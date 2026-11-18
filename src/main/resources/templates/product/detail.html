@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${product.name} + ' - 골드스타몰'">상품 상세</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main class="container">
+    <div th:replace="~{fragments/layout :: messages}"></div>
+
+    <div class="detail-box">
+        <div class="detail-icon" th:text="${product.icon}">📦</div>
+
+        <div class="detail-info">
+            <div class="product-category" th:text="${product.category}">카테고리</div>
+            <h1 th:text="${product.name}">상품명</h1>
+            <p class="detail-price">
+                <b th:text="${#numbers.formatInteger(product.price, 1, 'COMMA')}">10,000</b>원
+            </p>
+            <p class="detail-desc" th:text="${product.description}">상품 설명</p>
+            <p class="detail-stock">
+                남은 재고: <b th:text="${product.stock}">0</b>개
+            </p>
+
+            <!-- 재고가 있을 때만 장바구니 담기 가능 -->
+            <form th:if="${product.stock > 0}" th:action="@{/cart/add}" method="post" class="cart-add-form">
+                <!-- 어떤 상품인지 서버에 알려 주기 위한 숨은 값 -->
+                <input type="hidden" name="productId" th:value="${product.id}">
+                <label>수량
+                    <input type="number" name="quantity" value="1" min="1" th:max="${product.stock}">
+                </label>
+                <button type="submit" class="btn btn-primary">장바구니 담기</button>
+            </form>
+
+            <p class="soldout-text" th:if="${product.stock == 0}">일시 품절된 상품입니다.</p>
+
+            <a class="back-link" th:href="@{/}">← 상품 목록으로</a>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

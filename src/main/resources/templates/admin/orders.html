@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>배송관리 - 골드스타몰</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main class="container">
+    <h1>배송관리 <small>(관리자 전용)</small></h1>
+    <p class="guide">버튼을 누르면 배송 상태가 한 단계씩 넘어갑니다: 주문접수 → 입고 → 출고 → 배송중 → 배송완료</p>
+    <div th:replace="~{fragments/layout :: messages}"></div>
+
+    <p class="empty" th:if="${orders.isEmpty()}">들어온 주문이 없습니다.</p>
+
+    <div class="table-wrap" th:if="${!orders.isEmpty()}">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>주문번호</th>
+                <th>주문자</th>
+                <th>주문일시</th>
+                <th>배송지</th>
+                <th>결제 금액</th>
+                <th>배송 상태</th>
+                <th>처리</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="order : ${orders}">
+                <td th:text="${order.id}">1</td>
+                <td th:text="${order.member.name} + ' (' + ${order.member.loginId} + ')'">홍길동 (hong)</td>
+                <td th:text="${#temporals.format(order.orderedAt, 'yyyy-MM-dd HH:mm')}">2026-01-01 00:00</td>
+                <td th:text="${order.address}">주소</td>
+                <td th:text="${#numbers.formatInteger(order.totalPrice, 1, 'COMMA')} + '원'">0원</td>
+                <td>
+                    <span class="status" th:classappend="'status-' + ${order.status.name()}"
+                          th:text="${order.status.label}">주문접수</span>
+                </td>
+                <td>
+                    <!-- 배송완료, 주문취소가 아니면 '다음 단계' 버튼을 보여 준다 -->
+                    <form th:if="${order.status.name() != 'DELIVERED' and order.status.name() != 'CANCELED'}"
+                          th:action="@{/admin/orders/{id}/next(id=${order.id})}" method="post" class="inline-form">
+                        <button type="submit" class="btn btn-small btn-primary"
+                                th:text="${order.status.next().label} + ' 처리'">입고 처리</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- 모든 화면 위쪽에 공통으로 들어가는 머리말 조각 -->
+<!-- 다른 화면에서 th:replace="~{fragments/layout :: header}" 로 불러 쓴다 -->
+<header th:fragment="header" class="site-header">
+    <div class="header-inner">
+        <a class="logo" th:href="@{/}">⭐ 골드스타몰</a>
+
+        <!-- 상품 검색 -->
+        <form class="search-form" th:action="@{/}" method="get">
+            <input type="text" name="keyword" placeholder="찾고 싶은 상품을 검색해 보세요">
+            <button type="submit">검색</button>
+        </form>
+
+        <nav class="header-nav">
+            <!-- 로그인하지 않았을 때 -->
+            <th:block th:if="${session.loginMemberId == null}">
+                <a th:href="@{/members/login}">로그인</a>
+                <a th:href="@{/members/join}">회원가입</a>
+            </th:block>
+
+            <!-- 로그인했을 때 -->
+            <th:block th:if="${session.loginMemberId != null}">
+                <span class="hello" th:text="${session.loginMemberName} + '님'">홍길동님</span>
+                <a th:href="@{/cart}">장바구니</a>
+                <a th:href="@{/orders}">주문내역</a>
+                <!-- 관리자에게만 보이는 메뉴 -->
+                <a th:if="${session.loginMemberRole == 'ADMIN'}" th:href="@{/admin/orders}">배송관리</a>
+                <form class="logout-form" th:action="@{/members/logout}" method="post">
+                    <button type="submit">로그아웃</button>
+                </form>
+            </th:block>
+        </nav>
+    </div>
+</header>
+
+<!-- 성공/오류 메시지를 보여 주는 조각 -->
+<div th:fragment="messages">
+    <div class="alert alert-success" th:if="${message != null}" th:text="${message}">성공 메시지</div>
+    <div class="alert alert-error" th:if="${error != null}" th:text="${error}">오류 메시지</div>
+</div>
+
+<!-- 모든 화면 아래쪽에 공통으로 들어가는 꼬리말 조각 -->
+<footer th:fragment="footer" class="site-footer">
+    <p>골드스타몰 · 프레임워크실습 기말 Term Project · Spring Boot + JPA + MySQL</p>
+</footer>
+
+</body>
+</html>
