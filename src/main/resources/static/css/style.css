@@ -562,3 +562,46 @@ h2 {
 .site-footer p {
     margin: 0;
 }
+
+
+/* ----- 상품 사진 ----- */
+/* 사진(img)이 있으면 바로 뒤의 이모지(span)는 숨긴다. 사진 파일이 없으면 img 가 지워져 이모지가 보인다 */
+.product-icon img,
+.detail-icon img,
+.thumb img {
+    display: block;
+    width: 100%;
+    object-fit: contain;
+}
+
+.product-icon img + span,
+.detail-icon img + span,
+.thumb img + span {
+    display: none;
+}
+
+.product-icon img {
+    height: 120px;
+    margin-top: -20px;
+    margin-bottom: -20px;
+    background: #ffffff;
+}
+
+.detail-icon img {
+    height: 300px;
+    margin-top: -40px;
+    margin-bottom: -40px;
+    background: #ffffff;
+}
+
+.thumb {
+    display: inline-block;
+    width: 36px;
+    vertical-align: middle;
+    margin-right: 6px;
+    text-align: center;
+}
+
+.thumb img {
+    height: 36px;
+}

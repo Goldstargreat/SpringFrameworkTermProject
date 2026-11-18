@@ -39,7 +39,10 @@
             <tbody>
             <tr th:each="item : ${order.orderItems}">
                 <td>
-                    <span th:text="${item.product.icon}">📦</span>
+                    <span class="thumb">
+                        <img th:src="@{/images/products/{id}.jpg(id=${item.product.id})}" th:alt="${item.product.name}" onerror="this.remove()">
+                        <span th:text="${item.product.icon}">📦</span>
+                    </span>
                     <span th:text="${item.product.name}">상품명</span>
                 </td>
                 <td th:text="${#numbers.formatInteger(item.orderPrice, 1, 'COMMA')} + '원'">0원</td>

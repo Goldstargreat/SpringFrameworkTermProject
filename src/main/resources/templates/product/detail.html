@@ -13,7 +13,11 @@
     <div th:replace="~{fragments/layout :: messages}"></div>
 
     <div class="detail-box">
-        <div class="detail-icon" th:text="${product.icon}">📦</div>
+        <!-- 사진 파일이 있으면 사진, 없으면 이모지 -->
+        <div class="detail-icon">
+            <img th:src="@{/images/products/{id}.jpg(id=${product.id})}" th:alt="${product.name}" onerror="this.remove()">
+            <span th:text="${product.icon}">📦</span>
+        </div>
 
         <div class="detail-info">
             <div class="product-category" th:text="${product.category}">카테고리</div>

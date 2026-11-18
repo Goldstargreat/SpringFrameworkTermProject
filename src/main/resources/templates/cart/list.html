@@ -36,7 +36,10 @@
                 <tr th:each="item : ${cartItems}">
                     <td>
                         <a th:href="@{/products/{id}(id=${item.product.id})}">
-                            <span th:text="${item.product.icon}">📦</span>
+                            <span class="thumb">
+                                <img th:src="@{/images/products/{id}.jpg(id=${item.product.id})}" th:alt="${item.product.name}" onerror="this.remove()">
+                                <span th:text="${item.product.icon}">📦</span>
+                            </span>
                             <span th:text="${item.product.name}">상품명</span>
                         </a>
                     </td>

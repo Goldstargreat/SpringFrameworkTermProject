@@ -31,7 +31,11 @@
     <!-- 상품 카드 목록 -->
     <div class="product-grid">
         <a class="product-card" th:each="p : ${products}" th:href="@{/products/{id}(id=${p.id})}">
-            <div class="product-icon" th:text="${p.icon}">📦</div>
+            <!-- static/images/products/상품번호.jpg 파일이 있으면 사진을, 없으면 이모지를 보여 준다 -->
+            <div class="product-icon">
+                <img th:src="@{/images/products/{id}.jpg(id=${p.id})}" th:alt="${p.name}" onerror="this.remove()">
+                <span th:text="${p.icon}">📦</span>
+            </div>
             <div class="product-category" th:text="${p.category}">카테고리</div>
             <div class="product-name" th:text="${p.name}">상품명</div>
             <div class="product-price">
