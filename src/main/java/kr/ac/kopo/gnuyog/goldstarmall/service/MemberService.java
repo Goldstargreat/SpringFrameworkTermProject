@@ -1,5 +1,6 @@
 package kr.ac.kopo.gnuyog.goldstarmall.service;
 
+import kr.ac.kopo.gnuyog.goldstarmall.config.ValidationConfig;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Order;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.CartItemRepository;
@@ -81,9 +82,7 @@ public class MemberService {
 
     // 내 정보 수정 : 이름, 전화번호, 기본 배송지, 추가 배송지 (아이디는 바꿀 수 없다)
     public void updateInfo(Long memberId, String name, String phone, String address, String secondAddress) {
-        if (name.trim().isEmpty()) {
-            throw new IllegalStateException("이름을 입력해 주세요.");
-        }
+        ValidationConfig.validateName(name);
         Member member = findById(memberId);
         // 트랜잭션 안에서 값을 바꾸면 JPA 가 알아서 update SQL 을 실행한다 (변경 감지)
         member.setName(name.trim());
@@ -98,12 +97,7 @@ public class MemberService {
         if (!passwordEncoder.matches(currentPassword, member.getPassword())) {
             throw new IllegalStateException("현재 비밀번호가 올바르지 않습니다.");
         }
-        if (newPassword.length() < 4) {
-            throw new IllegalStateException("새 비밀번호는 4글자 이상이어야 합니다.");
-        }
-        if (!newPassword.equals(newPasswordConfirm)) {
-            throw new IllegalStateException("새 비밀번호와 비밀번호 확인이 서로 다릅니다.");
-        }
+        ValidationConfig.validatePassword(newPassword, newPasswordConfirm);
         member.setPassword(passwordEncoder.encode(newPassword));
     }
 

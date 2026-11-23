@@ -1,6 +1,7 @@
 package kr.ac.kopo.gnuyog.goldstarmall.controller;
 
 import kr.ac.kopo.gnuyog.goldstarmall.config.SessionConst;
+import kr.ac.kopo.gnuyog.goldstarmall.config.ValidationConfig;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.service.MemberService;
 import jakarta.servlet.http.HttpSession;
@@ -39,25 +40,16 @@ public class MemberController {
                        @RequestParam(name = "address", required = false) String address,
                        Model model,
                        RedirectAttributes redirectAttributes) {
-        // 입력값 검사 : 문제가 있으면 오류 메시지를 담아 가입 화면을 다시 보여 준다
+        // 입력값 검사(ValidationConfig) 후 가입 : 문제가 있으면 오류 메시지를 담아 가입 화면을 다시 보여 준다
         String error = null;
-        if (loginId.trim().length() < 4) {
-            error = "아이디는 4글자 이상이어야 합니다.";
-        } else if (password.length() < 4) {
-            error = "비밀번호는 4글자 이상이어야 합니다.";
-        } else if (!password.equals(passwordConfirm)) {
-            error = "비밀번호와 비밀번호 확인이 서로 다릅니다.";
-        } else if (name.trim().isEmpty()) {
-            error = "이름을 입력해 주세요.";
-        }
-
-        if (error == null) {
-            try {
-                memberService.join(loginId.trim(), password, name.trim(), phone, address);
-            } catch (IllegalStateException e) {
-                // 아이디 중복 등 서비스에서 던진 오류
-                error = e.getMessage();
-            }
+        try {
+            ValidationConfig.validateLoginId(loginId);
+            ValidationConfig.validatePassword(password, passwordConfirm);
+            ValidationConfig.validateName(name);
+            memberService.join(loginId.trim(), password, name.trim(), phone, address);
+        } catch (IllegalStateException e) {
+            // 입력값 오류, 아이디 중복 등
+            error = e.getMessage();
         }
 
         if (error != null) {
@@ -112,7 +104,7 @@ public class MemberController {
         return "redirect:/";
     }
 
-    // ===== 마이페이지 (WebConfig 에서 로그인한 사람만 들어올 수 있게 막아 두었다) =====
+    // ===== 마이페이지 (SecurityConfig 에서 로그인한 사람만 들어올 수 있게 막아 두었다) =====
 
     // 마이페이지 화면 : 내 정보 수정, 비밀번호 변경, 회원 탈퇴
     @GetMapping("/mypage")
