@@ -3,6 +3,8 @@ package kr.ac.kopo.gnuyog.goldstarmall.service;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.CartItem;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
+import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
+import kr.ac.kopo.gnuyog.goldstarmall.exception.NotFoundException;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.CartItemRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.MemberRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.ProductRepository;
@@ -31,13 +33,13 @@ public class CartService {
     // 장바구니에 상품 담기
     public void addToCart(Long memberId, Long productId, int quantity) {
         if (quantity < 1) {
-            throw new IllegalStateException("수량은 1개 이상이어야 합니다.");
+            throw new BusinessException("수량은 1개 이상이어야 합니다.");
         }
 
         Member member = memberRepository.findById(memberId).orElse(null);
         Product product = productRepository.findById(productId).orElse(null);
         if (member == null || product == null) {
-            throw new IllegalStateException("회원 또는 상품 정보를 찾을 수 없습니다.");
+            throw new NotFoundException("회원 또는 상품 정보를 찾을 수 없습니다.");
         }
 
         // 이미 담은 상품이면 수량만 더하고, 처음 담는 상품이면 새 항목을 만든다
@@ -49,7 +51,7 @@ public class CartService {
 
         // 재고보다 많이 담을 수 없다
         if (newQuantity > product.getStock()) {
-            throw new IllegalStateException("재고가 부족합니다. (남은 재고: " + product.getStock() + "개)");
+            throw new BusinessException("재고가 부족합니다. (남은 재고: " + product.getStock() + "개)");
         }
 
         if (cartItem == null) {
@@ -81,10 +83,10 @@ public class CartService {
     public void updateQuantity(Long memberId, Long cartItemId, int quantity) {
         CartItem cartItem = findMyCartItem(memberId, cartItemId);
         if (quantity < 1) {
-            throw new IllegalStateException("수량은 1개 이상이어야 합니다.");
+            throw new BusinessException("수량은 1개 이상이어야 합니다.");
         }
         if (quantity > cartItem.getProduct().getStock()) {
-            throw new IllegalStateException("재고가 부족합니다. (남은 재고: " + cartItem.getProduct().getStock() + "개)");
+            throw new BusinessException("재고가 부족합니다. (남은 재고: " + cartItem.getProduct().getStock() + "개)");
         }
         // 트랜잭션 안에서 값을 바꾸면 JPA 가 알아서 update SQL 을 실행한다 (변경 감지)
         cartItem.setQuantity(quantity);
@@ -100,10 +102,10 @@ public class CartService {
     private CartItem findMyCartItem(Long memberId, Long cartItemId) {
         CartItem cartItem = cartItemRepository.findById(cartItemId).orElse(null);
         if (cartItem == null) {
-            throw new IllegalStateException("장바구니 항목을 찾을 수 없습니다.");
+            throw new NotFoundException("장바구니 항목을 찾을 수 없습니다.");
         }
         if (!cartItem.getMember().getId().equals(memberId)) {
-            throw new IllegalStateException("본인의 장바구니만 수정할 수 있습니다.");
+            throw new BusinessException("본인의 장바구니만 수정할 수 있습니다.");
         }
         return cartItem;
     }

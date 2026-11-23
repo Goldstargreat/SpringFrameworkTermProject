@@ -3,6 +3,7 @@ package kr.ac.kopo.gnuyog.goldstarmall.controller;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Order;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
+import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
 import kr.ac.kopo.gnuyog.goldstarmall.service.MemberService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.OrderService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.ProductService;
@@ -47,7 +48,7 @@ public class AdminController {
         try {
             orderService.moveToNextStatus(orderId);
             redirectAttributes.addFlashAttribute("message", orderId + "번 주문의 배송 상태를 변경했습니다.");
-        } catch (IllegalStateException e) {
+        } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/admin/orders";
@@ -59,7 +60,7 @@ public class AdminController {
         try {
             orderService.deleteOrder(orderId);
             redirectAttributes.addFlashAttribute("message", orderId + "번 주문을 삭제했습니다.");
-        } catch (IllegalStateException e) {
+        } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/admin/orders";
@@ -79,7 +80,7 @@ public class AdminController {
         try {
             memberService.deleteMember(memberId);
             redirectAttributes.addFlashAttribute("message", memberId + "번 회원을 삭제했습니다.");
-        } catch (IllegalStateException e) {
+        } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/admin/members";
@@ -105,7 +106,7 @@ public class AdminController {
         try {
             Product product = productService.create(name, category, price, stock, description, icon);
             redirectAttributes.addFlashAttribute("message", product.getId() + "번 상품 '" + product.getName() + "'을(를) 등록했습니다.");
-        } catch (IllegalStateException e) {
+        } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/admin/products";
@@ -120,7 +121,7 @@ public class AdminController {
         try {
             productService.updatePriceAndStock(productId, price, stock);
             redirectAttributes.addFlashAttribute("message", productId + "번 상품의 가격과 재고를 수정했습니다.");
-        } catch (IllegalStateException e) {
+        } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/admin/products";
@@ -132,7 +133,7 @@ public class AdminController {
         try {
             productService.deleteProduct(productId);
             redirectAttributes.addFlashAttribute("message", productId + "번 상품을 삭제했습니다.");
-        } catch (IllegalStateException e) {
+        } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/admin/products";

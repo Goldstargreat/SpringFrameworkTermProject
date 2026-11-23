@@ -3,6 +3,7 @@ package kr.ac.kopo.gnuyog.goldstarmall.controller;
 import kr.ac.kopo.gnuyog.goldstarmall.config.SessionConst;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.CartItem;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
+import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
 import kr.ac.kopo.gnuyog.goldstarmall.service.CartService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.MemberService;
 import jakarta.servlet.http.HttpSession;
@@ -57,7 +58,7 @@ public class CartController {
         try {
             cartService.addToCart(memberId, productId, quantity);
             redirectAttributes.addFlashAttribute("message", "장바구니에 담았습니다.");
-        } catch (IllegalStateException e) {
+        } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/products/" + productId;
         }
@@ -73,7 +74,7 @@ public class CartController {
         Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
         try {
             cartService.updateQuantity(memberId, cartItemId, quantity);
-        } catch (IllegalStateException e) {
+        } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/cart";
@@ -87,7 +88,7 @@ public class CartController {
         Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
         try {
             cartService.deleteCartItem(memberId, cartItemId);
-        } catch (IllegalStateException e) {
+        } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/cart";

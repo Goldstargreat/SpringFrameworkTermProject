@@ -2,6 +2,7 @@ package kr.ac.kopo.gnuyog.goldstarmall.controller;
 
 import kr.ac.kopo.gnuyog.goldstarmall.config.SessionConst;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Order;
+import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
 import kr.ac.kopo.gnuyog.goldstarmall.service.OrderService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
@@ -45,7 +46,7 @@ public class OrderController {
             Order order = orderService.createOrder(memberId, receiverName.trim(), receiverPhone.trim(), shippingAddress.trim());
             redirectAttributes.addFlashAttribute("message", "주문이 완료되었습니다.");
             return "redirect:/orders/" + order.getId();
-        } catch (IllegalStateException e) {
+        } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/cart";
         }
@@ -70,7 +71,7 @@ public class OrderController {
         try {
             Order order = orderService.findMyOrder(memberId, orderId);
             model.addAttribute("order", order);
-        } catch (IllegalStateException e) {
+        } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/orders";
         }
@@ -90,7 +91,7 @@ public class OrderController {
         try {
             orderService.cancelOrder(memberId, orderId);
             redirectAttributes.addFlashAttribute("message", "주문을 취소했습니다.");
-        } catch (IllegalStateException e) {
+        } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/orders/" + orderId;

@@ -1,11 +1,13 @@
 package kr.ac.kopo.gnuyog.goldstarmall.service;
 
-import kr.ac.kopo.gnuyog.goldstarmall.config.ValidationConfig;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Order;
+import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
+import kr.ac.kopo.gnuyog.goldstarmall.exception.NotFoundException;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.CartItemRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.MemberRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.OrderRepository;
+import kr.ac.kopo.gnuyog.goldstarmall.validator.MemberValidator;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,7 +41,7 @@ public class MemberService {
         // 1) 아이디 중복 검사
         Member found = memberRepository.findByLoginId(loginId);
         if (found != null) {
-            throw new IllegalStateException("이미 사용 중인 아이디입니다.");
+            throw new BusinessException("이미 사용 중인 아이디입니다.");
         }
 
         // 2) 회원 객체를 만들고 값 채우기
@@ -82,7 +84,7 @@ public class MemberService {
 
     // 내 정보 수정 : 이름, 전화번호, 기본 배송지, 추가 배송지 (아이디는 바꿀 수 없다)
     public void updateInfo(Long memberId, String name, String phone, String address, String secondAddress) {
-        ValidationConfig.validateName(name);
+        MemberValidator.validateName(name);
         Member member = findById(memberId);
         // 트랜잭션 안에서 값을 바꾸면 JPA 가 알아서 update SQL 을 실행한다 (변경 감지)
         member.setName(name.trim());
@@ -95,9 +97,9 @@ public class MemberService {
     public void changePassword(Long memberId, String currentPassword, String newPassword, String newPasswordConfirm) {
         Member member = findById(memberId);
         if (!passwordEncoder.matches(currentPassword, member.getPassword())) {
-            throw new IllegalStateException("현재 비밀번호가 올바르지 않습니다.");
+            throw new BusinessException("현재 비밀번호가 올바르지 않습니다.");
         }
-        ValidationConfig.validatePassword(newPassword, newPasswordConfirm);
+        MemberValidator.validatePassword(newPassword, newPasswordConfirm);
         member.setPassword(passwordEncoder.encode(newPassword));
     }
 
@@ -105,7 +107,7 @@ public class MemberService {
     public void withdraw(Long memberId, String password) {
         Member member = findById(memberId);
         if (!passwordEncoder.matches(password, member.getPassword())) {
-            throw new IllegalStateException("비밀번호가 올바르지 않습니다.");
+            throw new BusinessException("비밀번호가 올바르지 않습니다.");
         }
         deleteMember(memberId);
     }
@@ -121,17 +123,17 @@ public class MemberService {
     public void deleteMember(Long memberId) {
         Member member = findById(memberId);
         if (member == null) {
-            throw new IllegalStateException("회원을 찾을 수 없습니다.");
+            throw new NotFoundException("회원을 찾을 수 없습니다.");
         }
         if ("ADMIN".equals(member.getRole())) {
-            throw new IllegalStateException("관리자 계정은 삭제할 수 없습니다.");
+            throw new BusinessException("관리자 계정은 삭제할 수 없습니다.");
         }
 
         // 1) 진행 중인 주문(배송완료, 주문취소가 아닌 주문)이 있는지 확인
         List<Order> orders = orderRepository.findByMemberOrderByIdDesc(member);
         for (Order order : orders) {
             if (!order.getStatus().isFinished()) {
-                throw new IllegalStateException("아직 배송이 끝나지 않은 주문이 있습니다. 배송이 끝난 뒤 다시 시도해 주세요.");
+                throw new BusinessException("아직 배송이 끝나지 않은 주문이 있습니다. 배송이 끝난 뒤 다시 시도해 주세요.");
             }
         }
 

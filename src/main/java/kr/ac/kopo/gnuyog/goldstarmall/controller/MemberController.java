@@ -1,9 +1,10 @@
 package kr.ac.kopo.gnuyog.goldstarmall.controller;
 
 import kr.ac.kopo.gnuyog.goldstarmall.config.SessionConst;
-import kr.ac.kopo.gnuyog.goldstarmall.config.ValidationConfig;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
+import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
 import kr.ac.kopo.gnuyog.goldstarmall.service.MemberService;
+import kr.ac.kopo.gnuyog.goldstarmall.validator.MemberValidator;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -40,14 +41,14 @@ public class MemberController {
                        @RequestParam(name = "address", required = false) String address,
                        Model model,
                        RedirectAttributes redirectAttributes) {
-        // 입력값 검사(ValidationConfig) 후 가입 : 문제가 있으면 오류 메시지를 담아 가입 화면을 다시 보여 준다
+        // 입력값 검사(MemberValidator) 후 가입 : 문제가 있으면 오류 메시지를 담아 가입 화면을 다시 보여 준다
         String error = null;
         try {
-            ValidationConfig.validateLoginId(loginId);
-            ValidationConfig.validatePassword(password, passwordConfirm);
-            ValidationConfig.validateName(name);
+            MemberValidator.validateLoginId(loginId);
+            MemberValidator.validatePassword(password, passwordConfirm);
+            MemberValidator.validateName(name);
             memberService.join(loginId.trim(), password, name.trim(), phone, address);
-        } catch (IllegalStateException e) {
+        } catch (BusinessException e) {
             // 입력값 오류, 아이디 중복 등
             error = e.getMessage();
         }
@@ -128,7 +129,7 @@ public class MemberController {
             // 화면 상단의 "OOO님" 도 바뀐 이름으로 보이도록 세션 값도 바꾼다
             session.setAttribute(SessionConst.LOGIN_MEMBER_NAME, name.trim());
             redirectAttributes.addFlashAttribute("message", "회원정보를 수정했습니다.");
-        } catch (IllegalStateException e) {
+        } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/members/mypage";
@@ -145,7 +146,7 @@ public class MemberController {
         try {
             memberService.changePassword(memberId, currentPassword, newPassword, newPasswordConfirm);
             redirectAttributes.addFlashAttribute("message", "비밀번호를 변경했습니다.");
-        } catch (IllegalStateException e) {
+        } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/members/mypage";
@@ -159,7 +160,7 @@ public class MemberController {
         Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
         try {
             memberService.withdraw(memberId, password);
-        } catch (IllegalStateException e) {
+        } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/members/mypage";
         }

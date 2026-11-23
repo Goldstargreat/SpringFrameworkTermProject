@@ -1,11 +1,13 @@
 package kr.ac.kopo.gnuyog.goldstarmall.service;
 
 import kr.ac.kopo.gnuyog.goldstarmall.domain.CartItem;
-import kr.ac.kopo.gnuyog.goldstarmall.domain.ShippingStatus;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Order;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.OrderItem;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
+import kr.ac.kopo.gnuyog.goldstarmall.domain.ShippingStatus;
+import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
+import kr.ac.kopo.gnuyog.goldstarmall.exception.NotFoundException;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.CartItemRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.MemberRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.OrderRepository;
@@ -37,13 +39,13 @@ public class OrderService {
     public Order createOrder(Long memberId, String receiverName, String receiverPhone, String shippingAddress) {
         Member member = memberRepository.findById(memberId).orElse(null);
         if (member == null) {
-            throw new IllegalStateException("회원 정보를 찾을 수 없습니다.");
+            throw new NotFoundException("회원 정보를 찾을 수 없습니다.");
         }
 
         // 1) 장바구니 조회
         List<CartItem> cartItems = cartItemRepository.findByMember(member);
         if (cartItems.isEmpty()) {
-            throw new IllegalStateException("장바구니가 비어 있습니다.");
+            throw new BusinessException("장바구니가 비어 있습니다.");
         }
 
         // 2) 주문 객체 만들기
@@ -62,7 +64,7 @@ public class OrderService {
 
             // 재고 확인
             if (product.getStock() < cartItem.getQuantity()) {
-                throw new IllegalStateException(product.getName() + " 상품의 재고가 부족합니다.");
+                throw new BusinessException(product.getName() + " 상품의 재고가 부족합니다.");
             }
             // 재고 차감 (변경 감지로 update SQL 실행)
             product.setStock(product.getStock() - cartItem.getQuantity());
@@ -98,10 +100,10 @@ public class OrderService {
     public Order findMyOrder(Long memberId, Long orderId) {
         Order order = orderRepository.findById(orderId).orElse(null);
         if (order == null) {
-            throw new IllegalStateException("주문을 찾을 수 없습니다.");
+            throw new NotFoundException("주문을 찾을 수 없습니다.");
         }
         if (!order.getMember().getId().equals(memberId)) {
-            throw new IllegalStateException("본인의 주문만 볼 수 있습니다.");
+            throw new BusinessException("본인의 주문만 볼 수 있습니다.");
         }
         return order;
     }
@@ -110,7 +112,7 @@ public class OrderService {
     public void cancelOrder(Long memberId, Long orderId) {
         Order order = findMyOrder(memberId, orderId);
         if (order.getStatus() != ShippingStatus.ORDER_RECEIVED) {
-            throw new IllegalStateException("이미 물류센터에 입고된 주문은 취소할 수 없습니다.");
+            throw new BusinessException("이미 물류센터에 입고된 주문은 취소할 수 없습니다.");
         }
 
         for (OrderItem orderItem : order.getOrderItems()) {
@@ -130,13 +132,13 @@ public class OrderService {
     public void moveToNextStatus(Long orderId) {
         Order order = orderRepository.findById(orderId).orElse(null);
         if (order == null) {
-            throw new IllegalStateException("주문을 찾을 수 없습니다.");
+            throw new NotFoundException("주문을 찾을 수 없습니다.");
         }
 
         ShippingStatus current = order.getStatus();
         ShippingStatus next = current.next();
         if (next == current) {
-            throw new IllegalStateException("더 이상 진행할 수 없는 주문입니다. (현재 상태: " + current.getLabel() + ")");
+            throw new BusinessException("더 이상 진행할 수 없는 주문입니다. (현재 상태: " + current.getLabel() + ")");
         }
         order.setStatus(next);
     }
@@ -145,10 +147,10 @@ public class OrderService {
     public void deleteOrder(Long orderId) {
         Order order = orderRepository.findById(orderId).orElse(null);
         if (order == null) {
-            throw new IllegalStateException("주문을 찾을 수 없습니다.");
+            throw new NotFoundException("주문을 찾을 수 없습니다.");
         }
         if (!order.getStatus().isFinished()) {
-            throw new IllegalStateException("진행 중인 주문은 삭제할 수 없습니다. (현재 상태: " + order.getStatus().getLabel() + ")");
+            throw new BusinessException("진행 중인 주문은 삭제할 수 없습니다. (현재 상태: " + order.getStatus().getLabel() + ")");
         }
         // cascade 설정으로 주문 상품(order_items)도 함께 지워진다
         orderRepository.delete(order);

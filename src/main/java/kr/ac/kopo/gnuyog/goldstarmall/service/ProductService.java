@@ -1,9 +1,12 @@
 package kr.ac.kopo.gnuyog.goldstarmall.service;
 
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
+import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
+import kr.ac.kopo.gnuyog.goldstarmall.exception.NotFoundException;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.CartItemRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.OrderItemRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.ProductRepository;
+import kr.ac.kopo.gnuyog.goldstarmall.validator.ProductValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,23 +63,7 @@ public class ProductService {
     // 클래스에 readOnly = true 가 붙어 있으므로, 저장/수정하는 메서드에는 @Transactional 을 따로 붙인다
     @Transactional
     public Product create(String name, String category, int price, int stock, String description, String icon) {
-        if (name.trim().isEmpty()) {
-            throw new IllegalStateException("상품명을 입력해 주세요.");
-        }
-        if (!CATEGORIES.contains(category)) {
-            throw new IllegalStateException("카테고리를 선택해 주세요.");
-        }
-        checkPriceAndStock(price, stock);
-        // DB 컬럼 길이보다 길면 저장할 때 오류가 나므로 미리 막는다 (Product 의 @Column length 참고)
-        if (name.trim().length() > 100) {
-            throw new IllegalStateException("상품명은 100글자까지 입력할 수 있습니다.");
-        }
-        if (description != null && description.length() > 500) {
-            throw new IllegalStateException("상품 설명은 500글자까지 입력할 수 있습니다.");
-        }
-        if (icon != null && icon.trim().length() > 10) {
-            throw new IllegalStateException("이모지는 한두 개만 입력해 주세요.");
-        }
+        ProductValidator.validateNewProduct(name, category, CATEGORIES, price, stock, description, icon);
 
         Product product = new Product();
         product.setName(name.trim());
@@ -98,9 +85,9 @@ public class ProductService {
     public void updatePriceAndStock(Long productId, int price, int stock) {
         Product product = findById(productId);
         if (product == null) {
-            throw new IllegalStateException("상품을 찾을 수 없습니다.");
+            throw new NotFoundException("상품을 찾을 수 없습니다.");
         }
-        checkPriceAndStock(price, stock);
+        ProductValidator.validatePriceAndStock(price, stock);
         // 변경 감지로 update SQL 이 실행된다
         product.setPrice(price);
         product.setStock(stock);
@@ -112,23 +99,13 @@ public class ProductService {
     public void deleteProduct(Long productId) {
         Product product = findById(productId);
         if (product == null) {
-            throw new IllegalStateException("상품을 찾을 수 없습니다.");
+            throw new NotFoundException("상품을 찾을 수 없습니다.");
         }
         if (orderItemRepository.existsByProduct(product)) {
-            throw new IllegalStateException("'" + product.getName() + "'은(는) 주문 내역이 있어 삭제할 수 없습니다. 재고를 0으로 바꿔 판매를 중지하세요.");
+            throw new BusinessException("'" + product.getName() + "'은(는) 주문 내역이 있어 삭제할 수 없습니다. 재고를 0으로 바꿔 판매를 중지하세요.");
         }
         // 이 상품을 장바구니에 담아 둔 회원이 있으면 그 항목부터 지운다 (외래키 때문에 순서가 중요하다)
         cartItemRepository.deleteAll(cartItemRepository.findByProduct(product));
         productRepository.delete(product);
-    }
-
-    // 가격은 1원 이상, 재고는 0개 이상이어야 한다
-    private void checkPriceAndStock(int price, int stock) {
-        if (price < 1) {
-            throw new IllegalStateException("가격은 1원 이상이어야 합니다.");
-        }
-        if (stock < 0) {
-            throw new IllegalStateException("재고는 0개 이상이어야 합니다.");
-        }
     }
 }
