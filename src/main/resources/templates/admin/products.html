@@ -11,7 +11,8 @@
 
 <main class="container">
     <h1>상품관리 <small>(관리자 전용)</small></h1>
-    <p class="guide">가격이나 재고 숫자를 고친 뒤 그 줄의 '저장' 버튼을 누르세요. 재고를 0으로 하면 품절로 표시됩니다.</p>
+    <p class="guide">가격이나 재고 숫자를 고친 뒤 그 줄의 '저장' 버튼을 누르세요. 재고를 0으로 하면 품절로 표시됩니다.<br>
+        주문된 적이 있는 상품은 주문 내역을 지키기 위해 삭제할 수 없습니다. 판매를 멈추려면 재고를 0으로 바꾸세요.</p>
     <div th:replace="~{fragments/layout :: messages}"></div>
 
     <!-- 1. 상품 목록 : 줄마다 가격/재고 수정 폼이 하나씩 있다 -->
@@ -23,6 +24,7 @@
                 <th>상품</th>
                 <th>카테고리</th>
                 <th>가격(원) / 재고(개)</th>
+                <th>삭제</th>
             </tr>
             </thead>
             <tbody>
@@ -40,6 +42,12 @@
                         <input type="number" name="price" th:value="${p.price}" min="1" required class="price-input">
                         <input type="number" name="stock" th:value="${p.stock}" min="0" required class="qty-input">
                         <button type="submit" class="btn btn-small btn-primary">저장</button>
+                    </form>
+                </td>
+                <td>
+                    <form th:action="@{/admin/products/{id}/delete(id=${p.id})}" method="post" class="inline-form"
+                          onsubmit="return confirm('이 상품을 삭제하시겠습니까?');">
+                        <button type="submit" class="btn btn-small btn-danger">삭제</button>
                     </form>
                 </td>
             </tr>

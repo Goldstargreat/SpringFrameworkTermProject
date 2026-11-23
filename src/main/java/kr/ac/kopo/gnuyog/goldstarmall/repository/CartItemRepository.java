@@ -15,4 +15,7 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 
     // 한 회원이 특정 상품을 이미 담았는지 확인 (없으면 null)
     CartItem findByMemberAndProduct(Member member, Product product);
+
+    // 특정 상품이 담긴 모든 장바구니 항목 (상품을 삭제할 때 함께 지우기 위해)
+    List<CartItem> findByProduct(Product product);
 }

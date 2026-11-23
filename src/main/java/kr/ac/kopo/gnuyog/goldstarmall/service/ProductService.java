@@ -1,13 +1,15 @@
 package kr.ac.kopo.gnuyog.goldstarmall.service;
 
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
+import kr.ac.kopo.gnuyog.goldstarmall.repository.CartItemRepository;
+import kr.ac.kopo.gnuyog.goldstarmall.repository.OrderItemRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-// 상품 서비스 : 상품 조회, (관리자) 상품 등록, 가격/재고 수정
+// 상품 서비스 : 상품 조회, (관리자) 상품 등록, 가격/재고 수정, 삭제
 @Service
 @Transactional(readOnly = true)
 public class ProductService {
@@ -19,9 +21,15 @@ public class ProductService {
             "음반/dvd", "완구/취미", "문구/오피스", "반려동물용품", "헬스/건강식품");
 
     private final ProductRepository productRepository;
+    private final CartItemRepository cartItemRepository;
+    private final OrderItemRepository orderItemRepository;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository,
+                          CartItemRepository cartItemRepository,
+                          OrderItemRepository orderItemRepository) {
         this.productRepository = productRepository;
+        this.cartItemRepository = cartItemRepository;
+        this.orderItemRepository = orderItemRepository;
     }
 
     // 카테고리 목록
@@ -96,6 +104,22 @@ public class ProductService {
         // 변경 감지로 update SQL 이 실행된다
         product.setPrice(price);
         product.setStock(stock);
+    }
+
+    // (관리자) 상품 삭제
+    // 주문된 적 있는 상품은 주문 내역에 남아 있어야 하므로 삭제할 수 없다 (대신 재고를 0으로 하면 품절로 판매 중지)
+    @Transactional
+    public void deleteProduct(Long productId) {
+        Product product = findById(productId);
+        if (product == null) {
+            throw new IllegalStateException("상품을 찾을 수 없습니다.");
+        }
+        if (orderItemRepository.existsByProduct(product)) {
+            throw new IllegalStateException("'" + product.getName() + "'은(는) 주문 내역이 있어 삭제할 수 없습니다. 재고를 0으로 바꿔 판매를 중지하세요.");
+        }
+        // 이 상품을 장바구니에 담아 둔 회원이 있으면 그 항목부터 지운다 (외래키 때문에 순서가 중요하다)
+        cartItemRepository.deleteAll(cartItemRepository.findByProduct(product));
+        productRepository.delete(product);
     }
 
     // 가격은 1원 이상, 재고는 0개 이상이어야 한다

@@ -125,4 +125,16 @@ public class AdminController {
         }
         return "redirect:/admin/products";
     }
+
+    // 상품 삭제 (주문된 적 없는 상품만)
+    @PostMapping("/products/{productId}/delete")
+    public String deleteProduct(@PathVariable("productId") Long productId, RedirectAttributes redirectAttributes) {
+        try {
+            productService.deleteProduct(productId);
+            redirectAttributes.addFlashAttribute("message", productId + "번 상품을 삭제했습니다.");
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/products";
+    }
 }
