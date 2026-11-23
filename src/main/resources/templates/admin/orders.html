@@ -41,11 +41,17 @@
                           th:text="${order.status.label}">주문접수</span>
                 </td>
                 <td>
-                    <!-- 배송완료, 주문취소가 아니면 '다음 단계' 버튼을 보여 준다 -->
-                    <form th:if="${order.status.name() != 'DELIVERED' and order.status.name() != 'CANCELED'}"
+                    <!-- 진행 중인 주문이면 '다음 단계' 버튼을 보여 준다 -->
+                    <form th:if="${!order.status.finished}"
                           th:action="@{/admin/orders/{id}/next(id=${order.id})}" method="post" class="inline-form">
                         <button type="submit" class="btn btn-small btn-primary"
                                 th:text="${order.status.next().label} + ' 처리'">입고 처리</button>
+                    </form>
+                    <!-- 끝난 주문(배송완료, 주문취소)이면 '삭제' 버튼을 보여 준다 -->
+                    <form th:if="${order.status.finished}"
+                          th:action="@{/admin/orders/{id}/delete(id=${order.id})}" method="post" class="inline-form"
+                          onsubmit="return confirm('이 주문을 삭제하시겠습니까?');">
+                        <button type="submit" class="btn btn-small btn-danger">삭제</button>
                     </form>
                 </td>
             </tr>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>회원관리 - 골드스타몰</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main class="container">
+    <h1>회원관리 <small>(관리자 전용)</small></h1>
+    <p class="guide">회원을 삭제하면 그 회원의 장바구니와 주문 내역도 함께 삭제됩니다. 배송 중인 주문이 있는 회원은 삭제할 수 없습니다.</p>
+    <div th:replace="~{fragments/layout :: messages}"></div>
+
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>회원번호</th>
+                <th>아이디</th>
+                <th>이름</th>
+                <th>전화번호</th>
+                <th>기본 배송지</th>
+                <th>가입일시</th>
+                <th>권한</th>
+                <th>처리</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="m : ${members}">
+                <td th:text="${m.id}">1</td>
+                <td th:text="${m.loginId}">hong</td>
+                <td th:text="${m.name}">홍길동</td>
+                <td th:text="${m.phone}">010-0000-0000</td>
+                <td th:text="${m.address}">주소</td>
+                <td th:text="${#temporals.format(m.createdAt, 'yyyy-MM-dd HH:mm')}">2026-01-01 00:00</td>
+                <td th:text="${m.role == 'ADMIN'} ? '관리자' : '일반'">일반</td>
+                <td>
+                    <!-- 관리자 계정은 삭제 버튼을 보여 주지 않는다 -->
+                    <form th:if="${m.role != 'ADMIN'}"
+                          th:action="@{/admin/members/{id}/delete(id=${m.id})}" method="post" class="inline-form"
+                          onsubmit="return confirm('이 회원을 삭제하시겠습니까? 주문 내역도 함께 삭제됩니다.');">
+                        <button type="submit" class="btn btn-small btn-danger">삭제</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

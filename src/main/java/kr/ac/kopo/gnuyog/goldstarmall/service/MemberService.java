@@ -1,6 +1,5 @@
 package kr.ac.kopo.gnuyog.goldstarmall.service;
 
-import kr.ac.kopo.gnuyog.goldstarmall.domain.ShippingStatus;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Order;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.CartItemRepository;
@@ -108,22 +107,37 @@ public class MemberService {
         member.setPassword(passwordEncoder.encode(newPassword));
     }
 
-    // 회원 탈퇴 : 배송이 끝나지 않은 주문이 있으면 탈퇴할 수 없다
+    // 회원 탈퇴 : 본인 확인(비밀번호) 후 회원 삭제
     public void withdraw(Long memberId, String password) {
         Member member = findById(memberId);
         if (!passwordEncoder.matches(password, member.getPassword())) {
             throw new IllegalStateException("비밀번호가 올바르지 않습니다.");
         }
+        deleteMember(memberId);
+    }
+
+    // (관리자) 전체 회원 목록
+    @Transactional(readOnly = true)
+    public List<Member> findAllMembers() {
+        return memberRepository.findAll();
+    }
+
+    // 회원 삭제 : 회원 탈퇴와 관리자의 회원 삭제가 함께 쓴다
+    // 관리자 계정이거나, 배송이 끝나지 않은 주문이 있으면 삭제할 수 없다
+    public void deleteMember(Long memberId) {
+        Member member = findById(memberId);
+        if (member == null) {
+            throw new IllegalStateException("회원을 찾을 수 없습니다.");
+        }
         if ("ADMIN".equals(member.getRole())) {
-            throw new IllegalStateException("관리자 계정은 탈퇴할 수 없습니다.");
+            throw new IllegalStateException("관리자 계정은 삭제할 수 없습니다.");
         }
 
         // 1) 진행 중인 주문(배송완료, 주문취소가 아닌 주문)이 있는지 확인
         List<Order> orders = orderRepository.findByMemberOrderByIdDesc(member);
         for (Order order : orders) {
-            ShippingStatus status = order.getStatus();
-            if (status != ShippingStatus.DELIVERED && status != ShippingStatus.CANCELED) {
-                throw new IllegalStateException("배송 중인 주문이 있어 탈퇴할 수 없습니다. 배송이 끝난 뒤 다시 시도해 주세요.");
+            if (!order.getStatus().isFinished()) {
+                throw new IllegalStateException("아직 배송이 끝나지 않은 주문이 있습니다. 배송이 끝난 뒤 다시 시도해 주세요.");
             }
         }
 

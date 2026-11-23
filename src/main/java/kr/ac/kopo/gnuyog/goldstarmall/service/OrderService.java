@@ -140,4 +140,17 @@ public class OrderService {
         }
         order.setStatus(next);
     }
+
+    // (관리자) 주문 삭제 : 배송완료 또는 주문취소로 끝난 주문만 지울 수 있다
+    public void deleteOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId).orElse(null);
+        if (order == null) {
+            throw new IllegalStateException("주문을 찾을 수 없습니다.");
+        }
+        if (!order.getStatus().isFinished()) {
+            throw new IllegalStateException("진행 중인 주문은 삭제할 수 없습니다. (현재 상태: " + order.getStatus().getLabel() + ")");
+        }
+        // cascade 설정으로 주문 상품(order_items)도 함께 지워진다
+        orderRepository.delete(order);
+    }
 }

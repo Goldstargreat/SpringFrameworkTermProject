@@ -42,4 +42,10 @@ public enum ShippingStatus {
         }
         return this;
     }
+
+    // 더 이상 진행할 게 없는 끝난 주문인지 (배송완료 또는 주문취소)
+    // 화면(Thymeleaf)에서는 ${order.status.finished} 로 쓸 수 있다
+    public boolean isFinished() {
+        return this == DELIVERED || this == CANCELED;
+    }
 }
