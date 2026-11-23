@@ -2,19 +2,22 @@ package kr.ac.kopo.gnuyog.goldstarmall.controller;
 
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Order;
+import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
 import kr.ac.kopo.gnuyog.goldstarmall.service.MemberService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.OrderService;
+import kr.ac.kopo.gnuyog.goldstarmall.service.ProductService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
-// 관리자 컨트롤러 : 배송관리(배송 상태 변경, 주문 삭제), 회원관리(회원 삭제)
+// 관리자 컨트롤러 : 배송관리(배송 상태 변경, 주문 삭제), 회원관리(회원 삭제), 상품관리(등록, 가격/재고 수정)
 // AdminCheckInterceptor 때문에 관리자(ADMIN)만 들어올 수 있다
 @Controller
 @RequestMapping("/admin")
@@ -22,10 +25,12 @@ public class AdminController {
 
     private final OrderService orderService;
     private final MemberService memberService;
+    private final ProductService productService;
 
-    public AdminController(OrderService orderService, MemberService memberService) {
+    public AdminController(OrderService orderService, MemberService memberService, ProductService productService) {
         this.orderService = orderService;
         this.memberService = memberService;
+        this.productService = productService;
     }
 
     // 전체 주문 목록
@@ -78,5 +83,46 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/admin/members";
+    }
+
+    // 상품관리 화면 : 전체 상품 목록(가격/재고 수정) + 새 상품 등록
+    @GetMapping("/products")
+    public String products(Model model) {
+        model.addAttribute("products", productService.findProducts(null, null));
+        model.addAttribute("categories", productService.getCategories());
+        return "admin/products";
+    }
+
+    // 새 상품 등록
+    @PostMapping("/products")
+    public String createProduct(@RequestParam("name") String name,
+                                @RequestParam("category") String category,
+                                @RequestParam("price") int price,
+                                @RequestParam("stock") int stock,
+                                @RequestParam(name = "description", required = false) String description,
+                                @RequestParam(name = "icon", required = false) String icon,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            Product product = productService.create(name, category, price, stock, description, icon);
+            redirectAttributes.addFlashAttribute("message", product.getId() + "번 상품 '" + product.getName() + "'을(를) 등록했습니다.");
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/products";
+    }
+
+    // 가격, 재고 수정
+    @PostMapping("/products/{productId}/update")
+    public String updateProduct(@PathVariable("productId") Long productId,
+                                @RequestParam("price") int price,
+                                @RequestParam("stock") int stock,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            productService.updatePriceAndStock(productId, price, stock);
+            redirectAttributes.addFlashAttribute("message", productId + "번 상품의 가격과 재고를 수정했습니다.");
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/products";
     }
 }

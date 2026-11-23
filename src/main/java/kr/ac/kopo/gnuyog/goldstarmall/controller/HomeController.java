@@ -32,10 +32,7 @@ public class HomeController {
         List<Product> products = productService.findProducts(category, keyword);
 
         // 화면 상단에 보여 줄 카테고리 메뉴
-        List<String> categories = List.of(
-                "패션의류", "잡화", "뷰티", "식품", "주방용품",
-                "생활용품", "홈인테리어", "가전디지털", "스포츠/레저", "자동차용품",
-                "음반/dvd", "완구/취미", "문구/오피스", "반려동물용품", "헬스/건강식품");
+        List<String> categories = productService.getCategories();
 
         // model 에 담은 값은 Thymeleaf 화면에서 ${이름} 으로 꺼내 쓴다
         model.addAttribute("products", products);

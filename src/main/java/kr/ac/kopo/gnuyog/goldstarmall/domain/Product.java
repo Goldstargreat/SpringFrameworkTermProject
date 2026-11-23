@@ -20,7 +20,7 @@ public class Product {
     @Column(nullable = false, length = 100)
     private String name;
 
-    // 카테고리 (패션의류, 식품, 가전디지털 등 15가지. 목록은 HomeController 참고)
+    // 카테고리 (패션의류, 식품, 가전디지털 등 15가지. 목록은 ProductService 참고)
     @Column(nullable = false, length = 30)
     private String category;
 
