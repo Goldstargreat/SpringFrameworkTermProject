@@ -69,11 +69,10 @@ public class CartService {
     }
 
     // 장바구니 총 금액 계산
-    @Transactional(readOnly = true)
     public int calculateTotalPrice(List<CartItem> cartItems) {
         int total = 0;
-        for (int i = 0; i < cartItems.size(); i++) {
-            total = total + cartItems.get(i).getTotalPrice();
+        for (CartItem cartItem : cartItems) {
+            total = total + cartItem.getTotalPrice();
         }
         return total;
     }

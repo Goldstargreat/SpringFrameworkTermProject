@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.ArrayList;
 import java.util.List;
 
 // 메인 화면(상품 목록)과 상품 상세 화면 컨트롤러
@@ -33,11 +32,10 @@ public class HomeController {
         List<Product> products = productService.findProducts(category, keyword);
 
         // 화면 상단에 보여 줄 카테고리 메뉴
-        List<String> categories = new ArrayList<String>();
-        categories.add("식품");
-        categories.add("생활용품");
-        categories.add("가전");
-        categories.add("패션");
+        List<String> categories = List.of(
+                "패션의류", "잡화", "뷰티", "식품", "주방용품",
+                "생활용품", "홈인테리어", "가전디지털", "스포츠/레저", "자동차용품",
+                "음반/dvd", "완구/취미", "문구/오피스", "반려동물용품", "헬스/건강식품");
 
         // model 에 담은 값은 Thymeleaf 화면에서 ${이름} 으로 꺼내 쓴다
         model.addAttribute("products", products);

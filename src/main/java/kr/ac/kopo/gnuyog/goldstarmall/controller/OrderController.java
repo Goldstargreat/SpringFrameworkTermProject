@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.ArrayList;
 import java.util.List;
 
 // 주문 컨트롤러 (로그인한 사람만 들어올 수 있다)
@@ -77,12 +76,7 @@ public class OrderController {
         }
 
         // 배송 진행 막대에 표시할 단계 이름 (순서대로 1~5단계)
-        List<String> steps = new ArrayList<String>();
-        steps.add("주문접수");
-        steps.add("입고");
-        steps.add("출고");
-        steps.add("배송중");
-        steps.add("배송완료");
+        List<String> steps = List.of("주문접수", "입고", "출고", "배송중", "배송완료");
         model.addAttribute("steps", steps);
         return "order/detail";
     }

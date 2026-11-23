@@ -20,9 +20,9 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        // 장바구니, 주문, 관리자 화면은 로그인해야 들어갈 수 있다
+        // 장바구니, 주문, 마이페이지, 관리자 화면은 로그인해야 들어갈 수 있다
         registry.addInterceptor(loginCheckInterceptor)
-                .addPathPatterns("/cart/**", "/orders/**", "/admin/**");
+                .addPathPatterns("/cart/**", "/orders/**", "/members/mypage/**", "/admin/**");
 
         // 관리자 화면은 로그인 + 관리자 권한까지 있어야 한다
         registry.addInterceptor(adminCheckInterceptor)

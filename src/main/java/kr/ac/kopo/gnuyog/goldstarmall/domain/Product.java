@@ -20,7 +20,7 @@ public class Product {
     @Column(nullable = false, length = 100)
     private String name;
 
-    // 카테고리 (식품, 생활용품, 가전, 패션)
+    // 카테고리 (패션의류, 식품, 가전디지털 등 15가지. 목록은 HomeController 참고)
     @Column(nullable = false, length = 30)
     private String category;
 
@@ -41,16 +41,6 @@ public class Product {
     private String icon;
 
     public Product() {
-    }
-
-    // 초기 데이터를 넣을 때 편하게 쓰는 생성자
-    public Product(String name, String category, int price, int stock, String description, String icon) {
-        this.name = name;
-        this.category = category;
-        this.price = price;
-        this.stock = stock;
-        this.description = description;
-        this.icon = icon;
     }
 
     // ===== getter / setter =====

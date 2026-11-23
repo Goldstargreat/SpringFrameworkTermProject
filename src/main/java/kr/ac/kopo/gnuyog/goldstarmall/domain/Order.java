@@ -36,7 +36,7 @@ public class Order {
     // mappedBy = "order" : 외래키는 OrderItem.order 쪽에 있다는 뜻
     // cascade = ALL : 주문을 저장하면 주문 상품들도 함께 저장된다
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-    private List<OrderItem> orderItems = new ArrayList<OrderItem>();
+    private List<OrderItem> orderItems = new ArrayList<>();
 
     // 받는 사람 이름
     @Column(nullable = false, length = 30)

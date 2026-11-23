@@ -111,4 +111,68 @@ public class MemberController {
         session.invalidate();
         return "redirect:/";
     }
+
+    // ===== 마이페이지 (WebConfig 에서 로그인한 사람만 들어올 수 있게 막아 두었다) =====
+
+    // 마이페이지 화면 : 내 정보 수정, 비밀번호 변경, 회원 탈퇴
+    @GetMapping("/mypage")
+    public String mypage(HttpSession session, Model model) {
+        Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
+        model.addAttribute("member", memberService.findById(memberId));
+        return "member/mypage";
+    }
+
+    // 내 정보 수정 처리
+    @PostMapping("/mypage/edit")
+    public String edit(@RequestParam("name") String name,
+                       @RequestParam(name = "phone", required = false) String phone,
+                       @RequestParam(name = "address", required = false) String address,
+                       HttpSession session,
+                       RedirectAttributes redirectAttributes) {
+        Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
+        try {
+            memberService.updateInfo(memberId, name, phone, address);
+            // 화면 상단의 "OOO님" 도 바뀐 이름으로 보이도록 세션 값도 바꾼다
+            session.setAttribute(SessionConst.LOGIN_MEMBER_NAME, name.trim());
+            redirectAttributes.addFlashAttribute("message", "회원정보를 수정했습니다.");
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/members/mypage";
+    }
+
+    // 비밀번호 변경 처리
+    @PostMapping("/mypage/password")
+    public String changePassword(@RequestParam("currentPassword") String currentPassword,
+                                 @RequestParam("newPassword") String newPassword,
+                                 @RequestParam("newPasswordConfirm") String newPasswordConfirm,
+                                 HttpSession session,
+                                 RedirectAttributes redirectAttributes) {
+        Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
+        try {
+            memberService.changePassword(memberId, currentPassword, newPassword, newPasswordConfirm);
+            redirectAttributes.addFlashAttribute("message", "비밀번호를 변경했습니다.");
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/members/mypage";
+    }
+
+    // 회원 탈퇴 처리
+    @PostMapping("/mypage/delete")
+    public String delete(@RequestParam("password") String password,
+                         HttpSession session,
+                         RedirectAttributes redirectAttributes) {
+        Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
+        try {
+            memberService.withdraw(memberId, password);
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/members/mypage";
+        }
+        // 탈퇴했으니 로그아웃 처리
+        session.invalidate();
+        redirectAttributes.addFlashAttribute("message", "회원 탈퇴가 완료되었습니다. 그동안 이용해 주셔서 감사합니다.");
+        return "redirect:/";
+    }
 }

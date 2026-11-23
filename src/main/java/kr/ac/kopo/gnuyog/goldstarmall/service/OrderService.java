@@ -57,8 +57,7 @@ public class OrderService {
 
         // 3) 장바구니 항목을 하나씩 주문 상품으로 옮기면서 재고를 줄인다
         int totalPrice = 0;
-        for (int i = 0; i < cartItems.size(); i++) {
-            CartItem cartItem = cartItems.get(i);
+        for (CartItem cartItem : cartItems) {
             Product product = cartItem.getProduct();
 
             // 재고 확인
@@ -82,9 +81,7 @@ public class OrderService {
         orderRepository.save(order);
 
         // 5) 주문이 끝났으니 장바구니 비우기
-        for (int i = 0; i < cartItems.size(); i++) {
-            cartItemRepository.delete(cartItems.get(i));
-        }
+        cartItemRepository.deleteAll(cartItems);
 
         return order;
     }
@@ -116,9 +113,7 @@ public class OrderService {
             throw new IllegalStateException("이미 물류센터에 입고된 주문은 취소할 수 없습니다.");
         }
 
-        List<OrderItem> orderItems = order.getOrderItems();
-        for (int i = 0; i < orderItems.size(); i++) {
-            OrderItem orderItem = orderItems.get(i);
+        for (OrderItem orderItem : order.getOrderItems()) {
             Product product = orderItem.getProduct();
             product.setStock(product.getStock() + orderItem.getQuantity());
         }
