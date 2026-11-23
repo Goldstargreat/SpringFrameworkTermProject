@@ -62,7 +62,7 @@
         <li>주문일시: <span th:text="${#temporals.format(order.orderedAt, 'yyyy-MM-dd HH:mm')}">2026-01-01</span></li>
         <li>받는 사람: <span th:text="${order.receiverName}">홍길동</span></li>
         <li>연락처: <span th:text="${order.receiverPhone}">010-0000-0000</span></li>
-        <li>배송지: <span th:text="${order.address}">주소</span></li>
+        <li>배송지: <span th:text="${order.shippingAddress}">주소</span></li>
         <li>배송 상태: <b th:text="${order.status.label}">주문접수</b></li>
     </ul>
 

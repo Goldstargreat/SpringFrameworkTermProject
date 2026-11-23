@@ -46,9 +46,9 @@ public class Order {
     @Column(nullable = false, length = 20)
     private String receiverPhone;
 
-    // 배송지 주소
+    // 배송지 주소 (회원의 기본 주소와 따로, 주문마다 저장한다) → shipping_address 컬럼
     @Column(nullable = false, length = 200)
-    private String address;
+    private String shippingAddress;
 
     // 총 결제 금액
     @Column(nullable = false)
@@ -57,7 +57,7 @@ public class Order {
     // 배송 상태. EnumType.STRING : DB에 "SHIPPED" 같은 글자로 저장된다
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private DeliveryStatus status;
+    private ShippingStatus status;
 
     // 주문 일시
     private LocalDateTime orderedAt;
@@ -112,12 +112,12 @@ public class Order {
         this.receiverPhone = receiverPhone;
     }
 
-    public String getAddress() {
-        return address;
+    public String getShippingAddress() {
+        return shippingAddress;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setShippingAddress(String shippingAddress) {
+        this.shippingAddress = shippingAddress;
     }
 
     public int getTotalPrice() {
@@ -128,11 +128,11 @@ public class Order {
         this.totalPrice = totalPrice;
     }
 
-    public DeliveryStatus getStatus() {
+    public ShippingStatus getStatus() {
         return status;
     }
 
-    public void setStatus(DeliveryStatus status) {
+    public void setStatus(ShippingStatus status) {
         this.status = status;
     }
 

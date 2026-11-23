@@ -1,7 +1,7 @@
 package kr.ac.kopo.gnuyog.goldstarmall.service;
 
 import kr.ac.kopo.gnuyog.goldstarmall.domain.CartItem;
-import kr.ac.kopo.gnuyog.goldstarmall.domain.DeliveryStatus;
+import kr.ac.kopo.gnuyog.goldstarmall.domain.ShippingStatus;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Order;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.OrderItem;
@@ -34,7 +34,7 @@ public class OrderService {
 
     // 주문 생성 : 장바구니에 담긴 상품 전체를 주문한다
     // @Transactional 덕분에 중간에 오류(재고 부족 등)가 나면 앞에서 한 작업이 모두 취소(rollback)된다
-    public Order createOrder(Long memberId, String receiverName, String receiverPhone, String address) {
+    public Order createOrder(Long memberId, String receiverName, String receiverPhone, String shippingAddress) {
         Member member = memberRepository.findById(memberId).orElse(null);
         if (member == null) {
             throw new IllegalStateException("회원 정보를 찾을 수 없습니다.");
@@ -51,8 +51,8 @@ public class OrderService {
         order.setMember(member);
         order.setReceiverName(receiverName);
         order.setReceiverPhone(receiverPhone);
-        order.setAddress(address);
-        order.setStatus(DeliveryStatus.ORDER_RECEIVED);
+        order.setShippingAddress(shippingAddress);
+        order.setStatus(ShippingStatus.ORDER_RECEIVED);
         order.setOrderedAt(LocalDateTime.now());
 
         // 3) 장바구니 항목을 하나씩 주문 상품으로 옮기면서 재고를 줄인다
@@ -109,7 +109,7 @@ public class OrderService {
     // 주문 취소 : 아직 '주문접수' 상태일 때만 가능하고, 줄였던 재고를 다시 돌려놓는다
     public void cancelOrder(Long memberId, Long orderId) {
         Order order = findMyOrder(memberId, orderId);
-        if (order.getStatus() != DeliveryStatus.ORDER_RECEIVED) {
+        if (order.getStatus() != ShippingStatus.ORDER_RECEIVED) {
             throw new IllegalStateException("이미 물류센터에 입고된 주문은 취소할 수 없습니다.");
         }
 
@@ -117,7 +117,7 @@ public class OrderService {
             Product product = orderItem.getProduct();
             product.setStock(product.getStock() + orderItem.getQuantity());
         }
-        order.setStatus(DeliveryStatus.CANCELED);
+        order.setStatus(ShippingStatus.CANCELED);
     }
 
     // (관리자) 전체 주문 목록
@@ -133,8 +133,8 @@ public class OrderService {
             throw new IllegalStateException("주문을 찾을 수 없습니다.");
         }
 
-        DeliveryStatus current = order.getStatus();
-        DeliveryStatus next = current.next();
+        ShippingStatus current = order.getStatus();
+        ShippingStatus next = current.next();
         if (next == current) {
             throw new IllegalStateException("더 이상 진행할 수 없는 주문입니다. (현재 상태: " + current.getLabel() + ")");
         }

@@ -1,7 +1,7 @@
 package kr.ac.kopo.gnuyog.goldstarmall.domain;
 
 // 배송 상태 : 실제 물류 흐름(주문접수 → 입고 → 출고 → 배송중 → 배송완료)을 그대로 옮겼다
-public enum DeliveryStatus {
+public enum ShippingStatus {
 
     ORDER_RECEIVED("주문접수", 1),
     WAREHOUSED("입고", 2),
@@ -16,7 +16,7 @@ public enum DeliveryStatus {
     // 진행 단계 번호 (1~5). 취소는 0
     private final int step;
 
-    DeliveryStatus(String label, int step) {
+    ShippingStatus(String label, int step) {
         this.label = label;
         this.step = step;
     }
@@ -30,7 +30,7 @@ public enum DeliveryStatus {
     }
 
     // 다음 단계의 상태를 돌려준다. 더 진행할 수 없으면(배송완료, 주문취소) 자기 자신을 돌려준다
-    public DeliveryStatus next() {
+    public ShippingStatus next() {
         if (this == ORDER_RECEIVED) {
             return WAREHOUSED;
         } else if (this == WAREHOUSED) {

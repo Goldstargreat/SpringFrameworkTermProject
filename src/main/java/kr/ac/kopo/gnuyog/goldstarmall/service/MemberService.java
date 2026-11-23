@@ -1,6 +1,6 @@
 package kr.ac.kopo.gnuyog.goldstarmall.service;
 
-import kr.ac.kopo.gnuyog.goldstarmall.domain.DeliveryStatus;
+import kr.ac.kopo.gnuyog.goldstarmall.domain.ShippingStatus;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Order;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.CartItemRepository;
@@ -120,8 +120,8 @@ public class MemberService {
         // 1) 진행 중인 주문(배송완료, 주문취소가 아닌 주문)이 있는지 확인
         List<Order> orders = orderRepository.findByMemberOrderByIdDesc(member);
         for (Order order : orders) {
-            DeliveryStatus status = order.getStatus();
-            if (status != DeliveryStatus.DELIVERED && status != DeliveryStatus.CANCELED) {
+            ShippingStatus status = order.getStatus();
+            if (status != ShippingStatus.DELIVERED && status != ShippingStatus.CANCELED) {
                 throw new IllegalStateException("배송 중인 주문이 있어 탈퇴할 수 없습니다. 배송이 끝난 뒤 다시 시도해 주세요.");
             }
         }

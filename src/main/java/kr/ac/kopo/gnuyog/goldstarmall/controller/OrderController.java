@@ -30,19 +30,19 @@ public class OrderController {
     @PostMapping
     public String create(@RequestParam("receiverName") String receiverName,
                          @RequestParam("receiverPhone") String receiverPhone,
-                         @RequestParam("address") String address,
+                         @RequestParam("shippingAddress") String shippingAddress,
                          HttpSession session,
                          RedirectAttributes redirectAttributes) {
         Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
 
         // 받는 사람 정보가 비어 있으면 주문할 수 없다
-        if (receiverName.trim().isEmpty() || receiverPhone.trim().isEmpty() || address.trim().isEmpty()) {
+        if (receiverName.trim().isEmpty() || receiverPhone.trim().isEmpty() || shippingAddress.trim().isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "받는 사람, 연락처, 배송지를 모두 입력해 주세요.");
             return "redirect:/cart";
         }
 
         try {
-            Order order = orderService.createOrder(memberId, receiverName.trim(), receiverPhone.trim(), address.trim());
+            Order order = orderService.createOrder(memberId, receiverName.trim(), receiverPhone.trim(), shippingAddress.trim());
             redirectAttributes.addFlashAttribute("message", "주문이 완료되었습니다.");
             return "redirect:/orders/" + order.getId();
         } catch (IllegalStateException e) {

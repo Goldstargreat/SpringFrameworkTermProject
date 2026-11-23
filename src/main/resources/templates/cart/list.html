@@ -78,7 +78,8 @@
                     <input type="text" name="receiverPhone" th:value="${member.phone}" required>
                 </label>
                 <label>배송지 주소
-                    <input type="text" name="address" th:value="${member.address}" required>
+                    <!-- 회원의 기본 주소를 미리 채워 두지만, 다른 곳으로 보내려면 바꿔 쓰면 된다 -->
+                    <input type="text" name="shippingAddress" th:value="${member.address}" required>
                 </label>
                 <button type="submit" class="btn btn-primary btn-block">주문하기</button>
             </form>
