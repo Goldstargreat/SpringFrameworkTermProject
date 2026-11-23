@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>마이페이지 - 골드스타몰</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main class="container">
+    <!-- 1. 내 정보 수정 -->
+    <div class="form-box">
+        <h1>마이페이지</h1>
+        <div th:replace="~{fragments/layout :: messages}"></div>
+
+        <h2>내 정보 수정</h2>
+        <form th:action="@{/members/mypage/edit}" method="post">
+            <label>아이디 (변경 불가)
+                <input type="text" th:value="${member.loginId}" disabled>
+            </label>
+            <label>이름
+                <input type="text" name="name" th:value="${member.name}" required>
+            </label>
+            <label>전화번호
+                <input type="text" name="phone" th:value="${member.phone}" placeholder="010-0000-0000">
+            </label>
+            <label>기본 배송지 주소
+                <input type="text" name="address" th:value="${member.address}">
+            </label>
+            <button type="submit" class="btn btn-primary btn-block">정보 수정</button>
+        </form>
+    </div>
+
+    <!-- 2. 비밀번호 변경 -->
+    <div class="form-box">
+        <h2>비밀번호 변경</h2>
+        <form th:action="@{/members/mypage/password}" method="post">
+            <label>현재 비밀번호
+                <input type="password" name="currentPassword" required>
+            </label>
+            <label>새 비밀번호 (4글자 이상)
+                <input type="password" name="newPassword" required>
+            </label>
+            <label>새 비밀번호 확인
+                <input type="password" name="newPasswordConfirm" required>
+            </label>
+            <button type="submit" class="btn btn-primary btn-block">비밀번호 변경</button>
+        </form>
+    </div>
+
+    <!-- 3. 회원 탈퇴 : 관리자에게는 보이지 않는다 -->
+    <div class="form-box" th:if="${member.role != 'ADMIN'}">
+        <h2>회원 탈퇴</h2>
+        <p class="guide">탈퇴하면 장바구니와 주문 내역이 모두 삭제되며 되돌릴 수 없습니다.<br>
+            배송 중인 주문이 있으면 탈퇴할 수 없습니다.</p>
+        <!-- onsubmit : 전송하기 전에 확인 창을 띄우고, '취소'를 누르면 전송하지 않는다 -->
+        <form th:action="@{/members/mypage/delete}" method="post"
+              onsubmit="return confirm('정말 탈퇴하시겠습니까?');">
+            <label>비밀번호 확인
+                <input type="password" name="password" required>
+            </label>
+            <button type="submit" class="btn btn-danger btn-block">회원 탈퇴</button>
+        </form>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
