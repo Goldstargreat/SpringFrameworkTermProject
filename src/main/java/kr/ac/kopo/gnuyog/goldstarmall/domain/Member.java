@@ -39,6 +39,10 @@ public class Member {
     @Column(length = 200)
     private String address;
 
+    // 추가 배송지 주소 (회사, 부모님 댁 등. 비어 있어도 된다)
+    @Column(length = 200)
+    private String secondAddress;
+
     // 권한 : "USER"(일반 회원) 또는 "ADMIN"(관리자)
     @Column(nullable = false, length = 10)
     private String role;
@@ -97,6 +101,14 @@ public class Member {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getSecondAddress() {
+        return secondAddress;
+    }
+
+    public void setSecondAddress(String secondAddress) {
+        this.secondAddress = secondAddress;
     }
 
     public String getRole() {

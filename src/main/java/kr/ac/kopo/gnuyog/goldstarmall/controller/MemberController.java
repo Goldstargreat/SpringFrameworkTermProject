@@ -127,11 +127,12 @@ public class MemberController {
     public String edit(@RequestParam("name") String name,
                        @RequestParam(name = "phone", required = false) String phone,
                        @RequestParam(name = "address", required = false) String address,
+                       @RequestParam(name = "secondAddress", required = false) String secondAddress,
                        HttpSession session,
                        RedirectAttributes redirectAttributes) {
         Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
         try {
-            memberService.updateInfo(memberId, name, phone, address);
+            memberService.updateInfo(memberId, name, phone, address, secondAddress);
             // 화면 상단의 "OOO님" 도 바뀐 이름으로 보이도록 세션 값도 바꾼다
             session.setAttribute(SessionConst.LOGIN_MEMBER_NAME, name.trim());
             redirectAttributes.addFlashAttribute("message", "회원정보를 수정했습니다.");

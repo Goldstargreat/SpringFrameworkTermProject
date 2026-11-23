@@ -29,6 +29,9 @@
             <label>기본 배송지 주소
                 <input type="text" name="address" th:value="${member.address}">
             </label>
+            <label>추가 배송지 주소 (선택)
+                <input type="text" name="secondAddress" th:value="${member.secondAddress}" placeholder="회사, 부모님 댁 등">
+            </label>
             <button type="submit" class="btn btn-primary btn-block">정보 수정</button>
         </form>
     </div>

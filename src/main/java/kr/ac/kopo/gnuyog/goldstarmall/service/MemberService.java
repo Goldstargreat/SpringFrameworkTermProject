@@ -80,8 +80,8 @@ public class MemberService {
         return memberRepository.findById(memberId).orElse(null);
     }
 
-    // 내 정보 수정 : 이름, 전화번호, 기본 배송지 (아이디는 바꿀 수 없다)
-    public void updateInfo(Long memberId, String name, String phone, String address) {
+    // 내 정보 수정 : 이름, 전화번호, 기본 배송지, 추가 배송지 (아이디는 바꿀 수 없다)
+    public void updateInfo(Long memberId, String name, String phone, String address, String secondAddress) {
         if (name.trim().isEmpty()) {
             throw new IllegalStateException("이름을 입력해 주세요.");
         }
@@ -90,6 +90,7 @@ public class MemberService {
         member.setName(name.trim());
         member.setPhone(phone);
         member.setAddress(address);
+        member.setSecondAddress(secondAddress);
     }
 
     // 비밀번호 변경 : 현재 비밀번호가 맞아야 바꿀 수 있다

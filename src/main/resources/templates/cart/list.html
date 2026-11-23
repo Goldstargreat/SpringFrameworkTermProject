@@ -77,9 +77,17 @@
                 <label>연락처
                     <input type="text" name="receiverPhone" th:value="${member.phone}" required>
                 </label>
+                <!-- 추가 배송지가 있을 때만 "어디로 보낼지" 고르는 버튼을 보여 준다 -->
+                <!-- 버튼을 누르면 그 주소가 아래 배송지 칸에 채워진다 (this.value = 누른 버튼의 주소) -->
+                <div class="address-choice" th:if="${!#strings.isEmpty(member.secondAddress)}">
+                    <label><input type="radio" name="addressChoice" th:value="${member.address}" checked
+                                  onclick="document.getElementById('shippingAddress').value = this.value"> 기본 배송지</label>
+                    <label><input type="radio" name="addressChoice" th:value="${member.secondAddress}"
+                                  onclick="document.getElementById('shippingAddress').value = this.value"> 추가 배송지</label>
+                </div>
                 <label>배송지 주소
                     <!-- 회원의 기본 주소를 미리 채워 두지만, 다른 곳으로 보내려면 바꿔 쓰면 된다 -->
-                    <input type="text" name="shippingAddress" th:value="${member.address}" required>
+                    <input type="text" id="shippingAddress" name="shippingAddress" th:value="${member.address}" required>
                 </label>
                 <button type="submit" class="btn btn-primary btn-block">주문하기</button>
             </form>
