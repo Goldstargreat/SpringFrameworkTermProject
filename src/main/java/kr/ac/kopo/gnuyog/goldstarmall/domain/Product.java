@@ -1,13 +1,18 @@
 package kr.ac.kopo.gnuyog.goldstarmall.domain;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 // 상품 엔티티 : products 테이블
 @Entity
@@ -58,7 +63,23 @@ public class Product
     // 비어 있으면(null) 로켓 배송이 아닌 것으로 본다
     private Boolean fastDelivery;
 
+    // 옵션 목록 (예: 15인치 / 화이트). 옵션이 없는 상품은 비어 있다
+    // 옵션이 있으면 손님은 옵션을 골라야 담거나 주문할 수 있고, 재고는 옵션마다 따로 센다
+    // cascade = ALL : 상품을 지우면 옵션도 함께 지워진다
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    @OrderBy("id asc")
+    private List<ProductOption> options = new ArrayList<>();
+
     public Product() {
+    }
+
+    // 옵션이 있는 상품인지 (화면에서 product.hasOptions 로 사용)
+    public boolean isHasOptions() {
+        return !options.isEmpty();
+    }
+
+    public List<ProductOption> getOptions() {
+        return options;
     }
 
     // ===== getter / setter =====

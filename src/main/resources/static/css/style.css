@@ -1211,6 +1211,25 @@ h2 {
 }
 
 /* 관리자 메뉴, 리뷰/문의 탭의 빨간 숫자 (처리하지 않은 문의/상품평 개수) */
+/* 상품 옵션 : 상품 상세의 옵션 선택, 장바구니/주문내역의 옵션 이름, 관리자용 옵션별 재고 */
+.option-select select {
+    padding: 6px 8px;
+    min-width: 200px;
+}
+
+.option-name {
+    margin-top: 2px;
+    font-size: 12px;
+    color: #777;
+}
+
+.option-stock-list {
+    margin: 4px 0 0;
+    padding-left: 18px;
+    font-size: 13px;
+    color: #555;
+}
+
 /* 상단 메뉴의 종 아이콘 : 알림이 오는 메뉴 앞에 붙는다 (글자색을 따라간다) */
 .bell-link {
     display: inline-flex;

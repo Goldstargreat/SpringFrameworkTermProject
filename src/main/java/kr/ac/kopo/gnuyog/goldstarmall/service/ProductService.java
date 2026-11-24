@@ -1,6 +1,7 @@
 package kr.ac.kopo.gnuyog.goldstarmall.service;
 
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
+import kr.ac.kopo.gnuyog.goldstarmall.domain.ProductOption;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.ShippingStatus;
 import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
 import kr.ac.kopo.gnuyog.goldstarmall.exception.NotFoundException;
@@ -190,9 +191,30 @@ public class ProductService {
             throw new NotFoundException("상품을 찾을 수 없습니다.");
         }
         ProductValidator.validatePriceAndStock(price, stock);
+        // 옵션 상품의 재고는 옵션 재고의 합계라서 여기서 바꿀 수 없다 (가격만 바꿀 수 있다)
+        if (product.isHasOptions() && stock != product.getStock()) {
+            throw new BusinessException("'" + product.getName() + "'은(는) 옵션 상품이라 재고를 옵션별로 관리합니다. 가격만 바꿀 수 있습니다.");
+        }
         // 변경 감지로 update SQL 이 실행된다
         product.setPrice(price);
         product.setStock(stock);
+    }
+
+    // 손님이 고른 옵션 확인 : 옵션이 있는 상품이면 꼭 골라야 하고, 그 상품의 옵션이어야 한다
+    // 옵션이 없는 상품이면 null 을 돌려준다 (넘어온 optionId 는 무시)
+    public ProductOption resolveOption(Product product, Long optionId) {
+        if (!product.isHasOptions()) {
+            return null;
+        }
+        if (optionId == null) {
+            throw new BusinessException("옵션을 선택해 주세요.");
+        }
+        for (ProductOption option : product.getOptions()) {
+            if (option.getId().equals(optionId)) {
+                return option;
+            }
+        }
+        throw new BusinessException("선택한 옵션을 찾을 수 없습니다.");
     }
 
     // (관리자) 상품 삭제

@@ -37,7 +37,20 @@ public class OrderItem {
     @Column(nullable = false)
     private int quantity;
 
+    // 주문한 옵션 (옵션이 없는 상품이면 null). 취소/거절/반품 때 이 옵션의 재고를 돌려놓는다
+    @ManyToOne
+    @JoinColumn(name = "option_id")
+    private ProductOption option;
+
     public OrderItem() {
+    }
+
+    public ProductOption getOption() {
+        return option;
+    }
+
+    public void setOption(ProductOption option) {
+        this.option = option;
     }
 
     // 이 주문 상품의 금액 = 주문 당시 가격 x 수량

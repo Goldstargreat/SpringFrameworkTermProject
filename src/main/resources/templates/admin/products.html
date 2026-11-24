@@ -58,9 +58,15 @@
                 <td>
                     <form th:action="@{/admin/products/{id}/update(id=${p.id})}" method="post" class="inline-form">
                         <input type="number" name="price" th:value="${p.price}" min="1" required class="price-input">
-                        <input type="number" name="stock" th:value="${p.stock}" min="0" required class="qty-input">
+                        <!-- 옵션 상품은 재고가 옵션 재고의 합계라 여기서 바꿀 수 없다 (readonly : 값은 그대로 보낸다) -->
+                        <input type="number" name="stock" th:value="${p.stock}" min="0" required class="qty-input"
+                               th:readonly="${p.hasOptions}" th:title="${p.hasOptions} ? '옵션별 재고의 합계입니다' : null">
                         <button type="submit" class="btn btn-small btn-primary">저장</button>
                     </form>
+                    <div class="refund-note" th:if="${p.hasOptions}">
+                        <span th:each="opt, st : ${p.options}"
+                              th:text="${opt.name} + ' ' + ${opt.stock} + '개' + (${st.last} ? '' : ' · ')">15인치 / 화이트 5개</span>
+                    </div>
                 </td>
                 <!-- 로켓 배송 : 버튼을 누를 때마다 켜짐/꺼짐이 바뀐다 -->
                 <td>

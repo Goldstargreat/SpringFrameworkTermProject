@@ -40,6 +40,10 @@
             <p class="detail-stock" th:if="${isAdmin}">
                 남은 재고: <b th:text="${product.stock}">0</b>개 <span class="guide">(관리자에게만 보입니다)</span>
             </p>
+            <!-- 옵션 상품 : 관리자에게 옵션별 재고를 보여 준다 -->
+            <ul class="option-stock-list" th:if="${isAdmin and product.hasOptions}">
+                <li th:each="opt : ${product.options}" th:text="${opt.name} + ' : ' + ${opt.stock} + '개'">15인치 / 화이트 : 5개</li>
+            </ul>
             <p class="detail-stock low-stock" th:if="${!isAdmin and product.lowStock}">
                 품절 임박! <b th:text="${product.stock}">1</b>개 남았습니다.
             </p>
@@ -51,6 +55,15 @@
             <form th:if="${!isAdmin and product.stock > 0}" th:action="@{/cart/add}" method="post" class="cart-add-form">
                 <!-- 어떤 상품인지 서버에 알려 주기 위한 숨은 값 -->
                 <input type="hidden" name="productId" th:value="${product.id}">
+                <!-- 옵션 상품이면 옵션을 골라야 한다 (품절된 옵션은 고를 수 없다) -->
+                <label th:if="${product.hasOptions}" class="option-select">옵션
+                    <select name="optionId" required>
+                        <option value="">옵션을 선택하세요</option>
+                        <option th:each="opt : ${product.options}" th:value="${opt.id}"
+                                th:disabled="${opt.stock == 0}"
+                                th:text="${opt.name} + (${opt.stock == 0} ? ' (품절)' : (${opt.lowStock} ? ' (' + ${opt.stock} + '개 남음)' : ''))">15인치 / 화이트</option>
+                    </select>
+                </label>
                 <label>수량
                     <input type="number" name="quantity" value="1" min="1" th:max="${isAdmin or product.lowStock} ? ${product.stock} : null">
                 </label>

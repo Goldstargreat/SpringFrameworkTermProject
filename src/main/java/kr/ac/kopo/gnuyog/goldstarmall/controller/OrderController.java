@@ -4,6 +4,7 @@ import kr.ac.kopo.gnuyog.goldstarmall.config.SessionConst;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Order;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
+import kr.ac.kopo.gnuyog.goldstarmall.domain.ProductOption;
 import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
 import kr.ac.kopo.gnuyog.goldstarmall.service.MemberService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.OrderService;
@@ -63,9 +64,10 @@ public class OrderController {
     // ===== 바로 주문하기 (상품 상세 화면 → 주문서 → 주문 완료) =====
 
     // 바로 주문 주문서 화면 : 상품 상세 화면의 "바로 주문하기" 버튼으로 들어온다
-    // 예) /orders/direct?productId=2&quantity=3
+    // 예) /orders/direct?productId=2&quantity=3  (옵션 상품이면 &optionId=5 도 붙는다)
     @GetMapping("/direct")
     public String directForm(@RequestParam(name = "productId", required = false) Long productId,
+                             @RequestParam(name = "optionId", required = false) Long optionId,
                              @RequestParam(name = "quantity", required = false) String quantity,
                              HttpSession session,
                              Model model,
@@ -76,8 +78,10 @@ public class OrderController {
             return "redirect:/";
         }
         int count = parseQuantity(quantity);
+        ProductOption option;
         try {
-            orderService.checkDirectOrderQuantity(product, count);
+            option = productService.resolveOption(product, optionId);
+            orderService.checkDirectOrderQuantity(product, option, count);
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/products/" + productId;
@@ -86,6 +90,7 @@ public class OrderController {
         Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
         Member member = memberService.findById(memberId);
         model.addAttribute("product", product);
+        model.addAttribute("option", option);
         model.addAttribute("quantity", count);
         // 등급 할인 : 상품 금액, 할인 금액, 결제 금액 (실제 계산은 주문할 때 OrderService 가 한다)
         int originalPrice = product.getPrice() * count;
@@ -101,6 +106,7 @@ public class OrderController {
     // 바로 주문 처리
     @PostMapping("/direct")
     public String createDirect(@RequestParam("productId") Long productId,
+                               @RequestParam(name = "optionId", required = false) Long optionId,
                                @RequestParam("quantity") String quantity,
                                @RequestParam("receiverName") String receiverName,
                                @RequestParam("receiverPhone") String receiverPhone,
@@ -110,7 +116,8 @@ public class OrderController {
         Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
         int count = parseQuantity(quantity);
         // 실패하면 같은 주문서로 돌아간다
-        String backToForm = "redirect:/orders/direct?productId=" + productId + "&quantity=" + count;
+        String backToForm = "redirect:/orders/direct?productId=" + productId + "&quantity=" + count
+                + (optionId != null ? "&optionId=" + optionId : "");
 
         if (receiverName.trim().isEmpty() || receiverPhone.trim().isEmpty() || shippingAddress.trim().isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "받는 사람, 연락처, 배송지를 모두 입력해 주세요.");
@@ -118,7 +125,7 @@ public class OrderController {
         }
 
         try {
-            Order order = orderService.createDirectOrder(memberId, productId, count,
+            Order order = orderService.createDirectOrder(memberId, productId, optionId, count,
                     receiverName.trim(), receiverPhone.trim(), shippingAddress.trim());
             redirectAttributes.addFlashAttribute("message", "주문이 완료되었습니다.");
             return "redirect:/orders/" + order.getId();

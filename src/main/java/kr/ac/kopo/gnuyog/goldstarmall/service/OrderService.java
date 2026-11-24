@@ -5,6 +5,7 @@ import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Order;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.OrderItem;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
+import kr.ac.kopo.gnuyog.goldstarmall.domain.ProductOption;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.ShippingStatus;
 import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
 import kr.ac.kopo.gnuyog.goldstarmall.exception.NotFoundException;
@@ -30,12 +31,15 @@ public class OrderService {
     private final MemberRepository memberRepository;
     private final ProductRepository productRepository;
     private final GradeService gradeService;
+    private final ProductService productService;
 
     public OrderService(OrderRepository orderRepository,
                         CartItemRepository cartItemRepository,
                         MemberRepository memberRepository,
                         ProductRepository productRepository,
-                        GradeService gradeService) {
+                        GradeService gradeService,
+                        ProductService productService) {
+        this.productService = productService;
         this.orderRepository = orderRepository;
         this.cartItemRepository = cartItemRepository;
         this.memberRepository = memberRepository;
@@ -64,16 +68,19 @@ public class OrderService {
         int totalPrice = 0;
         for (CartItem cartItem : cartItems) {
             Product product = cartItem.getProduct();
+            ProductOption option = cartItem.getOption();
 
-            // 재고 확인
-            if (product.getStock() < cartItem.getQuantity()) {
-                throw new BusinessException(product.getName() + " 상품의 재고가 부족합니다.");
+            // 재고 확인 (옵션이 있으면 그 옵션의 재고)
+            if (cartItem.getAvailableStock() < cartItem.getQuantity()) {
+                throw new BusinessException(product.getName() + " 상품의 재고가 부족합니다."
+                        + (option != null ? " (옵션: " + option.getName() + ")" : ""));
             }
             // 재고 차감 (변경 감지로 update SQL 실행)
-            product.setStock(product.getStock() - cartItem.getQuantity());
+            decreaseStock(product, option, cartItem.getQuantity());
 
             OrderItem orderItem = new OrderItem();
             orderItem.setProduct(product);
+            orderItem.setOption(option);
             orderItem.setOrderPrice(product.getPrice());
             orderItem.setQuantity(cartItem.getQuantity());
             order.addOrderItem(orderItem);
@@ -96,7 +103,7 @@ public class OrderService {
 
     // 바로 주문 : 상품 상세 화면에서 상품 1개만 바로 주문한다
     // 장바구니를 거치지 않으므로, 장바구니에 담아 둔 다른 상품은 그대로 남는다
-    public Order createDirectOrder(Long memberId, Long productId, int quantity,
+    public Order createDirectOrder(Long memberId, Long productId, Long optionId, int quantity,
                                    String receiverName, String receiverPhone, String shippingAddress) {
         Member member = memberRepository.findById(memberId).orElse(null);
         if (member == null) {
@@ -107,16 +114,18 @@ public class OrderService {
             throw new NotFoundException("상품을 찾을 수 없습니다.");
         }
 
-        // 1) 수량, 재고 확인
-        checkDirectOrderQuantity(product, quantity);
+        // 1) 옵션, 수량, 재고 확인
+        ProductOption option = productService.resolveOption(product, optionId);
+        checkDirectOrderQuantity(product, option, quantity);
 
         // 2) 재고 차감 (변경 감지로 update SQL 실행)
-        product.setStock(product.getStock() - quantity);
+        decreaseStock(product, option, quantity);
 
         // 3) 주문 + 주문 상품 1개 만들기
         Order order = newOrder(member, receiverName, receiverPhone, shippingAddress);
         OrderItem orderItem = new OrderItem();
         orderItem.setProduct(product);
+        orderItem.setOption(option);
         orderItem.setOrderPrice(product.getPrice());
         orderItem.setQuantity(quantity);
         order.addOrderItem(orderItem);
@@ -129,15 +138,30 @@ public class OrderService {
     }
 
     // 바로 주문 수량 검사 : 1개 이상, 남은 재고 이하 (주문서 화면을 보여 줄 때도 쓴다)
-    public void checkDirectOrderQuantity(Product product, int quantity) {
+    // 옵션을 골랐으면 그 옵션의 재고로 검사한다
+    public void checkDirectOrderQuantity(Product product, ProductOption option, int quantity) {
         if (product.getStock() == 0) {
             throw new BusinessException("일시 품절된 상품입니다.");
         }
         if (quantity < 1) {
             throw new BusinessException("수량은 1개 이상이어야 합니다.");
         }
+        if (option != null) {
+            if (quantity > option.getStock()) {
+                throw new BusinessException(product.getName() + " : " + option.getStockShortageMessage());
+            }
+            return;
+        }
         if (quantity > product.getStock()) {
             throw new BusinessException(product.getName() + " : " + product.getStockShortageMessage());
+        }
+    }
+
+    // 재고 줄이기 : 옵션이 있으면 옵션 재고도 함께 줄인다 (상품 재고 = 옵션 재고의 합계를 유지)
+    private void decreaseStock(Product product, ProductOption option, int quantity) {
+        product.setStock(product.getStock() - quantity);
+        if (option != null) {
+            option.setStock(option.getStock() - quantity);
         }
     }
 
@@ -300,6 +324,10 @@ public class OrderService {
         for (OrderItem orderItem : order.getOrderItems()) {
             Product product = orderItem.getProduct();
             product.setStock(product.getStock() + orderItem.getQuantity());
+            // 옵션 상품이면 그 옵션의 재고도 돌려놓는다
+            if (orderItem.getOption() != null) {
+                orderItem.getOption().setStock(orderItem.getOption().getStock() + orderItem.getQuantity());
+            }
         }
         order.setRefundAmount(order.getTotalPrice());
         order.setRefundedAt(LocalDateTime.now());

@@ -39,6 +39,8 @@
                     <span th:text="${order.orderItems[0].product.name}">상품명</span>
                     <span th:if="${order.orderItems.size() > 1}"
                           th:text="'외 ' + ${order.orderItems.size() - 1} + '건'">외 1건</span>
+                    <div class="option-name" th:if="${order.orderItems[0].option != null}"
+                         th:text="'옵션: ' + ${order.orderItems[0].option.name}">옵션: 15인치 / 화이트</div>
                 </td>
                 <td th:text="${#numbers.formatInteger(order.totalPrice, 1, 'COMMA')} + '원'">0원</td>
                 <td>

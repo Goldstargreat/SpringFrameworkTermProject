@@ -21,6 +21,7 @@
         </a>
         <div class="direct-item-info">
             <div class="product-name" th:text="${product.name}">상품명</div>
+            <div class="option-name" th:if="${option != null}" th:text="'옵션: ' + ${option.name}">옵션: 15인치 / 화이트</div>
             <p class="guide">
                 <span th:text="${#numbers.formatInteger(product.price, 1, 'COMMA')}">0</span>원
                 × <b th:text="${quantity}">1</b>개
@@ -48,6 +49,7 @@
             <!-- 어떤 상품을 몇 개 주문하는지 함께 보낸다 -->
             <input type="hidden" name="productId" th:value="${product.id}">
             <input type="hidden" name="quantity" th:value="${quantity}">
+            <input type="hidden" name="optionId" th:if="${option != null}" th:value="${option.id}">
 
             <label>받는 사람
                 <input type="text" name="receiverName" th:value="${member.name}" required>

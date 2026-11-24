@@ -3,6 +3,7 @@ package kr.ac.kopo.gnuyog.goldstarmall.service;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.CartItem;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
+import kr.ac.kopo.gnuyog.goldstarmall.domain.ProductOption;
 import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
 import kr.ac.kopo.gnuyog.goldstarmall.exception.NotFoundException;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.CartItemRepository;
@@ -21,17 +22,20 @@ public class CartService {
     private final CartItemRepository cartItemRepository;
     private final MemberRepository memberRepository;
     private final ProductRepository productRepository;
+    private final ProductService productService;
 
     public CartService(CartItemRepository cartItemRepository,
                        MemberRepository memberRepository,
-                       ProductRepository productRepository) {
+                       ProductRepository productRepository,
+                       ProductService productService) {
         this.cartItemRepository = cartItemRepository;
         this.memberRepository = memberRepository;
         this.productRepository = productRepository;
+        this.productService = productService;
     }
 
-    // 장바구니에 상품 담기
-    public void addToCart(Long memberId, Long productId, int quantity) {
+    // 장바구니에 상품 담기 (옵션이 있는 상품이면 optionId 로 옵션을 골라야 한다)
+    public void addToCart(Long memberId, Long productId, Long optionId, int quantity) {
         if (quantity < 1) {
             throw new BusinessException("수량은 1개 이상이어야 합니다.");
         }
@@ -41,23 +45,26 @@ public class CartService {
         if (member == null || product == null) {
             throw new NotFoundException("회원 또는 상품 정보를 찾을 수 없습니다.");
         }
+        ProductOption option = productService.resolveOption(product, optionId);
 
-        // 이미 담은 상품이면 수량만 더하고, 처음 담는 상품이면 새 항목을 만든다
-        CartItem cartItem = cartItemRepository.findByMemberAndProduct(member, product);
+        // 이미 담은 상품(같은 옵션)이면 수량만 더하고, 처음 담는 상품이면 새 항목을 만든다
+        CartItem cartItem = cartItemRepository.findByMemberAndProductAndOption(member, product, option);
         int newQuantity = quantity;
         if (cartItem != null) {
             newQuantity = cartItem.getQuantity() + quantity;
         }
 
-        // 재고보다 많이 담을 수 없다
-        if (newQuantity > product.getStock()) {
-            throw new BusinessException(product.getStockShortageMessage());
+        // 재고보다 많이 담을 수 없다 (옵션이 있으면 그 옵션의 재고)
+        int stock = option != null ? option.getStock() : product.getStock();
+        if (newQuantity > stock) {
+            throw new BusinessException(option != null ? option.getStockShortageMessage() : product.getStockShortageMessage());
         }
 
         if (cartItem == null) {
             cartItem = new CartItem();
             cartItem.setMember(member);
             cartItem.setProduct(product);
+            cartItem.setOption(option);
         }
         cartItem.setQuantity(newQuantity);
         cartItemRepository.save(cartItem);
@@ -85,8 +92,8 @@ public class CartService {
         if (quantity < 1) {
             throw new BusinessException("수량은 1개 이상이어야 합니다.");
         }
-        if (quantity > cartItem.getProduct().getStock()) {
-            throw new BusinessException(cartItem.getProduct().getStockShortageMessage());
+        if (quantity > cartItem.getAvailableStock()) {
+            throw new BusinessException(cartItem.getStockShortageMessage());
         }
         // 트랜잭션 안에서 값을 바꾸면 JPA 가 알아서 update SQL 을 실행한다 (변경 감지)
         cartItem.setQuantity(quantity);

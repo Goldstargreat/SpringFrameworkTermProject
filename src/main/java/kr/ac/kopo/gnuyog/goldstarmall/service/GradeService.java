@@ -44,9 +44,11 @@ public class GradeService {
 
     // 다음 등급까지 남은 금액 (가장 높은 등급이면 0)
     @Transactional(readOnly = true)
-    public long remainingToNextGrade(Member member) {
+    public long remainingToNextGrade(Member member)
+    {
         MemberGrade next = member.getGrade().getNext();
-        if (next == null) {
+        if (next == null)
+        {
             return 0;
         }
         return Math.max(0, next.getMinAmount() - totalPurchase(member));

@@ -34,6 +34,11 @@ public class CartItem {
     @Column(nullable = false)
     private int quantity;
 
+    // 고른 옵션 (옵션이 없는 상품이면 null). 같은 상품이라도 옵션이 다르면 다른 항목이다
+    @ManyToOne
+    @JoinColumn(name = "option_id")
+    private ProductOption option;
+
     public CartItem() {
     }
 
@@ -41,6 +46,24 @@ public class CartItem {
     public int getTotalPrice()
     {
         return product.getPrice() * quantity;
+    }
+
+    // 담을 수 있는 재고 : 옵션을 골랐으면 그 옵션의 재고, 아니면 상품 재고
+    public int getAvailableStock() {
+        return option != null ? option.getStock() : product.getStock();
+    }
+
+    // 재고가 부족할 때 보여 줄 문구
+    public String getStockShortageMessage() {
+        return option != null ? option.getStockShortageMessage() : product.getStockShortageMessage();
+    }
+
+    public ProductOption getOption() {
+        return option;
+    }
+
+    public void setOption(ProductOption option) {
+        this.option = option;
     }
 
     // ===== getter / setter =====

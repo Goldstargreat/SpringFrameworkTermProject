@@ -42,6 +42,8 @@
                             </span>
                             <span th:text="${item.product.name}">상품명</span>
                         </a>
+                        <!-- 옵션 상품이면 고른 옵션 -->
+                        <div class="option-name" th:if="${item.option != null}" th:text="'옵션: ' + ${item.option.name}">옵션: 15인치 / 화이트</div>
                     </td>
                     <td th:text="${#numbers.formatInteger(item.product.price, 1, 'COMMA')} + '원'">0원</td>
                     <td>

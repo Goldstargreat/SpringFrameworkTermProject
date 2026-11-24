@@ -55,12 +55,13 @@ public class CartController {
     // 장바구니에 담기
     @PostMapping("/add")
     public String add(@RequestParam("productId") Long productId,
+                      @RequestParam(name = "optionId", required = false) Long optionId,
                       @RequestParam(name = "quantity", defaultValue = "1") int quantity,
                       HttpSession session,
                       RedirectAttributes redirectAttributes) {
         Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
         try {
-            cartService.addToCart(memberId, productId, quantity);
+            cartService.addToCart(memberId, productId, optionId, quantity);
             redirectAttributes.addFlashAttribute("message", "장바구니에 담았습니다.");
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());

@@ -276,5 +276,21 @@ UPDATE products SET fast_delivery = 1;
 -- 예외 : 고가/대형 상품은 로켓 배송을 하지 않는다
 UPDATE products SET fast_delivery = 0 WHERE name IN ('미러리스 카메라 렌즈킷', '로봇 청소기', '세단기 (문서 파쇄기)');
 
+-- ===== 상품 옵션 : 노트북 백팩 (크기 x 색상 4가지, 가격은 모두 같다) =====
+-- 옵션 상품은 옵션마다 재고를 따로 세고, 상품 재고는 옵션 재고의 합계로 맞춘다
+-- product_options 테이블은 서버를 한 번 실행하면 만들어진다
+INSERT INTO product_options (product_id, name, stock)
+SELECT id, '15인치 / 화이트', 5 FROM products WHERE name = '노트북 백팩';
+INSERT INTO product_options (product_id, name, stock)
+SELECT id, '15인치 / 블랙', 7 FROM products WHERE name = '노트북 백팩';
+INSERT INTO product_options (product_id, name, stock)
+SELECT id, '17인치 / 화이트', 0 FROM products WHERE name = '노트북 백팩';
+INSERT INTO product_options (product_id, name, stock)
+SELECT id, '17인치 / 블랙', 4 FROM products WHERE name = '노트북 백팩';
+-- 상품 재고 = 옵션 재고 합계 (5 + 7 + 0 + 4 = 16)
+UPDATE products SET stock = (SELECT SUM(o.stock) FROM product_options o WHERE o.product_id = products.id)
+WHERE name = '노트북 백팩';
+
 -- 확인
 SELECT * FROM products;
+SELECT * FROM product_options;
