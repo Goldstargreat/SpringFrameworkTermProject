@@ -1,5 +1,6 @@
 package kr.ac.kopo.gnuyog.goldstarmall.controller;
 
+import kr.ac.kopo.gnuyog.goldstarmall.config.SessionConst;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Order;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
@@ -7,6 +8,7 @@ import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
 import kr.ac.kopo.gnuyog.goldstarmall.service.MemberService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.OrderService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.ProductService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,7 +20,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
-// 관리자 컨트롤러 : 배송관리(배송 상태 변경, 주문 삭제), 회원관리(회원 삭제), 상품관리(등록, 가격/재고 수정)
+// 관리자 컨트롤러 : 배송관리(배송 상태 변경, 주문 삭제), 회원관리(회원 정보 수정, 삭제), 상품관리(등록, 가격/재고 수정)
 // AdminCheckInterceptor 때문에 관리자(ADMIN)만 들어올 수 있다
 @Controller
 @RequestMapping("/admin")
@@ -74,6 +76,47 @@ public class AdminController {
         // 검색창에 검색어를 그대로 남겨 두고, 결과 건수를 보여 주는 데 쓴다
         model.addAttribute("phone", phone);
         return "admin/members";
+    }
+
+    // 회원 정보 수정 화면
+    // 이름, 전화번호, 배송지만 고칠 수 있다
+    // (회원번호는 주문/장바구니가 가리키는 기본키라서, 아이디는 로그인에 쓰는 값이라서 바꿀 수 없다)
+    @GetMapping("/members/{memberId}/edit")
+    public String editMemberForm(@PathVariable("memberId") Long memberId, Model model, RedirectAttributes redirectAttributes) {
+        Member member = memberService.findById(memberId);
+        if (member == null) {
+            redirectAttributes.addFlashAttribute("error", "회원을 찾을 수 없습니다.");
+            return "redirect:/admin/members";
+        }
+        model.addAttribute("member", member);
+        return "admin/member-edit";
+    }
+
+    // 회원 정보 수정 처리 : 회원이 마이페이지에서 고칠 때와 같은 검사(이름 필수, 전화번호 형식/중복)를 한다
+    @PostMapping("/members/{memberId}/edit")
+    public String editMember(@PathVariable("memberId") Long memberId,
+                             @RequestParam("name") String name,
+                             @RequestParam("phone") String phone,
+                             @RequestParam(name = "address", required = false) String address,
+                             @RequestParam(name = "secondAddress", required = false) String secondAddress,
+                             HttpSession session,
+                             RedirectAttributes redirectAttributes) {
+        if (memberService.findById(memberId) == null) {
+            redirectAttributes.addFlashAttribute("error", "회원을 찾을 수 없습니다.");
+            return "redirect:/admin/members";
+        }
+        try {
+            memberService.updateInfo(memberId, name, phone, address, secondAddress);
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/admin/members/" + memberId + "/edit";
+        }
+        // 관리자가 자기 이름을 고쳤다면 화면 상단 "OOO님" 도 바뀌도록 세션 값도 바꾼다
+        if (memberId.equals(session.getAttribute(SessionConst.LOGIN_MEMBER_ID))) {
+            session.setAttribute(SessionConst.LOGIN_MEMBER_NAME, name.trim());
+        }
+        redirectAttributes.addFlashAttribute("message", memberId + "번 회원 정보를 수정했습니다.");
+        return "redirect:/admin/members";
     }
 
     // 회원 삭제 (회원의 장바구니, 주문 내역도 함께 삭제된다)

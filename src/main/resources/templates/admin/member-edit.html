@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>회원 정보 수정 - 골드스타몰</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main class="container">
+    <div class="form-box">
+        <h1>회원 정보 수정 <small>(관리자)</small></h1>
+        <div th:replace="~{fragments/layout :: messages}"></div>
+
+        <form th:action="@{/admin/members/{id}/edit(id=${member.id})}" method="post">
+            <!-- 회원번호, 아이디는 보여 주기만 한다 (name 이 없고 disabled 라서 서버로 보내지 않는다) -->
+            <label>회원번호 (변경 불가)
+                <input type="text" th:value="${member.id}" disabled>
+            </label>
+            <label>아이디 (변경 불가)
+                <input type="text" th:value="${member.loginId}" disabled>
+            </label>
+            <label>이름
+                <input type="text" name="name" th:value="${member.name}" required>
+            </label>
+            <label>전화번호
+                <input type="text" name="phone" th:value="${member.phone}" placeholder="010-0000-0000" required data-phone-format inputmode="numeric" maxlength="13">
+            </label>
+            <label>기본 배송지 주소
+                <input type="text" name="address" th:value="${member.address}">
+            </label>
+            <label>추가 배송지 주소 (선택)
+                <input type="text" name="secondAddress" th:value="${member.secondAddress}" placeholder="회사, 부모님 댁 등">
+            </label>
+            <button type="submit" class="btn btn-primary btn-block">수정</button>
+        </form>
+
+        <p class="form-footer"><a th:href="@{/admin/members}">← 회원 목록으로</a></p>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

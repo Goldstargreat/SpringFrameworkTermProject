@@ -31,6 +31,9 @@
         <table class="table">
             <thead>
             <tr>
+                <!-- 순번 : 화면에만 1, 2, 3... 차례대로 붙이는 번호 (회원번호와 다르다) -->
+                <th>순번</th>
+                <!-- 회원번호 : DB 가 자동으로 붙이는 기본키. 삭제된 회원 번호는 다시 쓰지 않아서 중간이 비어 있을 수 있다 -->
                 <th>회원번호</th>
                 <th>아이디</th>
                 <th>이름</th>
@@ -42,7 +45,9 @@
             </tr>
             </thead>
             <tbody>
-            <tr th:each="m : ${members}">
+            <!-- stat.count : th:each 가 몇 번째 줄인지 1부터 세어 준다 -->
+            <tr th:each="m, stat : ${members}">
+                <td th:text="${stat.count}">1</td>
                 <td th:text="${m.id}">1</td>
                 <td th:text="${m.loginId}">hong</td>
                 <td th:text="${m.name}">홍길동</td>
@@ -51,6 +56,7 @@
                 <td th:text="${#temporals.format(m.createdAt, 'yyyy-MM-dd HH:mm')}">2026-01-01 00:00</td>
                 <td th:text="${m.role == 'ADMIN'} ? '관리자' : '일반'">일반</td>
                 <td>
+                    <a th:href="@{/admin/members/{id}/edit(id=${m.id})}" class="btn btn-small btn-primary">수정</a>
                     <!-- 관리자 계정은 삭제 버튼을 보여 주지 않는다 -->
                     <form th:if="${m.role != 'ADMIN'}"
                           th:action="@{/admin/members/{id}/delete(id=${m.id})}" method="post" class="inline-form"

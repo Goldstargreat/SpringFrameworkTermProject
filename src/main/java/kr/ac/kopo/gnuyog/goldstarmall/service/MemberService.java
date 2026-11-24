@@ -8,6 +8,7 @@ import kr.ac.kopo.gnuyog.goldstarmall.repository.CartItemRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.MemberRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.OrderRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.validator.MemberValidator;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -198,7 +199,8 @@ public class MemberService {
     @Transactional(readOnly = true)
     public List<Member> searchMembersByPhone(String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {
-            return memberRepository.findAll();
+            // 회원번호 순서로 (화면의 순번이 항상 같은 순서로 붙도록)
+            return memberRepository.findAll(Sort.by("id"));
         }
         String digits = keyword.replaceAll("[^0-9]", "");
         if (digits.isEmpty()) {
