@@ -291,6 +291,31 @@ SELECT id, '17인치 / 블랙', 4 FROM products WHERE name = '노트북 백팩';
 UPDATE products SET stock = (SELECT SUM(o.stock) FROM product_options o WHERE o.product_id = products.id)
 WHERE name = '노트북 백팩';
 
+-- ===== 상품 옵션 : 기능성 티셔츠 (색상 3가지 x 사이즈 4가지 = 12가지, 가격은 모두 같다) =====
+-- 많이 팔리는 M, L 사이즈에 재고를 더 많이 둔다
+INSERT INTO product_options (product_id, name, stock)
+SELECT p.id, o.name, o.stock
+FROM products p
+JOIN (
+    SELECT 1 AS seq, '블랙 / S' AS name, 6 AS stock UNION ALL
+    SELECT 2, '블랙 / M', 9 UNION ALL
+    SELECT 3, '블랙 / L', 9 UNION ALL
+    SELECT 4, '블랙 / XL', 6 UNION ALL
+    SELECT 5, '네이비 / S', 4 UNION ALL
+    SELECT 6, '네이비 / M', 7 UNION ALL
+    SELECT 7, '네이비 / L', 7 UNION ALL
+    SELECT 8, '네이비 / XL', 4 UNION ALL
+    SELECT 9, '버건디 / S', 3 UNION ALL
+    SELECT 10, '버건디 / M', 5 UNION ALL
+    SELECT 11, '버건디 / L', 5 UNION ALL
+    SELECT 12, '버건디 / XL', 3
+) o
+WHERE p.name = '기능성 티셔츠'
+ORDER BY o.seq;
+-- 상품 재고 = 옵션 재고 합계 (30 + 22 + 16 = 68)
+UPDATE products SET stock = (SELECT SUM(o.stock) FROM product_options o WHERE o.product_id = products.id)
+WHERE name = '기능성 티셔츠';
+
 -- 확인
 SELECT * FROM products;
 SELECT * FROM product_options;
