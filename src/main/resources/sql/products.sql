@@ -14,7 +14,7 @@ INSERT INTO products (name, category, price, stock, description, icon) VALUES
 ('무선 블루투스 이어폰', '가전디지털', 39900, 25, '소음 차단 기능이 있는 무선 이어폰입니다.', '🎧'),
 ('미니 선풍기', '가전디지털', 12900, 40, 'USB 충전식 휴대용 선풍기입니다.', '🌀'),
 ('전기 주전자 1.7L', '가전디지털', 24900, 3, '빠르게 끓는 스테인리스 전기 주전자입니다.', '🫖'),
-('기본 면 티셔츠', '패션의류', 9900, 70, '사계절 입기 좋은 순면 티셔츠입니다.', '👕'),
+('기능성 티셔츠', '패션의류', 9900, 70, '땀을 빠르게 흡수하고 말려 주는 가벼운 기능성 티셔츠입니다.', '👕'),
 ('러닝화', '스포츠/레저', 49900, 15, '가볍고 쿠션감 좋은 러닝화입니다.', '👟'),
 ('노트북 백팩', '잡화', 29900, 0, '노트북 수납이 가능한 캔버스 백팩입니다.', '🎒');
 
@@ -149,7 +149,7 @@ UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE na
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '무선 마우스';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '블루투스 스피커';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '스마트 워치';
-UPDATE products SET manufacturer = '골드스타 PB', origin = '베트남' WHERE name = '기본 면 티셔츠';
+UPDATE products SET manufacturer = '골드스타 PB', origin = '베트남' WHERE name = '기능성 티셔츠';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '베트남' WHERE name = '데님 일자 청바지';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '베트남' WHERE name = '오버핏 맨투맨';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '경량 패딩 조끼';
