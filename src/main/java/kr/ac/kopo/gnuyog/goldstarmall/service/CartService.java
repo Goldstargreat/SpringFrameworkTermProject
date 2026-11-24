@@ -51,7 +51,7 @@ public class CartService {
 
         // 재고보다 많이 담을 수 없다
         if (newQuantity > product.getStock()) {
-            throw new BusinessException("재고가 부족합니다. (남은 재고: " + product.getStock() + "개)");
+            throw new BusinessException(product.getStockShortageMessage());
         }
 
         if (cartItem == null) {
@@ -86,7 +86,7 @@ public class CartService {
             throw new BusinessException("수량은 1개 이상이어야 합니다.");
         }
         if (quantity > cartItem.getProduct().getStock()) {
-            throw new BusinessException("재고가 부족합니다. (남은 재고: " + cartItem.getProduct().getStock() + "개)");
+            throw new BusinessException(cartItem.getProduct().getStockShortageMessage());
         }
         // 트랜잭션 안에서 값을 바꾸면 JPA 가 알아서 update SQL 을 실행한다 (변경 감지)
         cartItem.setQuantity(quantity);

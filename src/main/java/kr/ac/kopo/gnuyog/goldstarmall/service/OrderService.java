@@ -128,7 +128,7 @@ public class OrderService {
             throw new BusinessException("수량은 1개 이상이어야 합니다.");
         }
         if (quantity > product.getStock()) {
-            throw new BusinessException(product.getName() + " 상품의 재고가 부족합니다. (남은 재고 " + product.getStock() + "개)");
+            throw new BusinessException(product.getName() + " : " + product.getStockShortageMessage());
         }
     }
 

@@ -88,6 +88,23 @@ public class Product
         return stock;
     }
 
+    // 손님에게 남은 개수를 알려 주는 기준 : 이 개수 이하로 남았을 때만 "N개 남음"을 보여 준다
+    // (재고가 넉넉할 때 정확한 숫자를 보여 주면 쇼핑몰의 판매량/입고량이 그대로 드러나기 때문)
+    public static final int LOW_STOCK_LIMIT = 2;
+
+    // 품절 임박인지 (재고 1 ~ 2개) → 화면에서 product.lowStock 으로 사용
+    public boolean isLowStock() {
+        return stock > 0 && stock <= LOW_STOCK_LIMIT;
+    }
+
+    // 재고가 부족할 때 손님에게 보여 줄 문구 : 품절 임박일 때만 남은 개수를 알려 준다
+    public String getStockShortageMessage() {
+        if (isLowStock()) {
+            return "재고가 부족합니다. (남은 수량 " + stock + "개)";
+        }
+        return "재고가 부족합니다. 주문 수량을 줄여 주세요.";
+    }
+
     public void setStock(int stock) {
         this.stock = stock;
     }

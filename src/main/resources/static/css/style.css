@@ -1017,3 +1017,9 @@ h2 {
 .thumb img {
     height: 36px;
 }
+
+/* 품절 임박 문구 (상품 상세) */
+.low-stock {
+    color: #c0392b;
+    font-weight: bold;
+}

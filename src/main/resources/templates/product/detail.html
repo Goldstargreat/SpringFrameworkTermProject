@@ -31,8 +31,12 @@
                 <b th:text="${#numbers.formatInteger(product.price, 1, 'COMMA')}">10,000</b>원
             </p>
             <p class="detail-desc" th:text="${product.description}">상품 설명</p>
-            <p class="detail-stock">
-                남은 재고: <b th:text="${product.stock}">0</b>개
+            <!-- 재고 표시 : 관리자는 항상 정확한 재고를, 손님은 1 ~ 2개 남았을 때만 "N개 남음"을 본다 -->
+            <p class="detail-stock" th:if="${isAdmin}">
+                남은 재고: <b th:text="${product.stock}">0</b>개 <span class="guide">(관리자에게만 보입니다)</span>
+            </p>
+            <p class="detail-stock low-stock" th:if="${!isAdmin and product.lowStock}">
+                품절 임박! <b th:text="${product.stock}">1</b>개 남았습니다.
             </p>
 
             <!-- 재고가 있을 때만 장바구니 담기 / 바로 주문하기 가능 -->
@@ -43,7 +47,7 @@
                 <!-- 어떤 상품인지 서버에 알려 주기 위한 숨은 값 -->
                 <input type="hidden" name="productId" th:value="${product.id}">
                 <label>수량
-                    <input type="number" name="quantity" value="1" min="1" th:max="${product.stock}">
+                    <input type="number" name="quantity" value="1" min="1" th:max="${isAdmin or product.lowStock} ? ${product.stock} : null">
                 </label>
                 <button type="submit" class="btn">장바구니 담기</button>
                 <button type="submit" class="btn btn-primary"
