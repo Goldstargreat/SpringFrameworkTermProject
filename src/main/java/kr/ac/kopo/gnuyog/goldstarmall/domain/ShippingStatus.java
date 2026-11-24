@@ -30,14 +30,19 @@ public enum ShippingStatus {
     }
 
     // 다음 단계의 상태를 돌려준다. 더 진행할 수 없으면(배송완료, 주문취소) 자기 자신을 돌려준다
-    public ShippingStatus next() {
-        if (this == ORDER_RECEIVED) {
+    public ShippingStatus next()
+    {
+        if (this == ORDER_RECEIVED)
+        {
             return WAREHOUSED;
-        } else if (this == WAREHOUSED) {
+        } else if (this == WAREHOUSED)
+        {
             return SHIPPED;
-        } else if (this == SHIPPED) {
+        } else if (this == SHIPPED)
+        {
             return IN_DELIVERY;
-        } else if (this == IN_DELIVERY) {
+        } else if (this == IN_DELIVERY)
+        {
             return DELIVERED;
         }
         return this;
@@ -45,7 +50,8 @@ public enum ShippingStatus {
 
     // 더 이상 진행할 게 없는 끝난 주문인지 (배송완료 또는 주문취소)
     // 화면(Thymeleaf)에서는 ${order.status.finished} 로 쓸 수 있다
-    public boolean isFinished() {
+    public boolean isFinished()
+    {
         return this == DELIVERED || this == CANCELED;
     }
 }

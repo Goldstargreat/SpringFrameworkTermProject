@@ -38,7 +38,8 @@ public class CartItem {
     }
 
     // 이 항목의 금액 = 상품 가격 x 수량 (화면에서 cartItem.totalPrice 로 사용)
-    public int getTotalPrice() {
+    public int getTotalPrice()
+    {
         return product.getPrice() * quantity;
     }
 
