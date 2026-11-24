@@ -15,6 +15,13 @@
         주문된 적이 있는 상품은 주문 내역을 지키기 위해 삭제할 수 없습니다. 판매를 멈추려면 재고를 0으로 바꾸세요.</p>
     <div th:replace="~{fragments/layout :: messages}"></div>
 
+    <!-- 전체 판매 합계 : 취소된 주문은 빼고, 주문 당시 가격으로 계산한다 -->
+    <p class="search-result">
+        전체 누적 판매량 <b th:text="${#numbers.formatInteger(totalSalesQuantity, 1, 'COMMA')}">0</b>개 ·
+        누적 매출 <b th:text="${#numbers.formatInteger(totalSalesAmount, 1, 'COMMA')}">0</b>원
+        <span class="guide">(취소된 주문 제외)</span>
+    </p>
+
     <!-- 1. 상품 목록 : 줄마다 가격/재고 수정 폼이 하나씩 있다 -->
     <div class="table-wrap">
         <table class="table">
@@ -24,6 +31,8 @@
                 <th>상품</th>
                 <th>카테고리</th>
                 <th>가격(원) / 재고(개)</th>
+                <th>누적 판매량</th>
+                <th>누적 매출</th>
                 <th>삭제</th>
             </tr>
             </thead>
@@ -44,6 +53,9 @@
                         <button type="submit" class="btn btn-small btn-primary">저장</button>
                     </form>
                 </td>
+                <!-- 한 번도 안 팔린 상품은 Map 에 없으므로 0 으로 보여 준다 -->
+                <td th:text="${#numbers.formatInteger(salesQuantity[p.id] ?: 0, 1, 'COMMA')} + '개'">0개</td>
+                <td th:text="${#numbers.formatInteger(salesAmount[p.id] ?: 0, 1, 'COMMA')} + '원'">0원</td>
                 <td>
                     <form th:action="@{/admin/products/{id}/delete(id=${p.id})}" method="post" class="inline-form"
                           data-confirm="이 상품을 삭제하시겠습니까?">

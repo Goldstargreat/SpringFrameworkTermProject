@@ -1,6 +1,7 @@
 package kr.ac.kopo.gnuyog.goldstarmall.service;
 
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
+import kr.ac.kopo.gnuyog.goldstarmall.domain.ShippingStatus;
 import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
 import kr.ac.kopo.gnuyog.goldstarmall.exception.NotFoundException;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.CartItemRepository;
@@ -16,7 +17,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 // 상품 서비스 : 상품 조회, (관리자) 상품 등록, 가격/재고 수정, 삭제
 @Service
@@ -50,6 +53,24 @@ public class ProductService {
     // 카테고리 목록
     public List<String> getCategories() {
         return CATEGORIES;
+    }
+
+    // (관리자) 상품별 누적 판매량 : 상품 번호 → 판매 수량 (취소된 주문은 빼고, 한 번도 안 팔린 상품은 없음)
+    public Map<Long, Long> salesQuantityByProduct() {
+        Map<Long, Long> result = new HashMap<>();
+        for (Object[] row : orderItemRepository.sumSalesByProduct(ShippingStatus.CANCELED)) {
+            result.put((Long) row[0], ((Number) row[1]).longValue());
+        }
+        return result;
+    }
+
+    // (관리자) 상품별 누적 매출 : 상품 번호 → 매출(원) (주문 당시 가격 기준이라 가격을 바꿔도 그대로다)
+    public Map<Long, Long> salesAmountByProduct() {
+        Map<Long, Long> result = new HashMap<>();
+        for (Object[] row : orderItemRepository.sumSalesByProduct(ShippingStatus.CANCELED)) {
+            result.put((Long) row[0], ((Number) row[2]).longValue());
+        }
+        return result;
     }
 
     // 메인 화면 한 페이지에 보여 줄 상품 수

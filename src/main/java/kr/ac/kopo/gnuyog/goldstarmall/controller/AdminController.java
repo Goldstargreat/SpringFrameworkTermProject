@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Map;
 
 // 관리자 컨트롤러 : 배송관리(배송 상태 변경, 주문 삭제), 회원관리(회원 정보 수정, 삭제), 상품관리(등록, 가격/재고 수정)
 // AdminCheckInterceptor 때문에 관리자(ADMIN)만 들어올 수 있다
@@ -135,11 +136,20 @@ public class AdminController {
         return "redirect:/admin/members";
     }
 
-    // 상품관리 화면 : 전체 상품 목록(가격/재고 수정) + 새 상품 등록
+    // 상품관리 화면 : 전체 상품 목록(가격/재고 수정, 누적 판매량/매출) + 새 상품 등록
     @GetMapping("/products")
     public String products(Model model) {
         model.addAttribute("products", productService.findProducts(null, null));
         model.addAttribute("categories", productService.getCategories());
+
+        // 누적 판매량/매출 : 상품 번호로 찾아 쓴다 (화면에서 salesQuantity[상품번호])
+        Map<Long, Long> salesQuantity = productService.salesQuantityByProduct();
+        Map<Long, Long> salesAmount = productService.salesAmountByProduct();
+        model.addAttribute("salesQuantity", salesQuantity);
+        model.addAttribute("salesAmount", salesAmount);
+        // 표 위에 보여 줄 전체 합계
+        model.addAttribute("totalSalesQuantity", salesQuantity.values().stream().mapToLong(Long::longValue).sum());
+        model.addAttribute("totalSalesAmount", salesAmount.values().stream().mapToLong(Long::longValue).sum());
         return "admin/products";
     }
 
