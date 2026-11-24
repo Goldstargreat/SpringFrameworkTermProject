@@ -31,15 +31,16 @@ public class Member
     @Column(nullable = false, length = 30)
     private String name;
 
-    // 전화번호
-    @Column(length = 20)
+    // 전화번호 : 이름은 동명이인이 있을 수 있지만 전화번호는 사람마다 다르므로 중복 불가(unique)
+    // 필수 입력 : 비어 있을 수 없음(nullable = false)
+    @Column(nullable = false, unique = true, length = 20)
     private String phone;
 
     // 기본 배송지 주소
     @Column(length = 200)
     private String address;
 
-    // 추가 배송지 주소 (회사, 부모님 댁 등. 비어 있어도 된다)
+    // 추가 배송지 주소 (회사, 학교 등. 비어 있어도 된다)
     @Column(length = 200)
     private String secondAddress;
 
@@ -51,7 +52,8 @@ public class Member
     private LocalDateTime createdAt;
 
     // JPA 는 기본 생성자가 반드시 필요하다
-    public Member() {
+    public Member()
+    {
     }
 
     // ===== getter / setter =====

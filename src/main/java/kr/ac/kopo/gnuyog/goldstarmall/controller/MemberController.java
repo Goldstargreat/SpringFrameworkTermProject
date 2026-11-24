@@ -37,7 +37,7 @@ public class MemberController {
                        @RequestParam("password") String password,
                        @RequestParam("passwordConfirm") String passwordConfirm,
                        @RequestParam("name") String name,
-                       @RequestParam(name = "phone", required = false) String phone,
+                       @RequestParam("phone") String phone,
                        @RequestParam(name = "address", required = false) String address,
                        Model model,
                        RedirectAttributes redirectAttributes) {
@@ -118,7 +118,7 @@ public class MemberController {
     // 내 정보 수정 처리
     @PostMapping("/mypage/edit")
     public String edit(@RequestParam("name") String name,
-                       @RequestParam(name = "phone", required = false) String phone,
+                       @RequestParam("phone") String phone,
                        @RequestParam(name = "address", required = false) String address,
                        @RequestParam(name = "secondAddress", required = false) String secondAddress,
                        HttpSession session,

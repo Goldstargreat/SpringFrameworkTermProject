@@ -11,4 +11,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     // → select * from members where login_id = ?
     // 해당 아이디가 없으면 null 을 돌려준다
     Member findByLoginId(String loginId);
+
+    // → select * from members where phone = ?
+    // 전화번호 중복 검사에 쓴다 (없으면 null)
+    Member findByPhone(String phone);
 }

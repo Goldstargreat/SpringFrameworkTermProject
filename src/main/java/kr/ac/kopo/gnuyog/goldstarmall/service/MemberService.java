@@ -44,7 +44,11 @@ public class MemberService {
             throw new BusinessException("이미 사용 중인 아이디입니다.");
         }
 
-        // 2) 회원 객체를 만들고 값 채우기
+        // 2) 전화번호 중복 검사 (이름은 같을 수 있어도 전화번호는 사람마다 다르다)
+        phone = MemberValidator.normalizePhone(phone);
+        checkDuplicatePhone(phone, null);
+
+        // 3) 회원 객체를 만들고 값 채우기
         Member member = new Member();
         member.setLoginId(loginId);
         // 비밀번호는 그대로 저장하지 않고 BCrypt 로 암호화해서 저장한다
@@ -55,7 +59,7 @@ public class MemberService {
         member.setRole("USER");
         member.setCreatedAt(LocalDateTime.now());
 
-        // 3) DB에 저장 (insert into members ...)
+        // 4) DB에 저장 (insert into members ...)
         return memberRepository.save(member);
     }
 
@@ -85,12 +89,24 @@ public class MemberService {
     // 내 정보 수정 : 이름, 전화번호, 기본 배송지, 추가 배송지 (아이디는 바꿀 수 없다)
     public void updateInfo(Long memberId, String name, String phone, String address, String secondAddress) {
         MemberValidator.validateName(name);
+        phone = MemberValidator.normalizePhone(phone);
+        // 내 번호 그대로 두는 건 괜찮고, 다른 회원이 쓰는 번호로 바꾸는 것만 막는다
+        checkDuplicatePhone(phone, memberId);
         Member member = findById(memberId);
         // 트랜잭션 안에서 값을 바꾸면 JPA 가 알아서 update SQL 을 실행한다 (변경 감지)
         member.setName(name.trim());
         member.setPhone(phone);
         member.setAddress(address);
         member.setSecondAddress(secondAddress);
+    }
+
+    // 전화번호 중복 검사 : 다른 회원이 이미 쓰는 번호면 예외
+    // myId : 정보 수정일 때 내 회원 번호 (회원가입일 때는 null)
+    private void checkDuplicatePhone(String phone, Long myId) {
+        Member found = memberRepository.findByPhone(phone);
+        if (found != null && !found.getId().equals(myId)) {
+            throw new BusinessException("이미 가입된 전화번호입니다.");
+        }
     }
 
     // 비밀번호 변경 : 현재 비밀번호가 맞아야 바꿀 수 있다

@@ -40,4 +40,21 @@ public final class MemberValidator {
             throw new BusinessException("이름을 입력해 주세요.");
         }
     }
+
+    // 전화번호 정리 + 검사
+    // 하이픈 유무와 상관없이 같은 번호로 보도록 숫자만 뽑아 "010-1234-5678" 형식으로 통일한다
+    // (형식이 다르면 같은 번호인데도 중복 검사를 통과해 버리기 때문)
+    // 전화번호는 필수 입력이므로 비어 있으면 예외
+    public static String normalizePhone(String phone) {
+        if (phone == null || phone.trim().isEmpty()) {
+            throw new BusinessException("전화번호를 입력해 주세요.");
+        }
+        String digits = phone.replaceAll("[^0-9]", "");
+        if (!digits.matches("0\\d{9,10}")) {
+            throw new BusinessException("전화번호 형식이 올바르지 않습니다. (예: 010-1234-5678)");
+        }
+        // 11자리 : 3-4-4, 10자리 : 3-3-4
+        int middleEnd = digits.length() - 4;
+        return digits.substring(0, 3) + "-" + digits.substring(3, middleEnd) + "-" + digits.substring(middleEnd);
+    }
 }
