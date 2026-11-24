@@ -11,6 +11,7 @@ import kr.ac.kopo.gnuyog.goldstarmall.exception.NotFoundException;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.CartItemRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.MemberRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.OrderRepository;
+import kr.ac.kopo.gnuyog.goldstarmall.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,13 +26,16 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final CartItemRepository cartItemRepository;
     private final MemberRepository memberRepository;
+    private final ProductRepository productRepository;
 
     public OrderService(OrderRepository orderRepository,
                         CartItemRepository cartItemRepository,
-                        MemberRepository memberRepository) {
+                        MemberRepository memberRepository,
+                        ProductRepository productRepository) {
         this.orderRepository = orderRepository;
         this.cartItemRepository = cartItemRepository;
         this.memberRepository = memberRepository;
+        this.productRepository = productRepository;
     }
 
     // 주문 생성 : 장바구니에 담긴 상품 전체를 주문한다
@@ -49,13 +53,7 @@ public class OrderService {
         }
 
         // 2) 주문 객체 만들기
-        Order order = new Order();
-        order.setMember(member);
-        order.setReceiverName(receiverName);
-        order.setReceiverPhone(receiverPhone);
-        order.setShippingAddress(shippingAddress);
-        order.setStatus(ShippingStatus.ORDER_RECEIVED);
-        order.setOrderedAt(LocalDateTime.now());
+        Order order = newOrder(member, receiverName, receiverPhone, shippingAddress);
 
         // 3) 장바구니 항목을 하나씩 주문 상품으로 옮기면서 재고를 줄인다
         int totalPrice = 0;
@@ -85,6 +83,64 @@ public class OrderService {
         // 5) 주문이 끝났으니 장바구니 비우기
         cartItemRepository.deleteAll(cartItems);
 
+        return order;
+    }
+
+    // 바로 주문 : 상품 상세 화면에서 상품 1개만 바로 주문한다
+    // 장바구니를 거치지 않으므로, 장바구니에 담아 둔 다른 상품은 그대로 남는다
+    public Order createDirectOrder(Long memberId, Long productId, int quantity,
+                                   String receiverName, String receiverPhone, String shippingAddress) {
+        Member member = memberRepository.findById(memberId).orElse(null);
+        if (member == null) {
+            throw new NotFoundException("회원 정보를 찾을 수 없습니다.");
+        }
+        Product product = productRepository.findById(productId).orElse(null);
+        if (product == null) {
+            throw new NotFoundException("상품을 찾을 수 없습니다.");
+        }
+
+        // 1) 수량, 재고 확인
+        checkDirectOrderQuantity(product, quantity);
+
+        // 2) 재고 차감 (변경 감지로 update SQL 실행)
+        product.setStock(product.getStock() - quantity);
+
+        // 3) 주문 + 주문 상품 1개 만들기
+        Order order = newOrder(member, receiverName, receiverPhone, shippingAddress);
+        OrderItem orderItem = new OrderItem();
+        orderItem.setProduct(product);
+        orderItem.setOrderPrice(product.getPrice());
+        orderItem.setQuantity(quantity);
+        order.addOrderItem(orderItem);
+        order.setTotalPrice(orderItem.getTotalPrice());
+
+        // 4) 저장
+        orderRepository.save(order);
+        return order;
+    }
+
+    // 바로 주문 수량 검사 : 1개 이상, 남은 재고 이하 (주문서 화면을 보여 줄 때도 쓴다)
+    public void checkDirectOrderQuantity(Product product, int quantity) {
+        if (product.getStock() == 0) {
+            throw new BusinessException("일시 품절된 상품입니다.");
+        }
+        if (quantity < 1) {
+            throw new BusinessException("수량은 1개 이상이어야 합니다.");
+        }
+        if (quantity > product.getStock()) {
+            throw new BusinessException(product.getName() + " 상품의 재고가 부족합니다. (남은 재고 " + product.getStock() + "개)");
+        }
+    }
+
+    // 주문 객체 만들기 : 장바구니 주문과 바로 주문이 함께 쓴다
+    private Order newOrder(Member member, String receiverName, String receiverPhone, String shippingAddress) {
+        Order order = new Order();
+        order.setMember(member);
+        order.setReceiverName(receiverName);
+        order.setReceiverPhone(receiverPhone);
+        order.setShippingAddress(shippingAddress);
+        order.setStatus(ShippingStatus.ORDER_RECEIVED);
+        order.setOrderedAt(LocalDateTime.now());
         return order;
     }
 

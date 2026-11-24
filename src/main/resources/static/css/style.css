@@ -389,6 +389,33 @@ h2 {
     margin-left: 6px;
 }
 
+/* 바로 주문 주문서 : 주문할 상품 한 줄 */
+.direct-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #fff;
+    border: 1px solid #e3e6eb;
+    border-radius: 10px;
+    padding: 16px 20px;
+}
+
+.direct-item .thumb {
+    flex-shrink: 0;
+}
+
+.direct-item-info {
+    flex: 1;
+}
+
+.direct-item-info .product-name {
+    font-weight: bold;
+}
+
+.direct-item-info .guide {
+    margin: 4px 0 0;
+}
+
 .soldout-text {
     color: #a12626;
     font-weight: bold;

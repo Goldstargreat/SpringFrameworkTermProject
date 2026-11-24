@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>바로 주문하기 - 골드스타몰</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main class="container">
+    <h1>바로 주문하기</h1>
+    <div th:replace="~{fragments/layout :: messages}"></div>
+
+    <!-- 주문할 상품 (장바구니를 거치지 않고 이 상품만 주문한다) -->
+    <div class="direct-item">
+        <a class="thumb" th:href="@{/products/{id}(id=${product.id})}">
+            <img th:src="@{/images/products/{id}.jpg(id=${product.id})}" th:alt="${product.name}" data-remove-on-error>
+            <span th:text="${product.icon}">📦</span>
+        </a>
+        <div class="direct-item-info">
+            <div class="product-name" th:text="${product.name}">상품명</div>
+            <p class="guide">
+                <span th:text="${#numbers.formatInteger(product.price, 1, 'COMMA')}">0</span>원
+                × <b th:text="${quantity}">1</b>개
+                · <a th:href="@{/products/{id}(id=${product.id})}">수량 변경</a>
+            </p>
+        </div>
+    </div>
+
+    <p class="total-price">
+        총 결제 금액: <b th:text="${#numbers.formatInteger(totalPrice, 1, 'COMMA')}">0</b>원
+    </p>
+
+    <!-- 주문서 : 받는 사람 정보는 회원 정보로 미리 채워 둔다 (장바구니 주문서와 같은 모양) -->
+    <div class="form-box form-box-wide">
+        <h2>배송 정보</h2>
+        <form th:action="@{/orders/direct}" method="post">
+            <!-- 어떤 상품을 몇 개 주문하는지 함께 보낸다 -->
+            <input type="hidden" name="productId" th:value="${product.id}">
+            <input type="hidden" name="quantity" th:value="${quantity}">
+
+            <label>받는 사람
+                <input type="text" name="receiverName" th:value="${member.name}" required>
+            </label>
+            <label>연락처
+                <input type="text" name="receiverPhone" th:value="${member.phone}" placeholder="010-0000-0000" required data-phone-format inputmode="numeric" maxlength="13">
+            </label>
+            <!-- 추가 배송지가 있을 때만 기본/추가 배송지를 고르는 버튼을 보여 준다 (동작은 js/common.js) -->
+            <div class="address-choice" th:if="${!#strings.isEmpty(member.secondAddress)}">
+                <label><input type="radio" name="addressChoice" th:value="${member.address}" checked
+                              data-fill-target="shippingAddress"> 기본 배송지</label>
+                <label><input type="radio" name="addressChoice" th:value="${member.secondAddress}"
+                              data-fill-target="shippingAddress"> 추가 배송지</label>
+            </div>
+            <label>배송지 주소
+                <input type="text" id="shippingAddress" name="shippingAddress" th:value="${member.address}" required>
+            </label>
+            <button type="submit" class="btn btn-primary btn-block">주문하기</button>
+        </form>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

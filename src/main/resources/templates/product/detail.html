@@ -30,14 +30,19 @@
                 남은 재고: <b th:text="${product.stock}">0</b>개
             </p>
 
-            <!-- 재고가 있을 때만 장바구니 담기 가능 -->
+            <!-- 재고가 있을 때만 장바구니 담기 / 바로 주문하기 가능 -->
+            <!-- 같은 수량 칸을 쓰고, 누른 버튼에 따라 보내는 곳이 다르다 -->
+            <!--   장바구니 담기 : POST /cart/add -->
+            <!--   바로 주문하기 : GET /orders/direct?productId=..&quantity=.. (formaction, formmethod 로 바꾼다) -->
             <form th:if="${product.stock > 0}" th:action="@{/cart/add}" method="post" class="cart-add-form">
                 <!-- 어떤 상품인지 서버에 알려 주기 위한 숨은 값 -->
                 <input type="hidden" name="productId" th:value="${product.id}">
                 <label>수량
                     <input type="number" name="quantity" value="1" min="1" th:max="${product.stock}">
                 </label>
-                <button type="submit" class="btn btn-primary">장바구니 담기</button>
+                <button type="submit" class="btn">장바구니 담기</button>
+                <button type="submit" class="btn btn-primary"
+                        th:formaction="@{/orders/direct}" formmethod="get">바로 주문하기</button>
             </form>
 
             <p class="soldout-text" th:if="${product.stock == 0}">일시 품절된 상품입니다.</p>
