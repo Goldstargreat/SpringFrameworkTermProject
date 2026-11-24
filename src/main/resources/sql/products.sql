@@ -70,7 +70,7 @@ INSERT INTO products (name, category, price, stock, description, icon) VALUES
 ('세라믹 머그컵 2개', '주방용품', 12900, 0, '커피와 차를 담기 좋은 심플한 머그컵 세트입니다.', '☕'),
 -- 생활용품
 ('대용량 물티슈 10팩', '생활용품', 12900, 100, '도톰하고 촉촉한 순한 물티슈 묶음입니다.', '🧻'),
-('약산성 바디워시 1L', '생활용품', 9900, 55, '자극 없이 순하게 씻어 주는 약산성 바디워시입니다.', '🧼'),
+('해피바스 로즈 바디워시 500g 1개', '생활용품', 9900, 55, '은은한 장미 향이 오래 남는 해피바스 로즈 바디워시입니다.', '🧼'),
 ('미세모 칫솔 8개입', '생활용품', 7900, 70, '잇몸에 부드러운 미세모 칫솔 묶음입니다.', '🪥'),
 ('항균 수건 5장', '생활용품', 19900, 4, '흡수력이 좋고 빨리 마르는 호텔식 수건 세트입니다.', '🛁'),
 -- 홈인테리어
@@ -133,7 +133,7 @@ UPDATE products SET manufacturer = '국내 산지 농가', origin = '국내산 (
 UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WHERE name = '3겹 화장지 30롤';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WHERE name = '액체 세탁세제 3L';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WHERE name = '대용량 물티슈 10팩';
-UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WHERE name = '약산성 바디워시 1L';
+UPDATE products SET manufacturer = '아모레퍼시픽 (해피바스)', origin = '대한민국' WHERE name = '해피바스 로즈 바디워시 500g 1개';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WHERE name = '미세모 칫솔 8개입';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '베트남' WHERE name = '항균 수건 5장';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WHERE name = '주방 수세미 10개';
