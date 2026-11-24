@@ -75,7 +75,7 @@
                     <input type="text" name="receiverName" th:value="${member.name}" required>
                 </label>
                 <label>연락처
-                    <input type="text" name="receiverPhone" th:value="${member.phone}" required>
+                    <input type="text" name="receiverPhone" th:value="${member.phone}" placeholder="010-0000-0000" required data-phone-format inputmode="numeric" maxlength="13">
                 </label>
                 <!-- 추가 배송지가 있을 때만 "어디로 보낼지" 고르는 버튼을 보여 준다 -->
                 <!-- 버튼을 누르면 그 주소가 아래 배송지 칸에 채워진다 (data-fill-target : 채울 입력칸 id, 동작은 js/common.js) -->

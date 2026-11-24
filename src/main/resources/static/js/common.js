@@ -38,3 +38,43 @@ document.querySelectorAll('img[data-remove-on-error]').forEach(function (img) {
         });
     }
 });
+
+// 4) 전화번호 하이픈 자동 입력 : data-phone-format 이 붙은 입력칸은 숫자만 입력해도 "010-1234-5678" 처럼 바뀐다
+//    서버의 MemberValidator.normalizePhone 과 같은 규칙 (11자리 : 3-4-4, 10자리 : 3-3-4)
+//    입력을 편하게 해 주는 기능일 뿐이고, 진짜 형식 검사와 중복 검사는 서버에서 한다
+function formatPhone(value) {
+    var digits = value.replace(/[^0-9]/g, '').substring(0, 11); // 숫자만, 최대 11자리
+    if (digits.length < 4) {
+        return digits;                                                     // 010
+    }
+    if (digits.length < 7) {
+        return digits.substring(0, 3) + '-' + digits.substring(3);         // 010-123
+    }
+    if (digits.length < 11) {
+        return digits.substring(0, 3) + '-' + digits.substring(3, 6) + '-' + digits.substring(6); // 010-123-4567
+    }
+    return digits.substring(0, 3) + '-' + digits.substring(3, 7) + '-' + digits.substring(7);     // 010-1234-5678
+}
+
+document.querySelectorAll('input[data-phone-format]').forEach(function (input) {
+    // 이미 들어 있는 값(회원 정보에서 채운 번호 등)도 형식을 맞춰 둔다
+    input.value = formatPhone(input.value);
+
+    input.addEventListener('input', function () {
+        // 가운데를 고칠 때 커서가 맨 끝으로 튀지 않도록,
+        // 커서 앞에 숫자가 몇 개 있었는지 기억했다가 바뀐 값에서 같은 자리로 커서를 옮긴다
+        var digitsBeforeCursor = input.value.substring(0, input.selectionStart).replace(/[^0-9]/g, '').length;
+        var formatted = formatPhone(input.value);
+        input.value = formatted;
+
+        var cursor = 0;
+        var count = 0;
+        while (cursor < formatted.length && count < digitsBeforeCursor) {
+            if (/[0-9]/.test(formatted[cursor])) {
+                count++;
+            }
+            cursor++;
+        }
+        input.setSelectionRange(cursor, cursor);
+    });
+});

@@ -24,7 +24,7 @@
                 <input type="text" name="name" th:value="${member.name}" required>
             </label>
             <label>전화번호
-                <input type="text" name="phone" th:value="${member.phone}" placeholder="010-0000-0000" required>
+                <input type="text" name="phone" th:value="${member.phone}" placeholder="010-0000-0000" required data-phone-format inputmode="numeric" maxlength="13">
             </label>
             <label>기본 배송지 주소
                 <input type="text" name="address" th:value="${member.address}">
