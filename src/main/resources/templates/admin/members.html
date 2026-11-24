@@ -14,7 +14,20 @@
     <p class="guide">회원을 삭제하면 그 회원의 장바구니와 주문 내역도 함께 삭제됩니다. 배송 중인 주문이 있는 회원은 삭제할 수 없습니다.</p>
     <div th:replace="~{fragments/layout :: messages}"></div>
 
-    <div class="table-wrap">
+    <!-- 전화번호 검색 : 일부만 입력해도 된다 (예: 5678, 010-1234) -->
+    <form th:action="@{/admin/members}" method="get" class="inline-form member-search">
+        <input type="text" name="phone" th:value="${phone}" placeholder="전화번호로 검색 (예: 5678)">
+        <button type="submit" class="btn btn-small btn-primary">검색</button>
+        <a th:href="@{/admin/members}" class="btn btn-small">전체 보기</a>
+    </form>
+
+    <p class="search-result" th:if="${phone != null and phone != ''}">
+        전화번호 '<b th:text="${phone}">검색어</b>' 검색 결과 <b th:text="${members.size()}">0</b>건
+    </p>
+
+    <p class="empty" th:if="${members.isEmpty()}">조건에 맞는 회원이 없습니다.</p>
+
+    <div class="table-wrap" th:unless="${members.isEmpty()}">
         <table class="table">
             <thead>
             <tr>

@@ -472,6 +472,16 @@ h2 {
     padding: 5px;
 }
 
+/* 회원관리 화면의 전화번호 검색 */
+.member-search {
+    margin: 12px 0;
+}
+
+.member-search input {
+    width: 220px;
+    padding: 5px 8px;
+}
+
 /* 상품관리 화면의 가격 입력칸 */
 .price-input {
     width: 100px;

@@ -134,6 +134,20 @@ public class MemberService {
         return memberRepository.findAll();
     }
 
+    // (관리자) 전화번호로 회원 검색 : 숫자만 뽑아서 일부만 맞아도 찾는다
+    // 검색어가 비어 있으면 전체 목록, 숫자가 하나도 없으면 결과 없음
+    @Transactional(readOnly = true)
+    public List<Member> searchMembersByPhone(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return memberRepository.findAll();
+        }
+        String digits = keyword.replaceAll("[^0-9]", "");
+        if (digits.isEmpty()) {
+            return List.of();
+        }
+        return memberRepository.searchByPhoneDigits(digits);
+    }
+
     // 회원 삭제 : 회원 탈퇴와 관리자의 회원 삭제가 함께 쓴다
     // 관리자 계정이거나, 배송이 끝나지 않은 주문이 있으면 삭제할 수 없다
     public void deleteMember(Long memberId) {

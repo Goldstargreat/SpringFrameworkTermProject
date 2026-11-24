@@ -66,11 +66,13 @@ public class AdminController {
         return "redirect:/admin/orders";
     }
 
-    // 전체 회원 목록
+    // 회원 목록 : 전화번호 검색어(phone)가 있으면 검색 결과, 없으면 전체 회원
     @GetMapping("/members")
-    public String members(Model model) {
-        List<Member> members = memberService.findAllMembers();
+    public String members(@RequestParam(name = "phone", required = false) String phone, Model model) {
+        List<Member> members = memberService.searchMembersByPhone(phone);
         model.addAttribute("members", members);
+        // 검색창에 검색어를 그대로 남겨 두고, 결과 건수를 보여 주는 데 쓴다
+        model.addAttribute("phone", phone);
         return "admin/members";
     }
 
