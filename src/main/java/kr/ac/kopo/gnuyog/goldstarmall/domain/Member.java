@@ -12,8 +12,8 @@ import java.time.LocalDateTime;
 // 회원 엔티티 : members 테이블과 1:1로 연결되는 클래스
 @Entity
 @Table(name = "members")
-public class Member {
-
+public class Member
+{
     // 기본키(PK). MySQL의 AUTO_INCREMENT 로 번호가 자동 증가한다
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
