@@ -76,7 +76,8 @@
             <!-- 로켓 배송 : 관리자가 상품관리에서 켠 상품만 -->
             <p th:if="${product.showFastDelivery}"><span class="badge badge-rocket">로켓 배송</span></p>
 
-            <a class="back-link" th:href="@{/}">← 상품 목록으로</a>
+            <a class="back-link" th:href="@{/products(category=${product.category})}"
+               th:text="'← ' + ${product.category} + ' 상품 목록으로'">← 상품 목록으로</a>
         </div>
     </div>
 

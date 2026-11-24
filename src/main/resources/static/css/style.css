@@ -259,6 +259,88 @@ h2 {
 }
 
 /* ----- 상품 카드 ----- */
+/* ----- 홈 화면 : 배너, 섹션 ----- */
+.home-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 20px;
+    padding: 28px 32px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #1b3a6b, #2f5fa8);
+    color: #fff;
+}
+
+.home-banner h1 {
+    margin: 6px 0 10px;
+    font-size: 26px;
+    line-height: 1.35;
+}
+
+.home-banner p {
+    margin: 0 0 14px;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.home-banner .home-banner-sub {
+    margin: 0;
+    font-weight: bold;
+    color: #ffd54f;
+    opacity: 1;
+}
+
+.home-banner .btn-primary {
+    background: #ffd54f;
+    border-color: #ffd54f;
+    color: #1b3a6b;
+    font-weight: bold;
+}
+
+.home-banner-icon {
+    font-size: 88px;
+    line-height: 1;
+}
+
+.home-section {
+    margin-top: 32px;
+}
+
+.home-section h2 {
+    margin: 0 0 12px;
+    font-size: 20px;
+}
+
+.home-section .category-bar {
+    margin: 0;
+}
+
+.home-section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+}
+
+.home-section-head a {
+    font-size: 14px;
+    color: #1b3a6b;
+}
+
+@media (max-width: 600px) {
+    .home-banner {
+        padding: 20px;
+    }
+
+    .home-banner h1 {
+        font-size: 20px;
+    }
+
+    .home-banner-icon {
+        display: none;
+    }
+}
+
 .product-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));

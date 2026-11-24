@@ -23,4 +23,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<Product> findByCategory(String category, Pageable pageable);
 
     Page<Product> findByNameContaining(String keyword, Pageable pageable);
+
+    // ===== 홈 화면 =====
+    // 최근에 등록한 상품 8개 (신상품) → select * from products order by id desc limit 8
+    List<Product> findTop8ByOrderByIdDesc();
 }

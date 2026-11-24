@@ -19,7 +19,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 
-// 메인 화면(상품 목록)과 상품 상세 화면 컨트롤러
+// 홈 화면, 상품 목록 화면, 상품 상세 화면 컨트롤러
 @Controller
 public class HomeController {
 
@@ -33,13 +33,42 @@ public class HomeController {
         this.inquiryService = inquiryService;
     }
 
-    // 메인 화면 : 상품 목록
-    // 예) /                  → 전체 상품
-    //     /?category=식품    → 식품만
-    //     /?keyword=라면     → 이름에 '라면'이 들어간 상품
-    //     /?category=식품&page=2 → 식품의 2페이지 (한 페이지에 ProductService.PAGE_SIZE 개)
+    // 홈 화면 : 배너, 카테고리 바로가기, 인기 상품 / 로켓 배송 / 신상품 / 품절 임박 섹션
+    // 예전 주소(/?category=식품, /?keyword=라면)로 들어오면 상품 목록 화면으로 보낸다 (조건은 그대로)
     @GetMapping("/")
     public String home(@RequestParam(name = "category", required = false) String category,
+                       @RequestParam(name = "keyword", required = false) String keyword,
+                       @RequestParam(name = "page", required = false) String page,
+                       Model model) {
+        if (category != null || keyword != null || page != null) {
+            UriComponentsBuilder link = UriComponentsBuilder.fromPath("/products");
+            if (category != null) {
+                link.queryParam("category", category);
+            }
+            if (keyword != null) {
+                link.queryParam("keyword", keyword);
+            }
+            if (page != null) {
+                link.queryParam("page", page);
+            }
+            return "redirect:" + link.encode().build().toUriString();
+        }
+
+        model.addAttribute("categories", productService.getCategories());
+        model.addAttribute("popularProducts", productService.findPopularProducts());
+        model.addAttribute("fastDeliveryProducts", productService.findFastDeliveryProducts());
+        model.addAttribute("newProducts", productService.findNewProducts());
+        model.addAttribute("lowStockProducts", productService.findLowStockProducts());
+        return "home"; // templates/home.html
+    }
+
+    // 상품 목록 화면
+    // 예) /products                    → 전체 상품
+    //     /products?category=식품      → 식품만
+    //     /products?keyword=라면       → 이름에 '라면'이 들어간 상품
+    //     /products?category=식품&page=2 → 식품의 2페이지 (한 페이지에 ProductService.PAGE_SIZE 개)
+    @GetMapping("/products")
+    public String list(@RequestParam(name = "category", required = false) String category,
                        @RequestParam(name = "keyword", required = false) String keyword,
                        @RequestParam(name = "page", required = false) String page,
                        Model model) {
@@ -64,8 +93,8 @@ public class HomeController {
         startPage = Math.max(1, endPage - 4);
 
         // 페이지 버튼 링크의 앞부분 : 값이 있는 조건(카테고리, 검색어)만 붙인다
-        // 예) "/?category=식품&page=" 뒤에 페이지 번호만 이어 붙이면 된다 (한글은 %EC%8B%9D... 처럼 인코딩)
-        UriComponentsBuilder link = UriComponentsBuilder.fromPath("/");
+        // 예) "/products?category=식품&page=" 뒤에 페이지 번호만 이어 붙이면 된다 (한글은 %EC%8B%9D... 처럼 인코딩)
+        UriComponentsBuilder link = UriComponentsBuilder.fromPath("/products");
         if (keyword != null && !keyword.trim().isEmpty()) {
             link.queryParam("keyword", keyword.trim());
         } else if (category != null && !category.trim().isEmpty()) {

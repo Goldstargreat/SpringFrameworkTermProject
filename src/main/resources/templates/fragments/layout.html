@@ -9,7 +9,7 @@
         <a class="logo" th:href="@{/}">⭐ 골드스타몰</a>
 
         <!-- 상품 검색 -->
-        <form class="search-form" th:action="@{/}" method="get">
+        <form class="search-form" th:action="@{/products}" method="get">
             <input type="text" name="keyword" placeholder="찾고 싶은 상품을 검색해 보세요">
             <button type="submit">검색</button>
         </form>
@@ -54,6 +54,27 @@
         </nav>
     </div>
 </header>
+
+<!-- 상품 카드 조각 : 상품 목록 화면과 홈 화면에서 함께 쓴다 -->
+<!-- 사용법 : th:replace="~{fragments/layout :: productCard(${p})}" -->
+<a th:fragment="productCard(p)" class="product-card" th:href="@{/products/{id}(id=${p.id})}">
+    <!-- static/images/products/상품번호.jpg 파일이 있으면 사진을, 없으면 이모지를 보여 준다 -->
+    <div class="product-icon">
+        <img th:src="@{/images/products/{id}.jpg(id=${p.id})}" th:alt="${p.name}" data-remove-on-error>
+        <span th:text="${p.icon}">📦</span>
+    </div>
+    <div class="product-category" th:text="${p.category}">카테고리</div>
+    <div class="product-name" th:text="${p.name}">상품명</div>
+    <div class="product-price">
+        <b th:text="${#numbers.formatInteger(p.price, 1, 'COMMA')}">10,000</b>원
+    </div>
+    <div class="badge badge-soldout" th:if="${p.stock == 0}">품절</div>
+    <!-- 1 ~ 2개 남았을 때만 남은 개수를 보여 준다 (Product.LOW_STOCK_LIMIT) -->
+    <div class="badge badge-few" th:if="${p.lowStock}"
+         th:text="'품절 임박 ' + ${p.stock} + '개 남음'">품절 임박</div>
+    <!-- 로켓 배송 : 관리자가 상품관리에서 켠 상품만 (품절이면 붙이지 않는다) -->
+    <div class="badge badge-rocket" th:if="${p.showFastDelivery}">로켓 배송</div>
+</a>
 
 <!-- 성공/오류 메시지를 보여 주는 조각 -->
 <div th:fragment="messages">

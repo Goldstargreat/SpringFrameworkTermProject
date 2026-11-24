@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +76,56 @@ public class ProductService {
         Map<Long, Long> result = new HashMap<>();
         for (Object[] row : orderItemRepository.sumSalesByProduct(VOIDED_STATUSES)) {
             result.put((Long) row[0], ((Number) row[2]).longValue());
+        }
+        return result;
+    }
+
+    // ===== 홈 화면 섹션 =====
+    // 섹션마다 보여 줄 상품 수 (한 줄에 4개씩 2줄)
+    public static final int HOME_SECTION_SIZE = 8;
+
+    // 인기 상품 : 누적 판매량이 많은 순서 (품절 상품은 빼고, 팔린 적 없는 상품은 들어가지 않는다)
+    public List<Product> findPopularProducts() {
+        Map<Long, Long> sales = salesQuantityByProduct();
+        List<Product> products = new ArrayList<>();
+        for (Product p : productRepository.findAllById(sales.keySet())) {
+            if (p.getStock() > 0) {
+                products.add(p);
+            }
+        }
+        products.sort((a, b) -> Long.compare(sales.get(b.getId()), sales.get(a.getId())));
+        return products.subList(0, Math.min(HOME_SECTION_SIZE, products.size()));
+    }
+
+    // 신상품 : 최근에 등록한 상품
+    public List<Product> findNewProducts() {
+        return productRepository.findTop8ByOrderByIdDesc();
+    }
+
+    // 로켓 배송 상품 : 관리자가 로켓 배송을 켠 상품 중 재고가 있는 것 (최근 등록 순)
+    public List<Product> findFastDeliveryProducts() {
+        List<Product> result = new ArrayList<>();
+        for (Product p : productRepository.findAll(Sort.by(Sort.Direction.DESC, "id"))) {
+            if (p.isShowFastDelivery()) {
+                result.add(p);
+                if (result.size() == HOME_SECTION_SIZE) {
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
+    // 품절 임박 상품 : 재고가 1 ~ 2개 남은 상품
+    public List<Product> findLowStockProducts() {
+        List<Product> result = new ArrayList<>();
+        for (Product p : productRepository.findAll(Sort.by("id"))) {
+            if (p.isLowStock()) {
+                result.add(p);
+                if (result.size() == HOME_SECTION_SIZE) {
+                    break;
+                }
+            }
         }
         return result;
     }

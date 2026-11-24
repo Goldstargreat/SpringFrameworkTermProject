@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>골드스타몰</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main class="container">
+    <div th:replace="~{fragments/layout :: messages}"></div>
+
+    <!-- 배너 -->
+    <section class="home-banner">
+        <div>
+            <p class="home-banner-sub">매일 쓰는 물건, 골드스타몰에서</p>
+            <h1>필요한 건 오늘 주문하고<br>로켓 배송으로 받아 보세요</h1>
+            <!-- 등급이 있는 손님에게는 내 등급 할인율을, 나머지에게는 회원 혜택을 알려 준다 -->
+            <p th:if="${loginMemberGrade != null and loginMemberGrade.discountRate > 0}"
+               th:text="${loginMemberGrade.label} + ' 회원님은 모든 상품을 ' + ${loginMemberGrade.discountRate} + '% 할인된 가격에 구매할 수 있습니다.'">골드 회원님은 5% 할인</p>
+            <p th:unless="${loginMemberGrade != null and loginMemberGrade.discountRate > 0}">구매 금액이 쌓이면 등급이 올라가고, 등급에 따라 할인 혜택을 드립니다.</p>
+            <a class="btn btn-primary" th:href="@{/products}">전체 상품 보기</a>
+        </div>
+        <div class="home-banner-icon" aria-hidden="true">🛍️</div>
+    </section>
+
+    <!-- 카테고리 바로가기 -->
+    <section class="home-section">
+        <h2>카테고리</h2>
+        <div class="category-bar">
+            <a th:href="@{/products}">전체</a>
+            <a th:each="c : ${categories}" th:href="@{/products(category=${c})}" th:text="${c}">카테고리</a>
+        </div>
+    </section>
+
+    <!-- 인기 상품 : 많이 팔린 순서 (팔린 상품이 없으면 섹션을 숨긴다) -->
+    <section class="home-section" th:if="${!popularProducts.isEmpty()}">
+        <div class="home-section-head">
+            <h2>🔥 인기 상품</h2>
+        </div>
+        <div class="product-grid">
+            <th:block th:each="p : ${popularProducts}"><a th:replace="~{fragments/layout :: productCard(${p})}"></a></th:block>
+        </div>
+    </section>
+
+    <!-- 로켓 배송 -->
+    <section class="home-section" th:if="${!fastDeliveryProducts.isEmpty()}">
+        <div class="home-section-head">
+            <h2>🚀 로켓 배송</h2>
+        </div>
+        <div class="product-grid">
+            <th:block th:each="p : ${fastDeliveryProducts}"><a th:replace="~{fragments/layout :: productCard(${p})}"></a></th:block>
+        </div>
+    </section>
+
+    <!-- 신상품 : 최근 등록한 상품 -->
+    <section class="home-section" th:if="${!newProducts.isEmpty()}">
+        <div class="home-section-head">
+            <h2>✨ 신상품</h2>
+            <a th:href="@{/products}">전체 상품 보기 &rsaquo;</a>
+        </div>
+        <div class="product-grid">
+            <th:block th:each="p : ${newProducts}"><a th:replace="~{fragments/layout :: productCard(${p})}"></a></th:block>
+        </div>
+    </section>
+
+    <!-- 품절 임박 : 1 ~ 2개 남은 상품 -->
+    <section class="home-section" th:if="${!lowStockProducts.isEmpty()}">
+        <div class="home-section-head">
+            <h2>⏰ 품절 임박</h2>
+        </div>
+        <div class="product-grid">
+            <th:block th:each="p : ${lowStockProducts}"><a th:replace="~{fragments/layout :: productCard(${p})}"></a></th:block>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
