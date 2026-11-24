@@ -17,7 +17,7 @@ INSERT INTO members (login_id, password, name, phone, address, second_address, r
 ('jung06', '$2a$10$SyL3NVjJP9ZELrDtOIUXLOcqOo7qailnRWonOq6KL8uOwckjDNgL2', '정다은', '010-6789-0123', '광주광역시 북구 용봉로 77', NULL, 'USER', '2026-11-06 13:08:00.000000'),
 ('hong07', '$2a$10$glJIZHLiKi4hfjUgCZ8CgepOr2NSeRLTh17hLxE.RpN.wW82a4yFi', '홍길동', '010-7890-1234', '인천광역시 연수구 컨벤시아대로 165', NULL, 'USER', '2026-11-17 22:30:00.000000');
 
--- ===== 주문 14건 : 배송 상태가 골고루 보이도록 (주문취소, 주문거절 포함) =====
+-- ===== 주문 15건 : 배송 상태가 골고루 보이도록 (주문취소, 주문거절 포함) =====
 -- [배송완료] hong01 : 신라면 5개입 x3, 제주 삼다수 2L x 6개 x1
 INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, status, total_price, ordered_at) VALUES
 ((SELECT id FROM members WHERE login_id = 'hong01'), '홍길동', '010-2345-6789', '서울특별시 강남구 테헤란로 123', 'DELIVERED', 18780, '2026-11-12 10:21:00.000000');
@@ -124,6 +124,13 @@ INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, 
 SET @order_id = LAST_INSERT_ID();
 INSERT INTO order_items (order_id, product_id, order_price, quantity) VALUES
 (@order_id, (SELECT id FROM products WHERE name = '애플 아이폰 16 128GB'), 1250000, 1);
+
+-- [주문접수] hong01 : 무선 블루투스 이어폰 x1 → VIP 가 된 뒤의 주문이라 VIP 할인(10%) 3,990원을 받았다
+INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, status, total_price, ordered_at, discount_amount, order_grade) VALUES
+((SELECT id FROM members WHERE login_id = 'hong01'), '홍길동', '010-2345-6789', '서울특별시 강남구 테헤란로 123', 'ORDER_RECEIVED', 35910, '2026-11-24 11:20:00.000000', 3990, 'VIP');
+SET @order_id = LAST_INSERT_ID();
+INSERT INTO order_items (order_id, product_id, order_price, quantity) VALUES
+(@order_id, (SELECT id FROM products WHERE name = '무선 블루투스 이어폰'), 39900, 1);
 
 -- ===== 회원 등급 : SQL 로 넣지 않는다. 서버를 켤 때 누적 구매액(배송완료 주문)으로 자동으로 정해진다 =====
 
