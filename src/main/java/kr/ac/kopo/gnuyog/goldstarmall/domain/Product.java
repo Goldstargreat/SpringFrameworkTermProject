@@ -99,7 +99,8 @@ public class Product
 
     // 재고가 부족할 때 손님에게 보여 줄 문구 : 품절 임박일 때만 남은 개수를 알려 준다
     public String getStockShortageMessage() {
-        if (isLowStock()) {
+        if (isLowStock())
+        {
             return "재고가 부족합니다. (남은 수량 " + stock + "개)";
         }
         return "재고가 부족합니다. 주문 수량을 줄여 주세요.";
