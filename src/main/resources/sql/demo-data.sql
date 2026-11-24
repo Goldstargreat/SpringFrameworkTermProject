@@ -149,6 +149,11 @@ INSERT INTO inquiries (member_id, product_id, question, answer, created_at, answ
  '민감성 피부도 사용할 수 있나요?', NULL,
  '2026-11-24 08:45:00.000000', NULL);
 
+-- ===== 주문번호 : 앱에서 주문할 때처럼 "주문날짜-id 4자리" 로 붙인다 (예: 20261124-0012) =====
+-- (이 줄을 빼먹어도 앱을 다시 켜면 비어 있는 주문번호가 자동으로 채워진다)
+UPDATE orders SET order_number = CONCAT(DATE_FORMAT(ordered_at, '%Y%m%d'), '-', LPAD(id, 4, '0'))
+WHERE order_number IS NULL;
+
 -- 확인
 SELECT id, login_id, name, phone FROM members WHERE login_id IN ('hong01','kim02','lee03','park04','choi05','jung06','hong07');
 SELECT o.id, m.login_id, o.status, o.total_price FROM orders o JOIN members m ON m.id = o.member_id WHERE m.login_id IN ('hong01','kim02','lee03','park04','choi05','jung06','hong07');

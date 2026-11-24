@@ -80,7 +80,9 @@ public class OrderService {
         order.setTotalPrice(totalPrice);
 
         // 4) 주문 저장 (cascade 설정으로 주문 상품들도 함께 저장된다)
+        //    저장해야 id 가 생기므로, 저장한 뒤 그 id 로 기본 주문번호를 붙인다
         orderRepository.save(order);
+        assignDefaultOrderNumber(order);
 
         // 5) 주문이 끝났으니 장바구니 비우기
         cartItemRepository.deleteAll(cartItems);
@@ -116,8 +118,9 @@ public class OrderService {
         order.addOrderItem(orderItem);
         order.setTotalPrice(orderItem.getTotalPrice());
 
-        // 4) 저장
+        // 4) 저장 후 기본 주문번호 붙이기
         orderRepository.save(order);
+        assignDefaultOrderNumber(order);
         return order;
     }
 
@@ -217,7 +220,7 @@ public class OrderService {
 
     // (관리자) 주문 검색 : 검색 기준(type)에 따라 일부만 맞아도 찾는다 (최신 주문부터)
     //   all     : 아래 네 가지 중 하나라도 맞으면
-    //   id      : 주문번호 (숫자가 정확히 같아야 한다. 예: 12)
+    //   number  : 주문번호의 일부 (예: 20261124, 0012)
     //   member  : 주문자 이름 또는 아이디 (예: 홍길동, hong01)
     //   date    : 주문일시 "yyyy-MM-dd HH:mm" 의 일부 (예: 2026-11-24, 11-24, 2026-11)
     //   address : 배송지 (예: 마포구)
@@ -241,15 +244,15 @@ public class OrderService {
 
     // 주문 하나가 검색 조건에 맞는지
     private boolean matches(Order order, String type, String text) {
-        boolean byId = String.valueOf(order.getId()).equals(text.replaceAll("[^0-9]", ""));
+        boolean byNumber = order.getDisplayNumber().toLowerCase().contains(text.toLowerCase());
         boolean byMember = order.getMember().getName().contains(text)
                 || order.getMember().getLoginId().toLowerCase().contains(text.toLowerCase());
         boolean byDate = order.getOrderedAt() != null
                 && order.getOrderedAt().format(ORDERED_AT_FORMAT).contains(text);
         boolean byAddress = order.getShippingAddress().contains(text);
 
-        if ("id".equals(type)) {
-            return byId;
+        if ("number".equals(type)) {
+            return byNumber;
         }
         if ("member".equals(type)) {
             return byMember;
@@ -260,7 +263,64 @@ public class OrderService {
         if ("address".equals(type)) {
             return byAddress;
         }
-        return byId || byMember || byDate || byAddress;
+        return byNumber || byMember || byDate || byAddress;
+    }
+
+    // 주문번호 최대 글자 수 (Order 의 order_number 컬럼 길이)
+    public static final int ORDER_NUMBER_MAX_LENGTH = 30;
+
+    // (관리자) 주문번호 고치기 : 영문, 숫자, 하이픈(-), 밑줄(_)만, 30글자까지, 다른 주문과 겹치면 안 된다
+    // 기본키(id)는 그대로라서 주문 상품, 손님의 주문내역 연결은 바뀌지 않는다. 바뀐 주문번호를 돌려준다
+    public String updateOrderNumber(Long orderId, String newNumber) {
+        Order order = orderRepository.findById(orderId).orElse(null);
+        if (order == null) {
+            throw new NotFoundException("주문을 찾을 수 없습니다.");
+        }
+        if (newNumber == null || newNumber.trim().isEmpty()) {
+            throw new BusinessException("주문번호를 입력해 주세요.");
+        }
+        String number = newNumber.trim();
+        if (number.length() > ORDER_NUMBER_MAX_LENGTH) {
+            throw new BusinessException("주문번호는 " + ORDER_NUMBER_MAX_LENGTH + "글자까지 쓸 수 있습니다.");
+        }
+        if (!number.matches("[A-Za-z0-9_-]+")) {
+            throw new BusinessException("주문번호에는 영문, 숫자, 하이픈(-), 밑줄(_)만 쓸 수 있습니다.");
+        }
+        // 다른 주문이 이미 쓰는 번호인지 (아직 주문번호가 없는 주문은 화면에 보이는 기본 번호와 비교한다)
+        for (Order other : orderRepository.findAll()) {
+            if (!other.getId().equals(orderId) && other.getDisplayNumber().equalsIgnoreCase(number)) {
+                throw new BusinessException("이미 다른 주문이 쓰고 있는 주문번호입니다: " + number);
+            }
+        }
+        order.setOrderNumber(number);
+        return number;
+    }
+
+    // (관리자) 주문 id 로 화면에 보이는 주문번호 찾기 (처리 결과 메시지에 쓴다, 없으면 null)
+    @Transactional(readOnly = true)
+    public String findOrderNumber(Long orderId) {
+        Order order = orderRepository.findById(orderId).orElse(null);
+        return order == null ? null : order.getDisplayNumber();
+    }
+
+    // 주문번호가 비어 있는 주문에 기본 주문번호를 채운다 (서버를 켤 때 DataInitializer 가 부른다)
+    // 시연용 SQL(demo-data.sql)처럼 앱을 거치지 않고 넣은 주문, 이 기능이 생기기 전의 주문이 대상이다
+    public void fillMissingOrderNumbers() {
+        for (Order order : orderRepository.findByOrderNumberIsNull()) {
+            assignDefaultOrderNumber(order);
+        }
+    }
+
+    // 기본 주문번호 붙이기 : 관리자가 다른 주문에 같은 번호를 이미 붙여 두었다면 뒤에 -1, -2 ... 를 붙여 겹치지 않게 한다
+    private void assignDefaultOrderNumber(Order order) {
+        String base = order.makeDefaultOrderNumber();
+        String number = base;
+        int suffix = 1;
+        while (orderRepository.findByOrderNumber(number) != null) {
+            number = base + "-" + suffix;
+            suffix++;
+        }
+        order.setOrderNumber(number);
     }
 
     // 주문일시 검색에 쓰는 형식 (화면에 보이는 형식과 같다)

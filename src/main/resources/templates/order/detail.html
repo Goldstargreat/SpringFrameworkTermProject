@@ -10,7 +10,7 @@
 <header th:replace="~{fragments/layout :: header}"></header>
 
 <main class="container">
-    <h1>주문 상세 <small th:text="'(주문번호 ' + ${order.id} + ')'">(주문번호 1)</small></h1>
+    <h1>주문 상세 <small th:text="'(주문번호 ' + ${order.displayNumber} + ')'">(주문번호 1)</small></h1>
     <div th:replace="~{fragments/layout :: messages}"></div>
 
     <!-- 배송 상태 추적 막대 : 취소/거절된 주문이 아닐 때만 보여 준다 -->

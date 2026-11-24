@@ -12,19 +12,20 @@
 <main class="container">
     <h1>주문관리 <small>(관리자 전용)</small></h1>
     <p class="guide">버튼을 누르면 배송 상태가 한 단계씩 넘어갑니다: 주문접수 → 입고 → 출고 → 배송중 → 배송완료<br>
-        출고 전(주문접수, 입고) 주문은 거절할 수 있습니다. 거절하면 결제 금액 전체가 환불되고 재고가 돌아오며, 거절 사유는 손님에게 보여집니다.</p>
+        출고 전(주문접수, 입고) 주문은 거절할 수 있습니다. 거절하면 결제 금액 전체가 환불되고 재고가 돌아오며, 거절 사유는 손님에게 보여집니다.<br>
+        주문번호는 칸에서 고친 뒤 '변경'을 누르세요. 영문, 숫자, -, _ 만 쓸 수 있고 다른 주문과 겹칠 수 없습니다. 바꾼 번호는 손님 주문내역에도 보입니다.</p>
     <div th:replace="~{fragments/layout :: messages}"></div>
 
     <!-- 주문 검색 : 검색 기준을 고르고 검색어를 입력한다 (회원관리 검색과 같은 모양) -->
     <form th:action="@{/admin/orders}" method="get" class="inline-form member-search">
         <select name="type">
             <option value="all" th:selected="${type == 'all'}">전체</option>
-            <option value="id" th:selected="${type == 'id'}">주문번호</option>
+            <option value="number" th:selected="${type == 'number'}">주문번호</option>
             <option value="member" th:selected="${type == 'member'}">주문자</option>
             <option value="date" th:selected="${type == 'date'}">주문일시</option>
             <option value="address" th:selected="${type == 'address'}">배송지</option>
         </select>
-        <input type="text" name="keyword" th:value="${keyword}" placeholder="예) 12, 홍길동, 2026-11-24, 마포구">
+        <input type="text" name="keyword" th:value="${keyword}" placeholder="예) 20261124-0012, 홍길동, 2026-11-24, 마포구">
         <button type="submit" class="btn btn-small btn-primary">검색</button>
         <a th:href="@{/admin/orders}" class="btn btn-small">전체 보기</a>
     </form>
@@ -32,7 +33,7 @@
     <!-- 검색 기준 이름 : 전체는 따로 적지 않는다 -->
     <p class="search-result" th:if="${keyword != null and keyword != ''}">
         <th:block th:switch="${type}">
-            <span th:case="'id'">주문번호 </span>
+            <span th:case="'number'">주문번호 </span>
             <span th:case="'member'">주문자 </span>
             <span th:case="'date'">주문일시 </span>
             <span th:case="'address'">배송지 </span>
@@ -57,7 +58,14 @@
             </thead>
             <tbody>
             <tr th:each="order : ${orders}">
-                <td th:text="${order.id}">1</td>
+                <!-- 주문번호 : 관리자가 바로 고칠 수 있다 (기본키 id 는 그대로라 주문 상품 연결은 안 바뀐다) -->
+                <td>
+                    <form th:action="@{/admin/orders/{id}/number(id=${order.id})}" method="post" class="inline-form order-number-form">
+                        <input type="text" name="orderNumber" th:value="${order.displayNumber}"
+                               maxlength="30" pattern="[A-Za-z0-9_\-]+" title="영문, 숫자, -, _ 만 쓸 수 있습니다" required>
+                        <button type="submit" class="btn btn-small">변경</button>
+                    </form>
+                </td>
                 <td th:text="${order.member.name} + ' (' + ${order.member.loginId} + ')'">홍길동 (hong)</td>
                 <td th:text="${#temporals.format(order.orderedAt, 'yyyy-MM-dd HH:mm')}">2026-01-01 00:00</td>
                 <td th:text="${order.shippingAddress}">주소</td>
@@ -81,7 +89,7 @@
                     <!-- 출고 전 주문이면 '거절' : 사유를 적어야 하고, 누르면 환불된다 -->
                     <form th:if="${order.status.rejectable}"
                           th:action="@{/admin/orders/{id}/reject(id=${order.id})}" method="post" class="inline-form reject-form"
-                          th:attr="data-confirm=${order.id} + '번 주문을 거절하고 ' + ${#numbers.formatInteger(order.totalPrice, 1, 'COMMA')} + '원을 환불하시겠습니까?'">
+                          th:attr="data-confirm='주문번호 ' + ${order.displayNumber} + ' 주문을 거절하고 ' + ${#numbers.formatInteger(order.totalPrice, 1, 'COMMA')} + '원을 환불하시겠습니까?'">
                         <input type="text" name="reason" maxlength="200" placeholder="거절 사유 (예: 재고 부족)" required>
                         <button type="submit" class="btn btn-small btn-danger">거절·환불</button>
                     </form>

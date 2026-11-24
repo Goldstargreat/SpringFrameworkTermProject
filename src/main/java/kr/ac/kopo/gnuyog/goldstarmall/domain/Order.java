@@ -14,6 +14,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,9 +24,15 @@ import java.util.List;
 @Table(name = "orders")
 public class Order {
 
+    // 주문 id : DB가 자동으로 붙이는 기본키. 주문 상품(order_items)이 이 값으로 주문을 가리키므로 바꾸지 않는다
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    // 주문번호 : 화면에 보여 주는 번호 (예: 20261124-0012). 주문할 때 자동으로 붙고, 관리자가 고칠 수 있다
+    // 기본키(id)와 따로 두었기 때문에 바꿔도 주문 상품과의 연결은 그대로다. 중복은 안 된다
+    @Column(unique = true, length = 30)
+    private String orderNumber;
 
     // 회원 1명 : 주문 N건
     @ManyToOne
@@ -76,6 +83,18 @@ public class Order {
     public Order() {
     }
 
+    // 자동으로 붙이는 기본 주문번호 : 주문 날짜 + "-" + id 4자리 (예: 2026-11-24 의 12번 주문 → 20261124-0012)
+    public String makeDefaultOrderNumber() {
+        String date = orderedAt == null ? "00000000" : orderedAt.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        return date + "-" + String.format("%04d", id);
+    }
+
+    // 화면에 보여 줄 주문번호 (화면에서 order.displayNumber 로 사용)
+    // SQL 로 직접 넣은 주문처럼 아직 주문번호가 없으면 기본 주문번호를 보여 준다
+    public String getDisplayNumber() {
+        return orderNumber != null ? orderNumber : makeDefaultOrderNumber();
+    }
+
     // 환불이 끝난 주문인지 (화면에서 order.refunded 로 사용)
     public boolean isRefunded() {
         return refundedAt != null;
@@ -94,6 +113,14 @@ public class Order {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getOrderNumber() {
+        return orderNumber;
+    }
+
+    public void setOrderNumber(String orderNumber) {
+        this.orderNumber = orderNumber;
     }
 
     public Member getMember() {

@@ -2,6 +2,7 @@ package kr.ac.kopo.gnuyog.goldstarmall.config;
 
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.MemberRepository;
+import kr.ac.kopo.gnuyog.goldstarmall.service.OrderService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -17,11 +18,14 @@ public class DataInitializer implements CommandLineRunner
 {
     private final MemberRepository memberRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final OrderService orderService;
 
-    public DataInitializer(MemberRepository memberRepository, BCryptPasswordEncoder passwordEncoder)
+    public DataInitializer(MemberRepository memberRepository, BCryptPasswordEncoder passwordEncoder,
+                           OrderService orderService)
     {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
+        this.orderService = orderService;
     }
 
     @Override
@@ -40,5 +44,8 @@ public class DataInitializer implements CommandLineRunner
             admin.setCreatedAt(LocalDateTime.now());
             memberRepository.save(admin);
         }
+
+        // 주문번호가 비어 있는 주문(시연용 SQL 로 넣은 주문 등)에 기본 주문번호를 채운다
+        orderService.fillMissingOrderNumbers();
     }
 }
