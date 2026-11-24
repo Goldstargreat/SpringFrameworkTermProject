@@ -54,6 +54,10 @@ public class Product
     // 주문 기록은 지우지 않고, 이 시각 이후의 주문만 누적 판매량/매출에 센다
     private LocalDateTime salesResetAt;
 
+    // 내일 도착 보장 여부 : 관리자가 상품마다 정한다 (상품관리 화면에서 켜고 끈다)
+    // 비어 있으면(null) 보장하지 않는 것으로 본다
+    private Boolean fastDelivery;
+
     public Product() {
     }
 
@@ -108,6 +112,20 @@ public class Product
     // 손님에게 남은 개수를 알려 주는 기준 : 이 개수 이하로 남았을 때만 "N개 남음"을 보여 준다
     // (재고가 넉넉할 때 정확한 숫자를 보여 주면 쇼핑몰의 판매량/입고량이 그대로 드러나기 때문)
     public static final int LOW_STOCK_LIMIT = 2;
+
+    // 내일 도착 보장 상품인지 (관리자가 정한 값) → 화면에서 product.fastDelivery 로 사용
+    public boolean isFastDelivery() {
+        return Boolean.TRUE.equals(fastDelivery);
+    }
+
+    public void setFastDelivery(boolean fastDelivery) {
+        this.fastDelivery = fastDelivery;
+    }
+
+    // 손님 화면에 "내일 도착 보장"을 붙일지 : 관리자가 켜 둔 상품이라도 품절이면 붙이지 않는다
+    public boolean isShowFastDelivery() {
+        return isFastDelivery() && stock > 0;
+    }
 
     // 품절 임박인지 (재고 1 ~ 2개) → 화면에서 product.lowStock 으로 사용
     public boolean isLowStock() {

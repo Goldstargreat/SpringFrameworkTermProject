@@ -211,9 +211,11 @@ public class AdminController {
                                 @RequestParam(name = "icon", required = false) String icon,
                                 @RequestParam(name = "manufacturer", required = false) String manufacturer,
                                 @RequestParam(name = "origin", required = false) String origin,
+                                // 체크박스 : 체크하면 true 가 오고, 체크하지 않으면 아예 오지 않으므로 기본값 false
+                                @RequestParam(name = "fastDelivery", defaultValue = "false") boolean fastDelivery,
                                 RedirectAttributes redirectAttributes) {
         try {
-            Product product = productService.create(name, category, price, stock, description, icon, manufacturer, origin);
+            Product product = productService.create(name, category, price, stock, description, icon, manufacturer, origin, fastDelivery);
             redirectAttributes.addFlashAttribute("message", product.getId() + "번 상품 '" + product.getName() + "'을(를) 등록했습니다.");
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -230,6 +232,19 @@ public class AdminController {
         try {
             productService.updatePriceAndStock(productId, price, stock);
             redirectAttributes.addFlashAttribute("message", productId + "번 상품의 가격과 재고를 수정했습니다.");
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/products";
+    }
+
+    // 내일 도착 보장 켜기/끄기
+    @PostMapping("/products/{productId}/fast-delivery")
+    public String toggleFastDelivery(@PathVariable("productId") Long productId, RedirectAttributes redirectAttributes) {
+        try {
+            Product product = productService.toggleFastDelivery(productId);
+            String state = product.isFastDelivery() ? "켰습니다" : "껐습니다";
+            redirectAttributes.addFlashAttribute("message", "'" + product.getName() + "'의 내일 도착 보장을 " + state + ".");
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }

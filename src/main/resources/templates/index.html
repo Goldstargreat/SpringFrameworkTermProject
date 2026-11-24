@@ -45,7 +45,8 @@
             <!-- 1 ~ 2개 남았을 때만 남은 개수를 보여 준다 (Product.LOW_STOCK_LIMIT) -->
             <div class="badge badge-few" th:if="${p.lowStock}"
                  th:text="'품절 임박 ' + ${p.stock} + '개 남음'">품절 임박</div>
-            <div class="badge badge-rocket" th:if="${p.stock > T(kr.ac.kopo.gnuyog.goldstarmall.domain.Product).LOW_STOCK_LIMIT}">내일 도착 보장</div>
+            <!-- 내일 도착 보장 : 관리자가 상품관리에서 켠 상품만 (품절이면 붙이지 않는다) -->
+            <div class="badge badge-rocket" th:if="${p.showFastDelivery}">내일 도착 보장</div>
         </a>
     </div>
 

@@ -38,6 +38,7 @@
                 <th>상품</th>
                 <th>카테고리</th>
                 <th>가격(원) / 재고(개)</th>
+                <th>내일 도착 보장</th>
                 <th>누적 판매량</th>
                 <th>누적 매출</th>
                 <th>집계 초기화</th>
@@ -59,6 +60,14 @@
                         <input type="number" name="price" th:value="${p.price}" min="1" required class="price-input">
                         <input type="number" name="stock" th:value="${p.stock}" min="0" required class="qty-input">
                         <button type="submit" class="btn btn-small btn-primary">저장</button>
+                    </form>
+                </td>
+                <!-- 내일 도착 보장 : 버튼을 누를 때마다 켜짐/꺼짐이 바뀐다 -->
+                <td>
+                    <form th:action="@{/admin/products/{id}/fast-delivery(id=${p.id})}" method="post" class="inline-form">
+                        <button type="submit" class="btn btn-small"
+                                th:classappend="${p.fastDelivery} ? 'btn-primary'"
+                                th:text="${p.fastDelivery} ? '보장 (끄기)' : '안 함 (켜기)'">안 함 (켜기)</button>
                     </form>
                 </td>
                 <!-- 한 번도 안 팔린 상품은 Map 에 없으므로 0 으로 보여 준다 -->
@@ -114,6 +123,9 @@
             </label>
             <label>이모지 (사진이 없을 때 대신 보여 줄 그림, 비워 두면 📦)
                 <input type="text" name="icon" placeholder="예) 🎁">
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox" name="fastDelivery" value="true"> 내일 도착 보장 상품
             </label>
             <button type="submit" class="btn btn-primary btn-block">상품 등록</button>
         </form>

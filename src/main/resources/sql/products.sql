@@ -235,5 +235,8 @@ INSERT INTO products (name, category, price, stock, description, icon, manufactu
 ('국산 콩 두부 300g x 3개', '식품', 5400, 45, '국산 콩으로 만든 부드러운 찌개용 두부입니다.', '🧈', '골드스타 PB', '대한민국 (콩 : 국내산)'),
 ('포기김치 3kg', '식품', 19900, 20, '국내산 배추와 고춧가루로 담근 포기김치입니다.', '🥬', '골드스타 PB', '대한민국 (배추, 고춧가루 : 국내산)');
 
+-- 내일 도착 보장 : 처음에는 모든 상품을 보장으로 해 둔다 (관리자가 상품관리 화면에서 상품마다 켜고 끈다)
+UPDATE products SET fast_delivery = 1;
+
 -- 확인
 SELECT * FROM products;

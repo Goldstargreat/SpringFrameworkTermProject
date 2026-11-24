@@ -127,7 +127,7 @@ public class ProductService {
     // 클래스에 readOnly = true 가 붙어 있으므로, 저장/수정하는 메서드에는 @Transactional 을 따로 붙인다
     @Transactional
     public Product create(String name, String category, int price, int stock, String description, String icon,
-                          String manufacturer, String origin) {
+                          String manufacturer, String origin, boolean fastDelivery) {
         ProductValidator.validateNewProduct(name, category, CATEGORIES, price, stock, description, icon);
         ProductValidator.validateProductInfo(manufacturer, origin);
 
@@ -146,10 +146,22 @@ public class ProductService {
         // 제조사/원산지는 선택 입력 : 비워 두면 null (상세 화면에는 "-" 로 보인다)
         product.setManufacturer(blankToNull(manufacturer));
         product.setOrigin(blankToNull(origin));
+        product.setFastDelivery(fastDelivery);
         return productRepository.save(product);
     }
 
     // (관리자) 가격, 재고 수정
+    // (관리자) 내일 도착 보장 켜기/끄기 : 지금 값의 반대로 바꾼다
+    @Transactional
+    public Product toggleFastDelivery(Long productId) {
+        Product product = findById(productId);
+        if (product == null) {
+            throw new NotFoundException("상품을 찾을 수 없습니다.");
+        }
+        product.setFastDelivery(!product.isFastDelivery());
+        return product;
+    }
+
     // (관리자) 한 상품의 누적 판매량/매출 초기화 : 주문 기록은 그대로 두고, 지금부터 다시 센다
     @Transactional
     public Product resetSales(Long productId) {

@@ -1163,3 +1163,17 @@ h2 {
     font-weight: normal;
     color: #888;
 }
+
+/* 상품 등록의 "내일 도착 보장" 체크박스 : 위의 input 스타일(가로 꽉 채우기)을 체크박스에는 적용하지 않는다 */
+.form-box .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.form-box .checkbox-label input {
+    display: inline-block;
+    width: auto;
+    margin: 0;
+}
