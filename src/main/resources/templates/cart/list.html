@@ -45,7 +45,13 @@
                         <!-- 옵션 상품이면 고른 옵션 -->
                         <div class="option-name" th:if="${item.option != null}" th:text="'옵션: ' + ${item.option.name}">옵션: 15인치 / 화이트</div>
                     </td>
-                    <td th:text="${#numbers.formatInteger(item.product.price, 1, 'COMMA')} + '원'">0원</td>
+                    <td>
+                        <!-- 오늘의 할인 상품이면 원래 가격에 줄을 긋는다 (할인은 오늘 주문할 때만 적용된다) -->
+                        <del class="refund-note" th:if="${item.product.onSale}"
+                             th:text="${#numbers.formatInteger(item.product.price, 1, 'COMMA')} + '원'">10,000원</del>
+                        <div th:text="${#numbers.formatInteger(item.product.salePrice, 1, 'COMMA')} + '원'">0원</div>
+                        <span class="sale-rate" th:if="${item.product.onSale}" th:text="'오늘의 할인 ' + ${item.product.saleRate} + '%'">오늘의 할인 10%</span>
+                    </td>
                     <td>
                         <!-- 수량 변경 폼 -->
                         <form th:action="@{/cart/{id}/update(id=${item.id})}" method="post" class="inline-form">

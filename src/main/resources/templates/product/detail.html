@@ -27,13 +27,19 @@
                 <span class="stars">★</span> <b th:text="${averageRating}">4.5</b>
                 (<span th:text="${reviews.size()}">0</span>개 상품평)
             </a>
+            <!-- 오늘의 할인 상품 : 원래 가격(줄 긋기) + 할인율 + 할인가 -->
+            <p class="detail-deal" th:if="${product.onSale}">
+                <span class="badge badge-deal">오늘의 할인</span>
+                <del th:text="${#numbers.formatInteger(product.price, 1, 'COMMA')} + '원'">10,000원</del>
+            </p>
             <p class="detail-price">
-                <b th:text="${#numbers.formatInteger(product.price, 1, 'COMMA')}">10,000</b>원
+                <span class="sale-rate" th:if="${product.onSale}" th:text="${product.saleRate} + '%'">10%</span>
+                <b th:text="${#numbers.formatInteger(product.salePrice, 1, 'COMMA')}">10,000</b>원
             </p>
             <!-- 할인을 받는 등급의 손님에게만 : 내 등급 할인가 -->
             <p class="member-price" th:if="${loginMemberGrade != null and loginMemberGrade.discountRate > 0}">
                 <span th:text="${loginMemberGrade.label} + ' 회원가 (' + ${loginMemberGrade.discountRate} + '% 할인)'">골드 회원가 (5% 할인)</span>
-                <b th:text="${#numbers.formatInteger(product.price - loginMemberGrade.discountOf(product.price), 1, 'COMMA')} + '원'">9,500원</b>
+                <b th:text="${#numbers.formatInteger(product.salePrice - loginMemberGrade.discountOf(product.salePrice), 1, 'COMMA')} + '원'">9,500원</b>
             </p>
             <p class="detail-desc" th:text="${product.description}">상품 설명</p>
             <!-- 재고 표시 : 관리자는 항상 정확한 재고를, 손님은 1 ~ 2개 남았을 때만 "N개 남음"을 본다 -->

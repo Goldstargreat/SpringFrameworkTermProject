@@ -65,8 +65,13 @@
     </div>
     <div class="product-category" th:text="${p.category}">카테고리</div>
     <div class="product-name" th:text="${p.name}">상품명</div>
+    <!-- 오늘의 할인 상품이면 원래 가격에 줄을 긋고 할인율, 할인가를 보여 준다 -->
+    <div class="product-price-origin" th:if="${p.onSale}">
+        <del th:text="${#numbers.formatInteger(p.price, 1, 'COMMA')} + '원'">10,000원</del>
+    </div>
     <div class="product-price">
-        <b th:text="${#numbers.formatInteger(p.price, 1, 'COMMA')}">10,000</b>원
+        <span class="sale-rate" th:if="${p.onSale}" th:text="${p.saleRate} + '%'">10%</span>
+        <b th:text="${#numbers.formatInteger(p.salePrice, 1, 'COMMA')}">10,000</b>원
     </div>
     <div class="badge badge-soldout" th:if="${p.stock == 0}">품절</div>
     <!-- 1 ~ 2개 남았을 때만 남은 개수를 보여 준다 (Product.LOW_STOCK_LIMIT) -->
@@ -74,6 +79,7 @@
          th:text="'품절 임박 ' + ${p.stock} + '개 남음'">품절 임박</div>
     <!-- 로켓 배송 : 관리자가 상품관리에서 켠 상품만 (품절이면 붙이지 않는다) -->
     <div class="badge badge-rocket" th:if="${p.showFastDelivery}">로켓 배송</div>
+    <div class="badge badge-deal" th:if="${p.onSale}">오늘의 할인</div>
 </a>
 
 <!-- 성공/오류 메시지를 보여 주는 조각 -->

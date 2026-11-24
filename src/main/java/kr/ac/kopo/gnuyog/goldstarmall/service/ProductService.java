@@ -1,5 +1,6 @@
 package kr.ac.kopo.gnuyog.goldstarmall.service;
 
+import kr.ac.kopo.gnuyog.goldstarmall.domain.DailyDeal;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.ProductOption;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.ShippingStatus;
@@ -95,6 +96,20 @@ public class ProductService {
         }
         products.sort((a, b) -> Long.compare(sales.get(b.getId()), sales.get(a.getId())));
         return products.subList(0, Math.min(HOME_SECTION_SIZE, products.size()));
+    }
+
+    // 오늘의 할인 상품 : 오늘 할인하는 카테고리에서 재고가 있는 상품 (상품 번호 순)
+    public List<Product> findTodayDealProducts() {
+        List<Product> result = new ArrayList<>();
+        for (Product p : productRepository.findByCategory(DailyDeal.today().getCategory())) {
+            if (p.getStock() > 0) {
+                result.add(p);
+                if (result.size() == HOME_SECTION_SIZE) {
+                    break;
+                }
+            }
+        }
+        return result;
     }
 
     // 신상품 : 최근에 등록한 상품

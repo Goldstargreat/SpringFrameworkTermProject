@@ -57,7 +57,9 @@
                 <td th:text="${p.category}">카테고리</td>
                 <td>
                     <form th:action="@{/admin/products/{id}/update(id=${p.id})}" method="post" class="inline-form">
-                        <input type="number" name="price" th:value="${p.price}" min="1" required class="price-input">
+                        <!-- 정가를 입력한다. 오늘의 할인 카테고리면 손님에게는 할인가로 팔린다 -->
+                        <input type="number" name="price" th:value="${p.price}" min="1" required class="price-input"
+                               th:title="${p.onSale} ? '오늘의 할인 ' + ${p.saleRate} + '% : 판매가 ' + ${p.salePrice} + '원' : null">
                         <!-- 옵션 상품은 재고가 옵션 재고의 합계라 여기서 바꿀 수 없다 (readonly : 값은 그대로 보낸다) -->
                         <input type="number" name="stock" th:value="${p.stock}" min="0" required class="qty-input"
                                th:readonly="${p.hasOptions}" th:title="${p.hasOptions} ? '옵션별 재고의 합계입니다' : null">

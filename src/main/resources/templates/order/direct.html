@@ -23,7 +23,9 @@
             <div class="product-name" th:text="${product.name}">상품명</div>
             <div class="option-name" th:if="${option != null}" th:text="'옵션: ' + ${option.name}">옵션: 15인치 / 화이트</div>
             <p class="guide">
-                <span th:text="${#numbers.formatInteger(product.price, 1, 'COMMA')}">0</span>원
+                <del th:if="${product.onSale}" th:text="${#numbers.formatInteger(product.price, 1, 'COMMA')} + '원'">10,000원</del>
+                <span th:text="${#numbers.formatInteger(product.salePrice, 1, 'COMMA')}">0</span>원
+                <span class="sale-rate" th:if="${product.onSale}" th:text="'(오늘의 할인 ' + ${product.saleRate} + '%)'">(오늘의 할인 10%)</span>
                 × <b th:text="${quantity}">1</b>개
                 · <a th:href="@{/products/{id}(id=${product.id})}">수량 변경</a>
             </p>

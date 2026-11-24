@@ -259,6 +259,122 @@ h2 {
 }
 
 /* ----- 상품 카드 ----- */
+/* ----- 오늘의 할인 : 할인율, 원래 가격, 배지, 홈 배너, 주간 할인표 ----- */
+.sale-rate {
+    margin-right: 4px;
+    color: #e53935;
+    font-weight: bold;
+}
+
+.product-price-origin {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #999;
+}
+
+.detail-deal {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0 0;
+    color: #999;
+}
+
+.detail-deal .badge {
+    margin-top: 0;
+}
+
+.badge-deal {
+    background: #fdecec;
+    color: #c62828;
+}
+
+.deal-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 20px;
+    padding: 22px 28px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #e53935, #ff7043);
+    color: #fff;
+}
+
+.deal-banner h2 {
+    margin: 4px 0 8px;
+    font-size: 24px;
+}
+
+.deal-banner h2 b {
+    color: #fff59d;
+}
+
+.deal-banner p {
+    margin: 0 0 12px;
+    font-size: 14px;
+}
+
+.deal-banner .deal-banner-sub {
+    margin: 0;
+    font-weight: bold;
+    opacity: 0.9;
+}
+
+.deal-banner .btn {
+    background: #fff;
+    border-color: #fff;
+    color: #c62828;
+    font-weight: bold;
+}
+
+.deal-week {
+    display: flex;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.deal-week li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 64px;
+    padding: 8px 4px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.18);
+    font-size: 12px;
+    text-align: center;
+}
+
+.deal-week li.today {
+    background: #fff;
+    color: #c62828;
+    font-weight: bold;
+}
+
+.deal-week li span {
+    margin: 2px 0;
+    word-break: keep-all;
+}
+
+@media (max-width: 600px) {
+    .deal-banner {
+        padding: 18px;
+    }
+
+    .deal-week {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .deal-week li {
+        flex: 0 0 56px;
+    }
+}
+
 /* ----- 홈 화면 : 배너, 섹션 ----- */
 .home-banner {
     display: flex;

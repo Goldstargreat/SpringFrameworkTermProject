@@ -122,6 +122,22 @@ public class Product
         return price;
     }
 
+    // 오늘의 할인 대상인지 (요일별 할인 카테고리, DailyDeal) → 화면에서 product.onSale 로 사용
+    public boolean isOnSale() {
+        return DailyDeal.today().appliesTo(category);
+    }
+
+    // 오늘의 할인율 (할인 대상이 아니면 0) → 화면에서 product.saleRate 로 사용
+    public int getSaleRate() {
+        return isOnSale() ? DailyDeal.today().getRate() : 0;
+    }
+
+    // 손님이 실제로 내는 가격 (오늘의 할인 적용, 등급 할인 전) → 화면에서 product.salePrice 로 사용
+    // 장바구니, 바로 주문, 주문 금액은 모두 이 가격으로 계산한다
+    public int getSalePrice() {
+        return isOnSale() ? DailyDeal.today().discountedPrice(price) : price;
+    }
+
     public void setPrice(int price) {
         this.price = price;
     }

@@ -12,6 +12,27 @@
 <main class="container">
     <div th:replace="~{fragments/layout :: messages}"></div>
 
+    <!-- 오늘의 할인 배너 : 요일마다 한 카테고리 할인 (DailyDeal) -->
+    <section class="deal-banner">
+        <div class="deal-banner-text">
+            <p class="deal-banner-sub" th:text="${todayDeal.dayLabel} + '요일 오늘의 할인'">화요일 오늘의 할인</p>
+            <h2>
+                <span th:text="${todayDeal.category}">생활용품</span> 전 상품
+                <b th:text="${todayDeal.rate} + '% 할인'">10% 할인</b>
+            </h2>
+            <p>오늘 하루만! 등급 할인은 할인된 가격에 한 번 더 적용됩니다.</p>
+            <a class="btn" th:href="@{/products(category=${todayDeal.category})}">할인 상품 보러 가기 &rsaquo;</a>
+        </div>
+        <!-- 주간 할인표 : 오늘 칸에 색을 칠한다 -->
+        <ol class="deal-week">
+            <li th:each="d : ${weeklyDeals}" th:classappend="${d.today} ? 'today'">
+                <b th:text="${d.dayLabel}">월</b>
+                <span th:text="${d.category}">식품</span>
+                <small th:text="${d.rate} + '%'">10%</small>
+            </li>
+        </ol>
+    </section>
+
     <!-- 배너 -->
     <section class="home-banner">
         <div>
@@ -32,6 +53,17 @@
         <div class="category-bar">
             <a th:href="@{/products}">전체</a>
             <a th:each="c : ${categories}" th:href="@{/products(category=${c})}" th:text="${c}">카테고리</a>
+        </div>
+    </section>
+
+    <!-- 오늘의 할인 상품 -->
+    <section class="home-section" th:if="${!dealProducts.isEmpty()}">
+        <div class="home-section-head">
+            <h2 th:text="'🏷️ 오늘의 할인 : ' + ${todayDeal.category} + ' ' + ${todayDeal.rate} + '%'">🏷️ 오늘의 할인</h2>
+            <a th:href="@{/products(category=${todayDeal.category})}">더 보기 &rsaquo;</a>
+        </div>
+        <div class="product-grid">
+            <th:block th:each="p : ${dealProducts}"><a th:replace="~{fragments/layout :: productCard(${p})}"></a></th:block>
         </div>
     </section>
 

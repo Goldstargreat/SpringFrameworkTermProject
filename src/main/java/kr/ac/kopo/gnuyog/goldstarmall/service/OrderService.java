@@ -81,7 +81,8 @@ public class OrderService {
             OrderItem orderItem = new OrderItem();
             orderItem.setProduct(product);
             orderItem.setOption(option);
-            orderItem.setOrderPrice(product.getPrice());
+            // 주문 가격 = 주문할 때의 판매 가격 (오늘의 할인 적용). 요일이 바뀌어도 주문 금액은 그대로 남는다
+            orderItem.setOrderPrice(product.getSalePrice());
             orderItem.setQuantity(cartItem.getQuantity());
             order.addOrderItem(orderItem);
 
@@ -126,7 +127,8 @@ public class OrderService {
         OrderItem orderItem = new OrderItem();
         orderItem.setProduct(product);
         orderItem.setOption(option);
-        orderItem.setOrderPrice(product.getPrice());
+        // 주문 가격 = 주문할 때의 판매 가격 (오늘의 할인 적용)
+        orderItem.setOrderPrice(product.getSalePrice());
         orderItem.setQuantity(quantity);
         order.addOrderItem(orderItem);
         applyGradeDiscount(order, member, orderItem.getTotalPrice());

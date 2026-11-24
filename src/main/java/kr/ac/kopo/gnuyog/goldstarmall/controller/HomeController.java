@@ -1,5 +1,6 @@
 package kr.ac.kopo.gnuyog.goldstarmall.controller;
 
+import kr.ac.kopo.gnuyog.goldstarmall.domain.DailyDeal;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
 import kr.ac.kopo.gnuyog.goldstarmall.config.SessionConst;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Inquiry;
@@ -55,6 +56,10 @@ public class HomeController {
         }
 
         model.addAttribute("categories", productService.getCategories());
+        // 오늘의 할인 : 배너 문구, 주간 할인표(월~일), 할인 상품 섹션
+        model.addAttribute("todayDeal", DailyDeal.today());
+        model.addAttribute("weeklyDeals", DailyDeal.values());
+        model.addAttribute("dealProducts", productService.findTodayDealProducts());
         model.addAttribute("popularProducts", productService.findPopularProducts());
         model.addAttribute("fastDeliveryProducts", productService.findFastDeliveryProducts());
         model.addAttribute("newProducts", productService.findNewProducts());

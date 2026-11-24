@@ -93,7 +93,7 @@ public class OrderController {
         model.addAttribute("option", option);
         model.addAttribute("quantity", count);
         // 등급 할인 : 상품 금액, 할인 금액, 결제 금액 (실제 계산은 주문할 때 OrderService 가 한다)
-        int originalPrice = product.getPrice() * count;
+        int originalPrice = product.getSalePrice() * count;  // 오늘의 할인이 적용된 판매 가격 기준
         int discount = member.getGrade().discountOf(originalPrice);
         model.addAttribute("originalPrice", originalPrice);
         model.addAttribute("discount", discount);

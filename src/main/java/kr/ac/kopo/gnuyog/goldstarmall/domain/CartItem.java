@@ -42,10 +42,10 @@ public class CartItem {
     public CartItem() {
     }
 
-    // 이 항목의 금액 = 상품 가격 x 수량 (화면에서 cartItem.totalPrice 로 사용)
+    // 이 항목의 금액 = 오늘 판매 가격(오늘의 할인 적용) x 수량 (화면에서 cartItem.totalPrice 로 사용)
     public int getTotalPrice()
     {
-        return product.getPrice() * quantity;
+        return product.getSalePrice() * quantity;
     }
 
     // 담을 수 있는 재고 : 옵션을 골랐으면 그 옵션의 재고, 아니면 상품 재고
