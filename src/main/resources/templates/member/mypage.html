@@ -26,12 +26,20 @@
             <label>전화번호
                 <input type="text" name="phone" th:value="${member.phone}" placeholder="010-0000-0000" required data-phone-format inputmode="numeric" maxlength="13">
             </label>
-            <label>기본 배송지 주소
-                <input type="text" name="address" th:value="${member.address}">
-            </label>
-            <label>추가 배송지 주소 (선택)
-                <input type="text" name="secondAddress" th:value="${member.secondAddress}" placeholder="회사, 부모님 댁 등">
-            </label>
+            <!-- 배송지 : 손님에게만 보인다 (관리자는 주문하지 않으므로 배송지가 필요 없다) -->
+            <th:block th:if="${member.role != 'ADMIN'}">
+                <label>기본 배송지 주소
+                    <input type="text" name="address" th:value="${member.address}">
+                </label>
+                <label>추가 배송지 주소 (선택)
+                    <input type="text" name="secondAddress" th:value="${member.secondAddress}" placeholder="회사, 부모님 댁 등">
+                </label>
+            </th:block>
+            <!-- 관리자 : 화면에는 안 보이지만, 정보 수정 때 원래 값이 지워지지 않도록 그대로 보낸다 -->
+            <th:block th:if="${member.role == 'ADMIN'}">
+                <input type="hidden" name="address" th:value="${member.address}">
+                <input type="hidden" name="secondAddress" th:value="${member.secondAddress}">
+            </th:block>
             <button type="submit" class="btn btn-primary btn-block">정보 수정</button>
         </form>
     </div>
