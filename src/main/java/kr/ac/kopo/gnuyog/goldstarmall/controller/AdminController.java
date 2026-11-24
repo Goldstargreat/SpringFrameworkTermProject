@@ -21,7 +21,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 import java.util.Map;
 
-// 관리자 컨트롤러 : 주문관리(배송 상태 변경, 주문 삭제), 회원관리(회원 정보 수정, 삭제), 상품관리(등록, 가격/재고 수정)
+// 관리자 컨트롤러 : 주문관리(배송 상태 변경, 주문 거절/환불, 주문 삭제), 회원관리(회원 정보 수정, 삭제), 상품관리(등록, 가격/재고 수정)
 // AdminCheckInterceptor 때문에 관리자(ADMIN)만 들어올 수 있다
 @Controller
 @RequestMapping("/admin")
@@ -57,7 +57,22 @@ public class AdminController {
         return "redirect:/admin/orders";
     }
 
-    // 주문 삭제 (배송완료, 주문취소된 주문만)
+    // 주문 거절 : 출고 전 주문만, 거절 사유가 필요하고 결제 금액 전체를 환불한다
+    @PostMapping("/orders/{orderId}/reject")
+    public String rejectOrder(@PathVariable("orderId") Long orderId,
+                              @RequestParam(name = "reason", required = false) String reason,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            int refund = orderService.rejectOrder(orderId, reason);
+            redirectAttributes.addFlashAttribute("message",
+                    orderId + "번 주문을 거절하고 " + String.format("%,d", refund) + "원을 환불했습니다.");
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/orders";
+    }
+
+    // 주문 삭제 (배송완료, 주문취소, 주문거절된 주문만)
     @PostMapping("/orders/{orderId}/delete")
     public String deleteOrder(@PathVariable("orderId") Long orderId, RedirectAttributes redirectAttributes) {
         try {

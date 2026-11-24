@@ -8,7 +8,8 @@ public enum ShippingStatus {
     SHIPPED("출고", 3),
     IN_DELIVERY("배송중", 4),
     DELIVERED("배송완료", 5),
-    CANCELED("주문취소", 0);
+    CANCELED("주문취소", 0),     // 손님이 직접 취소 (주문접수 단계에서만)
+    REJECTED("주문거절", 0);     // 관리자가 거절 (출고 전까지, 거절 사유를 남긴다)
 
     // 화면에 보여 줄 한글 이름
     private final String label;
@@ -48,10 +49,24 @@ public enum ShippingStatus {
         return this;
     }
 
-    // 더 이상 진행할 게 없는 끝난 주문인지 (배송완료 또는 주문취소)
+    // 더 이상 진행할 게 없는 끝난 주문인지 (배송완료, 주문취소, 주문거절)
     // 화면(Thymeleaf)에서는 ${order.status.finished} 로 쓸 수 있다
     public boolean isFinished()
     {
-        return this == DELIVERED || this == CANCELED;
+        return this == DELIVERED || this == CANCELED || this == REJECTED;
+    }
+
+    // 취소되거나 거절되어 판매가 없던 일이 된 주문인지 (환불 대상, 판매량/매출에서 뺀다)
+    // 화면에서는 ${order.status.voided} 로 쓸 수 있다
+    public boolean isVoided()
+    {
+        return this == CANCELED || this == REJECTED;
+    }
+
+    // 관리자가 거절할 수 있는 단계인지 : 아직 출고되기 전(주문접수, 입고)
+    // 화면에서는 ${order.status.rejectable} 로 쓸 수 있다
+    public boolean isRejectable()
+    {
+        return this == ORDER_RECEIVED || this == WAREHOUSED;
     }
 }

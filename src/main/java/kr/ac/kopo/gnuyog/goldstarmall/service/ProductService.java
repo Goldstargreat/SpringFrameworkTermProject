@@ -32,6 +32,9 @@ public class ProductService {
             "생활용품", "홈인테리어", "가전디지털", "스포츠/레저", "자동차용품",
             "음반/dvd", "완구/취미", "문구/오피스", "반려동물용품", "헬스/건강식품");
 
+    // 판매로 치지 않는 주문 상태 : 주문취소, 주문거절 (환불된 주문)
+    private static final List<ShippingStatus> VOIDED_STATUSES = List.of(ShippingStatus.CANCELED, ShippingStatus.REJECTED);
+
     private final ProductRepository productRepository;
     private final CartItemRepository cartItemRepository;
     private final OrderItemRepository orderItemRepository;
@@ -55,10 +58,10 @@ public class ProductService {
         return CATEGORIES;
     }
 
-    // (관리자) 상품별 누적 판매량 : 상품 번호 → 판매 수량 (취소된 주문은 빼고, 한 번도 안 팔린 상품은 없음)
+    // (관리자) 상품별 누적 판매량 : 상품 번호 → 판매 수량 (취소/거절된 주문은 빼고, 한 번도 안 팔린 상품은 없음)
     public Map<Long, Long> salesQuantityByProduct() {
         Map<Long, Long> result = new HashMap<>();
-        for (Object[] row : orderItemRepository.sumSalesByProduct(ShippingStatus.CANCELED)) {
+        for (Object[] row : orderItemRepository.sumSalesByProduct(VOIDED_STATUSES)) {
             result.put((Long) row[0], ((Number) row[1]).longValue());
         }
         return result;
@@ -67,7 +70,7 @@ public class ProductService {
     // (관리자) 상품별 누적 매출 : 상품 번호 → 매출(원) (주문 당시 가격 기준이라 가격을 바꿔도 그대로다)
     public Map<Long, Long> salesAmountByProduct() {
         Map<Long, Long> result = new HashMap<>();
-        for (Object[] row : orderItemRepository.sumSalesByProduct(ShippingStatus.CANCELED)) {
+        for (Object[] row : orderItemRepository.sumSalesByProduct(VOIDED_STATUSES)) {
             result.put((Long) row[0], ((Number) row[2]).longValue());
         }
         return result;

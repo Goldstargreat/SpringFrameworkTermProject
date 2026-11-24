@@ -62,7 +62,23 @@ public class Order {
     // 주문 일시
     private LocalDateTime orderedAt;
 
+    // 환불 금액 : 주문취소/주문거절 때 결제 금액 전체를 돌려준다 (환불 전에는 null)
+    // 실제 결제(카드, 계좌) 기능이 없으므로 "얼마를 언제 환불했는지"를 기록해 화면에 보여 준다
+    private Integer refundAmount;
+
+    // 환불 일시
+    private LocalDateTime refundedAt;
+
+    // 거절 사유 : 관리자가 주문을 거절할 때 남긴다 (손님에게 보여 준다)
+    @Column(length = 200)
+    private String rejectReason;
+
     public Order() {
+    }
+
+    // 환불이 끝난 주문인지 (화면에서 order.refunded 로 사용)
+    public boolean isRefunded() {
+        return refundedAt != null;
     }
 
     // 주문에 주문 상품을 추가하면서, 주문 상품 쪽에도 "내 주문은 이것"이라고 알려 준다 (양방향 연결)
@@ -142,5 +158,29 @@ public class Order {
 
     public void setOrderedAt(LocalDateTime orderedAt) {
         this.orderedAt = orderedAt;
+    }
+
+    public Integer getRefundAmount() {
+        return refundAmount;
+    }
+
+    public void setRefundAmount(Integer refundAmount) {
+        this.refundAmount = refundAmount;
+    }
+
+    public LocalDateTime getRefundedAt() {
+        return refundedAt;
+    }
+
+    public void setRefundedAt(LocalDateTime refundedAt) {
+        this.refundedAt = refundedAt;
+    }
+
+    public String getRejectReason() {
+        return rejectReason;
+    }
+
+    public void setRejectReason(String rejectReason) {
+        this.rejectReason = rejectReason;
     }
 }

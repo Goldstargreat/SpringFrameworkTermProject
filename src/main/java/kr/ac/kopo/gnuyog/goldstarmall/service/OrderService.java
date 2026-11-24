@@ -164,18 +164,47 @@ public class OrderService {
         return order;
     }
 
-    // 주문 취소 : 아직 '주문접수' 상태일 때만 가능하고, 줄였던 재고를 다시 돌려놓는다
-    public void cancelOrder(Long memberId, Long orderId) {
+    // 주문 취소 : 아직 '주문접수' 상태일 때만 가능하다. 결제 금액을 환불하고 재고를 돌려놓는다
+    // 환불한 금액을 돌려준다 (화면에 "N원 환불" 안내를 보여 주기 위해)
+    public int cancelOrder(Long memberId, Long orderId) {
         Order order = findMyOrder(memberId, orderId);
         if (order.getStatus() != ShippingStatus.ORDER_RECEIVED) {
             throw new BusinessException("이미 물류센터에 입고된 주문은 취소할 수 없습니다.");
         }
+        return refund(order, ShippingStatus.CANCELED);
+    }
 
+    // (관리자) 주문 거절 : 출고 전(주문접수, 입고)까지만 가능하고, 거절 사유가 꼭 있어야 한다
+    // 손님이 이미 결제했으므로 거절하면 반드시 환불한다. 환불한 금액을 돌려준다
+    public int rejectOrder(Long orderId, String reason) {
+        Order order = orderRepository.findById(orderId).orElse(null);
+        if (order == null) {
+            throw new NotFoundException("주문을 찾을 수 없습니다.");
+        }
+        if (!order.getStatus().isRejectable()) {
+            throw new BusinessException("출고 전(주문접수, 입고) 주문만 거절할 수 있습니다. (현재 상태: " + order.getStatus().getLabel() + ")");
+        }
+        if (reason == null || reason.trim().isEmpty()) {
+            throw new BusinessException("거절 사유를 입력해 주세요. (손님에게 보여집니다)");
+        }
+        if (reason.trim().length() > 200) {
+            throw new BusinessException("거절 사유는 200글자까지 쓸 수 있습니다.");
+        }
+        order.setRejectReason(reason.trim());
+        return refund(order, ShippingStatus.REJECTED);
+    }
+
+    // 환불 처리 : 주문취소와 주문거절이 함께 쓴다
+    // 1) 줄였던 재고를 다시 돌려놓고  2) 결제 금액 전체를 환불 기록으로 남기고  3) 상태를 바꾼다
+    private int refund(Order order, ShippingStatus newStatus) {
         for (OrderItem orderItem : order.getOrderItems()) {
             Product product = orderItem.getProduct();
             product.setStock(product.getStock() + orderItem.getQuantity());
         }
-        order.setStatus(ShippingStatus.CANCELED);
+        order.setRefundAmount(order.getTotalPrice());
+        order.setRefundedAt(LocalDateTime.now());
+        order.setStatus(newStatus);
+        return order.getTotalPrice();
     }
 
     // (관리자) 전체 주문 목록
@@ -199,7 +228,7 @@ public class OrderService {
         order.setStatus(next);
     }
 
-    // (관리자) 주문 삭제 : 배송완료 또는 주문취소로 끝난 주문만 지울 수 있다
+    // (관리자) 주문 삭제 : 배송완료, 주문취소, 주문거절로 끝난 주문만 지울 수 있다
     public void deleteOrder(Long orderId) {
         Order order = orderRepository.findById(orderId).orElse(null);
         if (order == null) {

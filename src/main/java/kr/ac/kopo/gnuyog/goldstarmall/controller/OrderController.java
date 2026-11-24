@@ -161,15 +161,16 @@ public class OrderController {
         return "order/detail";
     }
 
-    // 주문 취소
+    // 주문 취소 : 결제 금액 전체가 환불된다
     @PostMapping("/{orderId}/cancel")
     public String cancel(@PathVariable("orderId") Long orderId,
                          HttpSession session,
                          RedirectAttributes redirectAttributes) {
         Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
         try {
-            orderService.cancelOrder(memberId, orderId);
-            redirectAttributes.addFlashAttribute("message", "주문을 취소했습니다.");
+            int refund = orderService.cancelOrder(memberId, orderId);
+            redirectAttributes.addFlashAttribute("message",
+                    "주문을 취소했습니다. 결제 금액 " + String.format("%,d", refund) + "원이 환불되었습니다.");
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
