@@ -202,19 +202,34 @@ public class MemberService {
         return memberRepository.findAll();
     }
 
-    // (관리자) 전화번호로 회원 검색 : 숫자만 뽑아서 일부만 맞아도 찾는다
-    // 검색어가 비어 있으면 전체 목록, 숫자가 하나도 없으면 결과 없음
+    // (관리자) 회원 검색 : 검색 기준(type)에 따라 일부만 맞아도 찾는다
+    //   all   : 이름, 아이디, 전화번호 중 하나라도 맞으면
+    //   name  : 이름
+    //   loginId : 아이디
+    //   phone : 전화번호 (숫자만 뽑아서 비교, 숫자가 하나도 없으면 결과 없음)
+    // 검색어가 비어 있으면 전체 목록
     @Transactional(readOnly = true)
-    public List<Member> searchMembersByPhone(String keyword) {
+    public List<Member> searchMembers(String type, String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {
             // 회원번호 순서로 (화면의 순번이 항상 같은 순서로 붙도록)
             return memberRepository.findAll(Sort.by("id"));
         }
-        String digits = keyword.replaceAll("[^0-9]", "");
-        if (digits.isEmpty()) {
-            return List.of();
+        String text = keyword.trim();
+        String digits = text.replaceAll("[^0-9]", "");
+
+        if ("name".equals(type)) {
+            return memberRepository.findByNameContainingOrderByIdAsc(text);
         }
-        return memberRepository.searchByPhoneDigits(digits);
+        if ("loginId".equals(type)) {
+            return memberRepository.findByLoginIdContainingOrderByIdAsc(text);
+        }
+        if ("phone".equals(type)) {
+            if (digits.isEmpty()) {
+                return List.of();
+            }
+            return memberRepository.searchByPhoneDigits(digits);
+        }
+        return memberRepository.searchAll(text, digits);
     }
 
     // 회원 삭제 : 회원 탈퇴와 관리자의 회원 삭제가 함께 쓴다

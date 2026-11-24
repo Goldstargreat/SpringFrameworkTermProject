@@ -25,4 +25,18 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     // → "5678", "12345678", "010-1234" 어떤 식으로 입력해도 찾을 수 있다
     @Query("select m from Member m where replace(m.phone, '-', '') like concat('%', :digits, '%') order by m.id")
     List<Member> searchByPhoneDigits(@Param("digits") String digits);
+
+    // (관리자) 이름 일부로 회원 검색 → select * from members where name like '%검색어%' order by id
+    List<Member> findByNameContainingOrderByIdAsc(String name);
+
+    // (관리자) 아이디 일부로 회원 검색 → select * from members where login_id like '%검색어%' order by id
+    List<Member> findByLoginIdContainingOrderByIdAsc(String loginId);
+
+    // (관리자) 전체 검색 : 이름, 아이디, 전화번호 중 하나라도 검색어가 들어 있으면 찾는다
+    // digits : 검색어에서 숫자만 뽑은 값 (숫자가 없으면 전화번호 비교는 건너뛴다)
+    @Query("select m from Member m where m.name like concat('%', :keyword, '%')"
+            + " or m.loginId like concat('%', :keyword, '%')"
+            + " or (:digits <> '' and replace(m.phone, '-', '') like concat('%', :digits, '%'))"
+            + " order by m.id")
+    List<Member> searchAll(@Param("keyword") String keyword, @Param("digits") String digits);
 }

@@ -835,14 +835,18 @@ h2 {
     color: #a12626;
 }
 
-/* 회원관리 화면의 전화번호 검색 */
+/* 회원관리 화면의 회원 검색 (검색 기준 + 검색어) */
 .member-search {
     margin: 12px 0;
 }
 
+.member-search select,
 .member-search input {
-    width: 220px;
     padding: 5px 8px;
+}
+
+.member-search input {
+    width: 260px;
 }
 
 /* 상품관리 화면의 가격 입력칸 */
