@@ -2,6 +2,8 @@ package kr.ac.kopo.gnuyog.goldstarmall.validator;
 
 import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
 
+import java.util.List;
+
 // 회원 입력값 검사기 : 회원 입력값 규칙(글자 수 등)과 검사 메서드를 한곳에 모아 둔다
 // 규칙을 바꾸고 싶으면 이 파일의 상수만 고치면 회원가입, 비밀번호 변경 등에 모두 적용된다
 // 검사에 실패하면 BusinessException 을 던지고, 컨트롤러가 메시지를 화면에 보여 준다
@@ -13,8 +15,45 @@ public final class MemberValidator {
     // 비밀번호 최소 글자 수
     public static final int PASSWORD_MIN_LENGTH = 4;
 
+    // 일반 회원이 아이디에 쓸 수 없는 단어 (관리자나 쇼핑몰로 착각하지 않도록)
+    // 대소문자, 띄어쓰기와 상관없이 들어 있기만 해도 막는다 (예: Admin1, myadmin, GoldStarMall)
+    private static final List<String> RESERVED_LOGIN_ID_WORDS = List.of("admin", "goldstarmall");
+
+    // 일반 회원이 이름에 쓸 수 없는 단어 (상품평/문의에 관리자처럼 보이지 않도록)
+    private static final List<String> RESERVED_NAME_WORDS = List.of(
+            "admin", "관리자", "운영자", "골드스타몰", "goldstarmall");
+
     // 객체를 만들 필요가 없는 클래스이므로 생성자를 막아 둔다
     private MemberValidator() {
+    }
+
+    // 아이디에 쓸 수 없는 단어가 들어 있는지 검사 (회원가입, 아이디 중복 확인)
+    public static void checkReservedLoginId(String loginId) {
+        if (containsReservedWord(loginId, RESERVED_LOGIN_ID_WORDS)) {
+            throw new BusinessException("'admin', 'goldstarmall'이 들어간 아이디는 사용할 수 없습니다.");
+        }
+    }
+
+    // 이름에 쓸 수 없는 단어가 들어 있는지 검사 (회원가입, 일반 회원의 정보 수정)
+    // 관리자 계정은 원래 이름이 "관리자"이므로 이 검사를 하지 않는다
+    public static void checkReservedName(String name) {
+        if (containsReservedWord(name, RESERVED_NAME_WORDS)) {
+            throw new BusinessException("'관리자', '운영자', 'admin', '골드스타몰', 'goldstarmall'이 들어간 이름은 사용할 수 없습니다.");
+        }
+    }
+
+    // 띄어쓰기를 지우고 소문자로 바꾼 뒤, 금지 단어가 하나라도 들어 있는지
+    private static boolean containsReservedWord(String text, List<String> words) {
+        if (text == null) {
+            return false;
+        }
+        String normalized = text.replaceAll("\\s", "").toLowerCase();
+        for (String word : words) {
+            if (normalized.contains(word)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // 아이디 검사

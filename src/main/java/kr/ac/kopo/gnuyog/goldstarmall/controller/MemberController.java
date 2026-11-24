@@ -48,8 +48,10 @@ public class MemberController {
         String error = null;
         try {
             MemberValidator.validateLoginId(loginId);
+            MemberValidator.checkReservedLoginId(loginId);
             MemberValidator.validatePassword(password, passwordConfirm);
             MemberValidator.validateName(name);
+            MemberValidator.checkReservedName(name);
             memberService.join(loginId.trim(), password, name.trim(), phone, address);
         } catch (BusinessException e) {
             // 입력값 오류, 아이디 중복 등
@@ -81,6 +83,7 @@ public class MemberController {
         // 1) 글자 수 등 아이디 규칙 검사
         try {
             MemberValidator.validateLoginId(loginId);
+            MemberValidator.checkReservedLoginId(loginId);
         } catch (BusinessException e) {
             return Map.of("available", false, "message", e.getMessage());
         }

@@ -108,6 +108,10 @@ public class MemberService {
         // 내 번호 그대로 두는 건 괜찮고, 다른 회원이 쓰는 번호로 바꾸는 것만 막는다
         checkDuplicatePhone(phone, memberId);
         Member member = findById(memberId);
+        // 일반 회원은 "관리자" 같은 이름으로 바꿀 수 없다 (관리자 계정은 원래 이름이 "관리자"라서 검사하지 않는다)
+        if (!"ADMIN".equals(member.getRole())) {
+            MemberValidator.checkReservedName(name);
+        }
         // 트랜잭션 안에서 값을 바꾸면 JPA 가 알아서 update SQL 을 실행한다 (변경 감지)
         member.setName(name.trim());
         member.setPhone(phone);
