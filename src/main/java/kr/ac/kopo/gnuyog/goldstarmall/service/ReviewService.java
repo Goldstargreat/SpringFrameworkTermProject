@@ -67,6 +67,9 @@ public class ReviewService {
         if (member == null) {
             return "로그인한 회원만 상품평을 쓸 수 있습니다.";
         }
+        if ("ADMIN".equals(member.getRole())) {
+            return "관리자는 상품평을 쓸 수 없습니다. 상품평에 코멘트를 달아 주세요.";
+        }
         if (reviewRepository.existsByMemberAndProduct(member, product)) {
             return "이 상품의 상품평을 이미 작성했습니다.";
         }
@@ -105,6 +108,23 @@ public class ReviewService {
         review.setContent(content.trim());
         review.setCreatedAt(LocalDateTime.now());
         return reviewRepository.save(review);
+    }
+
+    // (관리자) 코멘트 달기 : 이미 코멘트가 있으면 새 코멘트로 고친다. 상품 번호를 돌려준다
+    public Long comment(Long reviewId, String comment) {
+        Review review = reviewRepository.findById(reviewId).orElse(null);
+        if (review == null) {
+            throw new NotFoundException("상품평을 찾을 수 없습니다.");
+        }
+        if (comment == null || comment.trim().isEmpty()) {
+            throw new BusinessException("코멘트 내용을 입력해 주세요.");
+        }
+        if (comment.trim().length() > CONTENT_MAX_LENGTH) {
+            throw new BusinessException("코멘트는 " + CONTENT_MAX_LENGTH + "글자까지 쓸 수 있습니다.");
+        }
+        review.setAdminComment(comment.trim());
+        review.setCommentedAt(LocalDateTime.now());
+        return review.getProduct().getId();
     }
 
     // 상품평 삭제 : 쓴 사람 본인이나 관리자만 지울 수 있다. 지운 상품평의 상품 번호를 돌려준다

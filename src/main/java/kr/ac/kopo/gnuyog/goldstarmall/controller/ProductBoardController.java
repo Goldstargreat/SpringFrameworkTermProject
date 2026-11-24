@@ -13,7 +13,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 // 상품평 / 상품문의 컨트롤러 : 상품 상세 화면의 "상품평", "상품문의" 탭에서 보내는 요청을 받는다
 // 쓰기/삭제는 로그인해야 하고(SecurityConfig 의 /reviews/**, /inquiries/**),
-// 답변은 관리자만 할 수 있다(/admin/**)
+// 상품평 코멘트, 문의 답변은 관리자만 할 수 있다(/admin/**)
 // 처리가 끝나면 상품 상세 화면의 해당 탭 위치(#tab-reviews, #tab-qna)로 돌아간다
 @Controller
 public class ProductBoardController {
@@ -57,6 +57,21 @@ public class ProductBoardController {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/";
         }
+    }
+
+    // (관리자) 상품평 코멘트 : 주소가 /admin/ 으로 시작하므로 AdminCheckInterceptor 가 관리자만 들여보낸다
+    @PostMapping("/admin/reviews/{reviewId}/comment")
+    public String commentReview(@PathVariable("reviewId") Long reviewId,
+                                @RequestParam("comment") String comment,
+                                @RequestParam("productId") Long productId,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            reviewService.comment(reviewId, comment);
+            redirectAttributes.addFlashAttribute("message", "코멘트를 등록했습니다.");
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/products/" + productId + "#tab-reviews";
     }
 
     // ===== 상품문의 =====

@@ -43,7 +43,19 @@ public class Review {
     // 쓴 날짜
     private LocalDateTime createdAt;
 
+    // 관리자 코멘트 : 관리자가 코멘트를 달기 전에는 비어 있다(null)
+    @Column(length = 500)
+    private String adminComment;
+
+    // 관리자가 코멘트를 단 날짜
+    private LocalDateTime commentedAt;
+
     public Review() {
+    }
+
+    // 관리자 코멘트가 달렸는지 (화면에서 review.commented 로 사용)
+    public boolean isCommented() {
+        return adminComment != null;
     }
 
     // 화면에 별 모양으로 보여 주기 위한 문자열 (예: 4점 → ★★★★☆)
@@ -98,5 +110,21 @@ public class Review {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getAdminComment() {
+        return adminComment;
+    }
+
+    public void setAdminComment(String adminComment) {
+        this.adminComment = adminComment;
+    }
+
+    public LocalDateTime getCommentedAt() {
+        return commentedAt;
+    }
+
+    public void setCommentedAt(LocalDateTime commentedAt) {
+        this.commentedAt = commentedAt;
     }
 }

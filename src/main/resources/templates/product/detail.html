@@ -110,6 +110,8 @@
         </div>
 
         <!-- 쓸 수 있으면 작성 폼, 아니면 이유 (ReviewService.cannotWriteReason) -->
+        <!-- 관리자는 상품평을 쓰지 않고, 아래 목록에서 각 상품평에 코멘트를 단다 -->
+        <p class="guide" th:if="${isAdmin}">관리자는 각 상품평 아래에서 코멘트를 달 수 있습니다.</p>
         <form th:if="${reviewBlockedReason == null}" th:action="@{/reviews}" method="post" class="board-form">
             <input type="hidden" name="productId" th:value="${product.id}">
             <div class="rating-input">
@@ -123,7 +125,7 @@
             <textarea name="content" rows="3" maxlength="500" placeholder="상품을 사용해 보신 느낌을 남겨 주세요. (500자 이내)" required></textarea>
             <button type="submit" class="btn btn-primary">상품평 등록</button>
         </form>
-        <p class="board-notice" th:if="${reviewBlockedReason != null}">
+        <p class="board-notice" th:if="${!isAdmin and reviewBlockedReason != null}">
             <span th:text="${reviewBlockedReason}">안내</span>
             <a th:if="${loginMemberId == null}" th:href="@{/members/login}">로그인하기</a>
         </p>
@@ -143,6 +145,21 @@
                     </form>
                 </div>
                 <p class="board-body" th:text="${r.content}">상품평 내용</p>
+
+                <!-- 관리자 코멘트 -->
+                <div class="answer" th:if="${r.commented}">
+                    <b class="qa-mark">↳</b>
+                    <span class="answer-text" th:text="${r.adminComment}">코멘트</span>
+                    <span class="date" th:text="'골드스타몰 · ' + ${#temporals.format(r.commentedAt, 'yyyy-MM-dd')}">골드스타몰</span>
+                </div>
+
+                <!-- 관리자에게만 : 코멘트 쓰기 (코멘트가 있으면 고치기) -->
+                <form th:if="${isAdmin}" th:action="@{/admin/reviews/{id}/comment(id=${r.id})}" method="post" class="board-form answer-form">
+                    <input type="hidden" name="productId" th:value="${product.id}">
+                    <textarea name="comment" rows="2" maxlength="500" th:text="${r.adminComment}"
+                              th:placeholder="${r.commented} ? '코멘트 고치기' : '코멘트 쓰기 (관리자)'" required></textarea>
+                    <button type="submit" class="btn btn-small btn-primary" th:text="${r.commented} ? '코멘트 수정' : '코멘트 등록'">코멘트 등록</button>
+                </form>
             </li>
         </ul>
     </section>
@@ -150,9 +167,11 @@
     <!-- ===== 3. 상품문의 ===== -->
     <section id="tab-qna" class="tab-section">
         <h2>상품문의</h2>
-        <p class="guide">상품에 대해 궁금한 점을 남겨 주시면 골드스타몰이 답변해 드립니다.</p>
+        <p class="guide" th:if="${!isAdmin}">상품에 대해 궁금한 점을 남겨 주시면 골드스타몰이 답변해 드립니다.</p>
+        <!-- 관리자는 문의를 쓰지 않고, 아래 목록에서 각 문의에 답변한다 -->
+        <p class="guide" th:if="${isAdmin}">관리자는 각 문의 아래에서 답변을 달 수 있습니다.</p>
 
-        <form th:if="${loginMemberId != null}" th:action="@{/inquiries}" method="post" class="board-form">
+        <form th:if="${loginMemberId != null and !isAdmin}" th:action="@{/inquiries}" method="post" class="board-form">
             <input type="hidden" name="productId" th:value="${product.id}">
             <textarea name="question" rows="3" maxlength="500" placeholder="문의 내용을 입력해 주세요. (500자 이내)" required></textarea>
             <button type="submit" class="btn btn-primary">문의하기</button>
