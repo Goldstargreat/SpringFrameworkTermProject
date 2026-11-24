@@ -1,0 +1,10 @@
+# 편집기 공통 설정 (IntelliJ, VS Code 등이 읽는다)
+# 모든 파일을 UTF-8 로 저장해 한글 주석이 깨지지 않게 한다
+# 특히 IntelliJ 는 .properties 파일을 기본으로 ISO-8859-1 로 저장해서 한글이 ? 로 바뀌므로 꼭 필요하다
+root = true
+
+[*]
+charset = utf-8
+
+[*.properties]
+charset = utf-8
