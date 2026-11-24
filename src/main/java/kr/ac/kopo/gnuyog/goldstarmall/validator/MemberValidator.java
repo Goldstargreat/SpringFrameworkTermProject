@@ -50,11 +50,19 @@ public final class MemberValidator {
             throw new BusinessException("전화번호를 입력해 주세요.");
         }
         String digits = phone.replaceAll("[^0-9]", "");
-        if (!digits.matches("0\\d{9,10}")) {
-            throw new BusinessException("전화번호 형식이 올바르지 않습니다. (예: 010-1234-5678)");
+
+        // 앞자리(국번) 길이 : 서울(02)만 2자리, 나머지(010, 031, 070 등)는 3자리
+        // - 서울 : 9자리(02-123-4567) 또는 10자리(02-1234-5678)
+        // - 그 외 : 10자리(031-123-4567) 또는 11자리(010-1234-5678)
+        boolean seoul = digits.startsWith("02");
+        boolean validLength = seoul ? digits.matches("02\\d{7,8}") : digits.matches("0[1-9]\\d{8,9}");
+        if (!validLength) {
+            throw new BusinessException("전화번호 형식이 올바르지 않습니다. (예: 010-1234-5678, 02-123-4567)");
         }
-        // 11자리 : 3-4-4, 10자리 : 3-3-4
+
+        // 앞자리 - 가운데 - 마지막 4자리 로 나눈다
+        int prefixEnd = seoul ? 2 : 3;
         int middleEnd = digits.length() - 4;
-        return digits.substring(0, 3) + "-" + digits.substring(3, middleEnd) + "-" + digits.substring(middleEnd);
+        return digits.substring(0, prefixEnd) + "-" + digits.substring(prefixEnd, middleEnd) + "-" + digits.substring(middleEnd);
     }
 }

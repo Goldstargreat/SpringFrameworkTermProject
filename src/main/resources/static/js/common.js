@@ -40,20 +40,29 @@ document.querySelectorAll('img[data-remove-on-error]').forEach(function (img) {
 });
 
 // 4) 전화번호 하이픈 자동 입력 : data-phone-format 이 붙은 입력칸은 숫자만 입력해도 "010-1234-5678" 처럼 바뀐다
-//    서버의 MemberValidator.normalizePhone 과 같은 규칙 (11자리 : 3-4-4, 10자리 : 3-3-4)
+//    서버의 MemberValidator.normalizePhone 과 같은 규칙
+//    - 서울(02) : 앞자리 2자리. 02-123-4567(9자리), 02-1234-5678(10자리)
+//    - 그 외    : 앞자리 3자리. 031-123-4567(10자리), 010-1234-5678(11자리)
 //    입력을 편하게 해 주는 기능일 뿐이고, 진짜 형식 검사와 중복 검사는 서버에서 한다
 function formatPhone(value) {
-    var digits = value.replace(/[^0-9]/g, '').substring(0, 11); // 숫자만, 최대 11자리
-    if (digits.length < 4) {
-        return digits;                                                     // 010
+    var digits = value.replace(/[^0-9]/g, '');
+    var seoul = digits.indexOf('02') === 0;
+    var p = seoul ? 2 : 3;                  // 앞자리 길이
+    var max = seoul ? 10 : 11;              // 최대 자리 수
+    digits = digits.substring(0, max);
+
+    if (digits.length <= p) {
+        return digits;                                                         // 02, 010
     }
-    if (digits.length < 7) {
-        return digits.substring(0, 3) + '-' + digits.substring(3);         // 010-123
+    if (digits.length <= p + 3) {
+        return digits.substring(0, p) + '-' + digits.substring(p);             // 02-123, 010-123
     }
-    if (digits.length < 11) {
-        return digits.substring(0, 3) + '-' + digits.substring(3, 6) + '-' + digits.substring(6); // 010-123-4567
+    if (digits.length < max) {
+        // 가운데 3자리 : 02-123-4567, 031-123-4567 (입력 중인 010-123-4 도 여기)
+        return digits.substring(0, p) + '-' + digits.substring(p, p + 3) + '-' + digits.substring(p + 3);
     }
-    return digits.substring(0, 3) + '-' + digits.substring(3, 7) + '-' + digits.substring(7);     // 010-1234-5678
+    // 가운데 4자리 : 02-1234-5678, 010-1234-5678
+    return digits.substring(0, p) + '-' + digits.substring(p, p + 4) + '-' + digits.substring(p + 4);
 }
 
 document.querySelectorAll('input[data-phone-format]').forEach(function (input) {
