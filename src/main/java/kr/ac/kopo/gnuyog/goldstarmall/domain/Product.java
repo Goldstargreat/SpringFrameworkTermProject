@@ -54,8 +54,8 @@ public class Product
     // 주문 기록은 지우지 않고, 이 시각 이후의 주문만 누적 판매량/매출에 센다
     private LocalDateTime salesResetAt;
 
-    // 내일 도착 보장 여부 : 관리자가 상품마다 정한다 (상품관리 화면에서 켜고 끈다)
-    // 비어 있으면(null) 보장하지 않는 것으로 본다
+    // 로켓 배송 여부 : 관리자가 상품마다 정한다 (상품관리 화면에서 켜고 끈다)
+    // 비어 있으면(null) 로켓 배송이 아닌 것으로 본다
     private Boolean fastDelivery;
 
     public Product() {
@@ -113,7 +113,7 @@ public class Product
     // (재고가 넉넉할 때 정확한 숫자를 보여 주면 쇼핑몰의 판매량/입고량이 그대로 드러나기 때문)
     public static final int LOW_STOCK_LIMIT = 2;
 
-    // 내일 도착 보장 상품인지 (관리자가 정한 값) → 화면에서 product.fastDelivery 로 사용
+    // 로켓 배송 상품인지 (관리자가 정한 값) → 화면에서 product.fastDelivery 로 사용
     public boolean isFastDelivery() {
         return Boolean.TRUE.equals(fastDelivery);
     }
@@ -122,7 +122,7 @@ public class Product
         this.fastDelivery = fastDelivery;
     }
 
-    // 손님 화면에 "내일 도착 보장"을 붙일지 : 관리자가 켜 둔 상품이라도 품절이면 붙이지 않는다
+    // 손님 화면에 "로켓 배송"을 붙일지 : 관리자가 켜 둔 상품이라도 품절이면 붙이지 않는다
     public boolean isShowFastDelivery() {
         return isFastDelivery() && stock > 0;
     }

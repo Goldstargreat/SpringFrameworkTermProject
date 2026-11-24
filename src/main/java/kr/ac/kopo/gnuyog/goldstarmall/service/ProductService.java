@@ -151,7 +151,7 @@ public class ProductService {
     }
 
     // (관리자) 가격, 재고 수정
-    // (관리자) 내일 도착 보장 켜기/끄기 : 지금 값의 반대로 바꾼다
+    // (관리자) 로켓 배송 켜기/끄기 : 지금 값의 반대로 바꾼다
     @Transactional
     public Product toggleFastDelivery(Long productId) {
         Product product = findById(productId);

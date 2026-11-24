@@ -238,13 +238,13 @@ public class AdminController {
         return "redirect:/admin/products";
     }
 
-    // 내일 도착 보장 켜기/끄기
+    // 로켓 배송 켜기/끄기
     @PostMapping("/products/{productId}/fast-delivery")
     public String toggleFastDelivery(@PathVariable("productId") Long productId, RedirectAttributes redirectAttributes) {
         try {
             Product product = productService.toggleFastDelivery(productId);
             String state = product.isFastDelivery() ? "켰습니다" : "껐습니다";
-            redirectAttributes.addFlashAttribute("message", "'" + product.getName() + "'의 내일 도착 보장을 " + state + ".");
+            redirectAttributes.addFlashAttribute("message", "'" + product.getName() + "'의 로켓 배송을 " + state + ".");
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }

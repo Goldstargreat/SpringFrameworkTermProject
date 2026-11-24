@@ -1164,7 +1164,7 @@ h2 {
     color: #888;
 }
 
-/* 상품 등록의 "내일 도착 보장" 체크박스 : 위의 input 스타일(가로 꽉 채우기)을 체크박스에는 적용하지 않는다 */
+/* 상품 등록의 "로켓 배송" 체크박스 : 위의 input 스타일(가로 꽉 채우기)을 체크박스에는 적용하지 않는다 */
 .form-box .checkbox-label {
     display: flex;
     align-items: center;
