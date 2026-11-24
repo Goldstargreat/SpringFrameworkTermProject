@@ -131,7 +131,7 @@ UPDATE products SET manufacturer = '골드스타 PB', origin = '국내산' WHERE
 UPDATE products SET manufacturer = '국내 산지 농가', origin = '국내산' WHERE name = '특란 30구';
 UPDATE products SET manufacturer = '국내 산지 농가', origin = '국내산 (제주)' WHERE name = '제주 감귤 3kg';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WHERE name = '3겹 화장지 30롤';
-UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WHERE name = '액체 세탁세제 3L';
+UPDATE products SET manufacturer = '라이온코리아 (비트)', origin = '대한민국' WHERE name = '액체 세탁세제 3L';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WHERE name = '대용량 물티슈 10팩';
 UPDATE products SET manufacturer = '아모레퍼시픽 (해피바스)', origin = '대한민국' WHERE name = '해피바스 로즈 바디워시 500g 1개';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WHERE name = '미세모 칫솔 8개입';
@@ -161,7 +161,7 @@ UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE na
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '2인용 원터치 텐트';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '입문용 배드민턴 라켓 세트';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '보온 스포츠 물병 750ml';
-UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '노트북 백팩';
+UPDATE products SET manufacturer = '에스티글로벌 (일상공식)', origin = '중국' WHERE name = '노트북 백팩';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '면 볼캡';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WHERE name = '가죽 반지갑';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '3단 자동 우산';
