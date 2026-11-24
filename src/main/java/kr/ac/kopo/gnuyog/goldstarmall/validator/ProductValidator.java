@@ -6,8 +6,8 @@ import java.util.List;
 
 // 상품 입력값 검사기 : 관리자가 상품을 등록하거나 가격/재고를 수정할 때 쓰는 규칙을 모아 둔다
 // 검사에 실패하면 BusinessException 을 던지고, 컨트롤러가 메시지를 화면에 보여 준다
-public final class ProductValidator {
-
+public final class ProductValidator
+{
     // DB 컬럼 길이보다 길면 저장할 때 오류가 나므로 미리 막는다 (Product 의 @Column length 참고)
     public static final int NAME_MAX_LENGTH = 100;
     public static final int DESCRIPTION_MAX_LENGTH = 500;
@@ -41,21 +41,27 @@ public final class ProductValidator {
     }
 
     // 상품 정보(제조사/브랜드, 원산지) 검사 : 선택 입력이라 비어 있어도 되고, 글자 수만 본다
-    public static void validateProductInfo(String manufacturer, String origin) {
-        if (manufacturer != null && manufacturer.trim().length() > INFO_MAX_LENGTH) {
+    public static void validateProductInfo(String manufacturer, String origin)
+    {
+        if (manufacturer != null && manufacturer.trim().length() > INFO_MAX_LENGTH)
+        {
             throw new BusinessException("제조사/브랜드는 " + INFO_MAX_LENGTH + "글자까지 입력할 수 있습니다.");
         }
-        if (origin != null && origin.trim().length() > INFO_MAX_LENGTH) {
+        if (origin != null && origin.trim().length() > INFO_MAX_LENGTH)
+        {
             throw new BusinessException("원산지는 " + INFO_MAX_LENGTH + "글자까지 입력할 수 있습니다.");
         }
     }
 
     // 가격은 1원 이상, 재고는 0개 이상이어야 한다
-    public static void validatePriceAndStock(int price, int stock) {
-        if (price < 1) {
+    public static void validatePriceAndStock(int price, int stock)
+    {
+        if (price < 1)
+        {
             throw new BusinessException("가격은 1원 이상이어야 합니다.");
         }
-        if (stock < 0) {
+        if (stock < 0)
+        {
             throw new BusinessException("재고는 0개 이상이어야 합니다.");
         }
     }

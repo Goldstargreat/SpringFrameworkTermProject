@@ -216,5 +216,11 @@ UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WH
 UPDATE products SET manufacturer = '골드스타 PB', origin = '국내산' WHERE name = '홍삼 스틱 30포';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WHERE name = '비타민C 1000mg 100정';
 
+-- 추가 상품 : 가전디지털 스마트폰 (실제 브랜드 상품이라 실제 제조사를 넣는다)
+-- 맨 끝에 따로 넣어야 앞 상품들의 번호(id)가 밀리지 않는다 (상품 사진이 상품번호.jpg 로 연결되기 때문)
+INSERT INTO products (name, category, price, stock, description, icon, manufacturer, origin) VALUES
+('삼성 갤럭시 S25 256GB', '가전디지털', 1155000, 10, '6.2인치 디스플레이와 고성능 카메라를 갖춘 삼성 갤럭시 스마트폰입니다.', '📱', '삼성전자', '베트남'),
+('애플 아이폰 16 128GB', '가전디지털', 1250000, 10, '6.1인치 디스플레이와 카메라 컨트롤 버튼을 갖춘 애플 아이폰입니다.', '📱', 'Apple', '중국');
+
 -- 확인
 SELECT * FROM products;
