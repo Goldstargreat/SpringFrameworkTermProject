@@ -223,6 +223,41 @@ h2 {
     font-size: 14px;
 }
 
+/* ----- 페이지 나누기 (메인 화면) ----- */
+.pagination {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 28px 0 8px;
+}
+
+.pagination a,
+.pagination span {
+    min-width: 36px;
+    padding: 7px 10px;
+    border-radius: 6px;
+    border: 1px solid #d5d9e0;
+    background: #fff;
+    text-align: center;
+    font-size: 14px;
+}
+
+.pagination a:hover {
+    border-color: #1b3a6b;
+}
+
+.pagination .current {
+    background: #1b3a6b;
+    border-color: #1b3a6b;
+    color: #fff;
+    font-weight: bold;
+}
+
+.pagination .disabled {
+    color: #b0b5bf;
+}
+
 /* ----- 상품 카드 ----- */
 .product-grid {
     display: grid;

@@ -2,12 +2,14 @@ package kr.ac.kopo.gnuyog.goldstarmall.controller;
 
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
 import kr.ac.kopo.gnuyog.goldstarmall.service.ProductService;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 
@@ -25,11 +27,41 @@ public class HomeController {
     // 예) /                  → 전체 상품
     //     /?category=식품    → 식품만
     //     /?keyword=라면     → 이름에 '라면'이 들어간 상품
+    //     /?category=식품&page=2 → 식품의 2페이지 (한 페이지에 ProductService.PAGE_SIZE 개)
     @GetMapping("/")
     public String home(@RequestParam(name = "category", required = false) String category,
                        @RequestParam(name = "keyword", required = false) String keyword,
+                       @RequestParam(name = "page", required = false) String page,
                        Model model) {
-        List<Product> products = productService.findProducts(category, keyword);
+        // page 는 숫자가 아니거나 없으면 1페이지로 본다 (주소창에 page=abc 를 쳐도 오류가 나지 않게)
+        int pageNumber = 1;
+        try {
+            if (page != null) {
+                pageNumber = Integer.parseInt(page.trim());
+            }
+        } catch (NumberFormatException e) {
+            pageNumber = 1;
+        }
+
+        Page<Product> productPage = productService.findProductPage(category, keyword, pageNumber);
+        List<Product> products = productPage.getContent();
+
+        // 페이지 번호 버튼 : 지금 페이지를 가운데에 두고 최대 5개까지 보여 준다 (예: 3 4 [5] 6 7)
+        int currentPage = productPage.getNumber() + 1;          // 0부터 세는 번호를 1부터로
+        int totalPages = productPage.getTotalPages();
+        int startPage = Math.max(1, currentPage - 2);
+        int endPage = Math.min(totalPages, startPage + 4);
+        startPage = Math.max(1, endPage - 4);
+
+        // 페이지 버튼 링크의 앞부분 : 값이 있는 조건(카테고리, 검색어)만 붙인다
+        // 예) "/?category=식품&page=" 뒤에 페이지 번호만 이어 붙이면 된다 (한글은 %EC%8B%9D... 처럼 인코딩)
+        UriComponentsBuilder link = UriComponentsBuilder.fromPath("/");
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            link.queryParam("keyword", keyword.trim());
+        } else if (category != null && !category.trim().isEmpty()) {
+            link.queryParam("category", category);
+        }
+        String pageLinkBase = link.queryParam("page", "").encode().build().toUriString();
 
         // 화면 상단에 보여 줄 카테고리 메뉴
         List<String> categories = productService.getCategories();
@@ -39,6 +71,13 @@ public class HomeController {
         model.addAttribute("categories", categories);
         model.addAttribute("selectedCategory", category);
         model.addAttribute("keyword", keyword);
+        // 페이지 나누기 정보
+        model.addAttribute("totalCount", productPage.getTotalElements());
+        model.addAttribute("currentPage", currentPage);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("startPage", startPage);
+        model.addAttribute("endPage", endPage);
+        model.addAttribute("pageLinkBase", pageLinkBase);
         return "index"; // templates/index.html
     }
 

@@ -23,7 +23,7 @@
     </div>
 
     <p class="search-result" th:if="${keyword != null and keyword != ''}">
-        '<b th:text="${keyword}">검색어</b>' 검색 결과 <b th:text="${products.size()}">0</b>건
+        '<b th:text="${keyword}">검색어</b>' 검색 결과 <b th:text="${totalCount}">0</b>건
     </p>
 
     <p class="empty" th:if="${products.isEmpty()}">조건에 맞는 상품이 없습니다.</p>
@@ -47,6 +47,22 @@
             <div class="badge badge-rocket" th:if="${p.stock > 5}">내일 도착 보장</div>
         </a>
     </div>
+
+    <!-- 페이지 나누기 : 페이지가 2개 이상일 때만 보여 준다 -->
+    <!-- pageLinkBase : 지금 보고 있는 카테고리/검색어가 붙은 링크 앞부분 (예: /?category=식품&page=) -->
+    <!-- 뒤에 페이지 번호만 붙이면 되므로, 페이지를 넘겨도 조건이 유지된다 (HomeController 참고) -->
+    <nav class="pagination" th:if="${totalPages > 1}">
+        <a th:if="${currentPage > 1}" th:href="@{${pageLinkBase + (currentPage - 1)}}">&lsaquo; 이전</a>
+        <span th:unless="${currentPage > 1}" class="disabled">&lsaquo; 이전</span>
+
+        <th:block th:each="n : ${#numbers.sequence(startPage, endPage)}">
+            <span th:if="${n == currentPage}" class="current" th:text="${n}">1</span>
+            <a th:unless="${n == currentPage}" th:href="@{${pageLinkBase + n}}" th:text="${n}">2</a>
+        </th:block>
+
+        <a th:if="${currentPage < totalPages}" th:href="@{${pageLinkBase + (currentPage + 1)}}">다음 &rsaquo;</a>
+        <span th:unless="${currentPage < totalPages}" class="disabled">다음 &rsaquo;</span>
+    </nav>
 </main>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>

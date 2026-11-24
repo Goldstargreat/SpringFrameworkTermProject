@@ -7,6 +7,10 @@ import kr.ac.kopo.gnuyog.goldstarmall.repository.CartItemRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.OrderItemRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.ProductRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.validator.ProductValidator;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,7 +44,34 @@ public class ProductService {
         return CATEGORIES;
     }
 
-    // 상품 목록 조회
+    // 메인 화면 한 페이지에 보여 줄 상품 수
+    public static final int PAGE_SIZE = 12;
+
+    // 상품 목록 한 페이지 조회 (메인 화면)
+    // - 조건(검색어 > 카테고리 > 전체)은 findProducts 와 같다
+    // - page 는 1부터 시작 (화면에 보이는 번호). Spring Data 는 0부터 세므로 1을 뺀다
+    // - 없는 페이지 번호(예: 전체 8쪽인데 99쪽)를 달라고 하면 마지막 페이지를 보여 준다
+    public Page<Product> findProductPage(String category, String keyword, int page) {
+        Page<Product> result = findPage(category, keyword, Math.max(page, 1) - 1);
+        if (result.getTotalPages() > 0 && page > result.getTotalPages()) {
+            result = findPage(category, keyword, result.getTotalPages() - 1);
+        }
+        return result;
+    }
+
+    private Page<Product> findPage(String category, String keyword, int pageIndex) {
+        // 상품 번호 순서로 PAGE_SIZE 개씩
+        Pageable pageable = PageRequest.of(pageIndex, PAGE_SIZE, Sort.by("id"));
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            return productRepository.findByNameContaining(keyword.trim(), pageable);
+        }
+        if (category != null && !category.trim().isEmpty()) {
+            return productRepository.findByCategory(category, pageable);
+        }
+        return productRepository.findAll(pageable);
+    }
+
+    // 상품 목록 조회 (페이지 나누기 없이 전부 : 관리자 상품관리 화면)
     // - 검색어가 있으면 이름으로 검색
     // - 카테고리가 있으면 카테고리로 조회
     // - 둘 다 없으면 전체 조회
