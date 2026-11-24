@@ -96,7 +96,7 @@ INSERT INTO products (name, category, price, stock, description, icon) VALUES
 -- 음반/dvd
 ('재즈 베스트 앨범 CD', '음반/dvd', 15900, 20, '카페에서 듣기 좋은 재즈 명곡 모음 CD입니다.', '🎷'),
 ('어린이 동요 CD', '음반/dvd', 12900, 30, '아이와 함께 따라 부르는 인기 동요 40곡입니다.', '🎵'),
-('명작 영화 블루레이', '음반/dvd', 24900, 10, '고화질로 다시 보는 명작 영화 블루레이입니다.', '🎬'),
+('[블루레이] 밴드 오브 브라더스 : 리패키지 (6disc)', '음반/dvd', 24900, 10, '제2차 세계대전 이지 중대의 여정을 그린 HBO 10부작 미니시리즈를 6장의 블루레이에 담은 리패키지입니다.', '🎬'),
 ('LP 레코드 팝 명곡집', '음반/dvd', 39900, 0, '따뜻한 아날로그 소리로 듣는 팝 명곡 LP입니다.', '📻'),
 -- 완구/취미
 ('RC 자동차', '완구/취미', 45900, 12, '리모컨으로 빠르게 달리는 충전식 RC 자동차입니다.', '🏎️'),
@@ -189,7 +189,7 @@ UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WH
 UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WHERE name = '애니메이션 DVD 세트';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WHERE name = '재즈 베스트 앨범 CD';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WHERE name = '어린이 동요 CD';
-UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WHERE name = '명작 영화 블루레이';
+UPDATE products SET manufacturer = 'HBO', origin = '미국' WHERE name = '[블루레이] 밴드 오브 브라더스 : 리패키지 (6disc)';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WHERE name = 'LP 레코드 팝 명곡집';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '1000피스 직소 퍼즐';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '창작 블록 세트';
