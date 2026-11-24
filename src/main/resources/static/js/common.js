@@ -89,13 +89,16 @@ document.querySelectorAll('input[data-phone-format]').forEach(function (input) {
 });
 
 // 5) 중복 확인 버튼 : data-check-url 이 붙은 버튼을 누르면 새로고침 없이 서버에 물어보고 결과를 보여 준다
-//    data-check-url    : 물어볼 주소 (예: /members/check-login-id)
-//    data-check-input  : 검사할 입력칸 id   (그 값을 ?loginId=... 처럼 입력칸 name 으로 보낸다)
-//    data-check-result : 결과 문구를 넣을 칸 id
+//    data-check-url      : 물어볼 주소 (예: /members/check-login-id)
+//    data-check-input    : 검사할 입력칸 id   (그 값을 ?loginId=... 처럼 입력칸 name 으로 보낸다)
+//    data-check-result   : 결과 문구를 넣을 칸 id
+//    data-check-required : 이 속성이 있으면 "사용 가능" 확인을 받기 전에는 폼을 제출할 수 없다
 //    서버는 {"available": true/false, "message": "..."} 형태의 JSON 을 돌려준다
+//    (막는 것은 편의 기능일 뿐이고, 가입할 때 서버가 아이디 중복을 한 번 더 검사한다)
 document.querySelectorAll('button[data-check-url]').forEach(function (button) {
     var input = document.getElementById(button.dataset.checkInput);
     var result = document.getElementById(button.dataset.checkResult);
+    var checkedValue = null;   // "사용 가능" 확인을 받은 값 (확인 전이거나 사용 불가면 null)
 
     function showResult(text, ok) {
         result.textContent = text;
@@ -103,17 +106,40 @@ document.querySelectorAll('button[data-check-url]').forEach(function (button) {
     }
 
     button.addEventListener('click', function () {
-        var url = button.dataset.checkUrl + '?' + encodeURIComponent(input.name) + '=' + encodeURIComponent(input.value.trim());
+        var value = input.value.trim();
+        var url = button.dataset.checkUrl + '?' + encodeURIComponent(input.name) + '=' + encodeURIComponent(value);
+        checkedValue = null;
         // fetch : 페이지를 그대로 둔 채 서버와 데이터만 주고받는다 (AJAX)
         fetch(url)
             .then(function (response) { return response.json(); })
-            .then(function (data) { showResult(data.message, data.available); })
+            .then(function (data) {
+                // 응답을 기다리는 동안 아이디를 바꿨다면 이 결과는 버린다
+                if (input.value.trim() !== value) {
+                    return;
+                }
+                showResult(data.message, data.available);
+                if (data.available) {
+                    checkedValue = value;
+                }
+            })
             .catch(function () { showResult('확인하지 못했습니다. 잠시 후 다시 시도해 주세요.', false); });
     });
 
     // 확인한 뒤에 아이디를 바꾸면 예전 결과는 지운다 (다시 확인해야 한다)
     input.addEventListener('input', function () {
+        checkedValue = null;
         result.textContent = '';
         result.className = 'check-message';
     });
+
+    // 중복 확인을 하지 않았으면 제출을 막는다
+    if (button.hasAttribute('data-check-required') && input.form) {
+        input.form.addEventListener('submit', function (event) {
+            if (checkedValue === null || checkedValue !== input.value.trim()) {
+                event.preventDefault();
+                showResult('아이디 중복 확인을 해 주세요.', false);
+                input.focus();
+            }
+        });
+    }
 });

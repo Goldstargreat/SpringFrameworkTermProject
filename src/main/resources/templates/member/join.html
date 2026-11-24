@@ -18,12 +18,14 @@
         <form th:action="@{/members/join}" method="post">
             <label>아이디 (4글자 이상)
                 <!-- 중복 확인 버튼 : 누르면 js/common.js 가 data-check-url 주소로 물어보고 결과를 아래 칸에 보여 준다 -->
+                <!-- data-check-required : 중복 확인에서 "사용 가능"을 받아야 가입할 수 있다 -->
                 <span class="input-with-button">
                     <input type="text" id="loginId" name="loginId" th:value="${loginId}" required>
                     <button type="button" class="btn btn-small"
                             th:data-check-url="@{/members/check-login-id}"
                             data-check-input="loginId"
-                            data-check-result="loginIdResult">중복 확인</button>
+                            data-check-result="loginIdResult"
+                            data-check-required>중복 확인</button>
                 </span>
             </label>
             <p id="loginIdResult" class="check-message"></p>
