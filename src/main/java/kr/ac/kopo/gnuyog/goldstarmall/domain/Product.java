@@ -10,9 +10,9 @@ import jakarta.persistence.Table;
 // 상품 엔티티 : products 테이블
 @Entity
 @Table(name = "products")
-public class Product {
-
-    @Id
+public class Product
+{
+    @Id // 기본키
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
