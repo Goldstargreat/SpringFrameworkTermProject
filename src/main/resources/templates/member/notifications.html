@@ -11,9 +11,17 @@
 
 <main class="container">
     <h1>알림</h1>
-    <p class="guide">내 상품문의에 달린 답변과 내 상품평에 달린 골드스타몰 코멘트입니다. 이 화면을 열면 새 알림은 모두 확인한 것으로 바뀝니다.</p>
+    <p class="guide">내 상품문의에 달린 답변과 내 상품평에 달린 골드스타몰 코멘트입니다. 이 화면을 열면 새 알림은 모두 확인한 것으로 바뀝니다.<br>
+        확인한 알림은 삭제할 수 있습니다. 알림만 지워지고 문의와 상품평은 그대로 남습니다.</p>
+    <div th:replace="~{fragments/layout :: messages}"></div>
 
     <p class="empty" th:if="${notifications.isEmpty()}">아직 받은 알림이 없습니다.</p>
+
+    <!-- 확인한 알림 전체 삭제 (이 화면을 열면서 모두 확인했으므로 목록의 알림이 모두 지워진다) -->
+    <form th:unless="${notifications.isEmpty()}" th:action="@{/notifications/delete-all}" method="post"
+          class="inline-form notice-actions" data-confirm="확인한 알림을 모두 삭제하시겠습니까?">
+        <button type="submit" class="btn btn-small btn-danger">전체 삭제</button>
+    </form>
 
     <ul class="admin-board" th:unless="${notifications.isEmpty()}">
         <!-- n.unread : 이번에 처음 보는 알림이면 "새 알림" 표시와 배경색 -->
@@ -25,6 +33,11 @@
                    th:text="${n.productIcon} + ' ' + ${n.productName}">상품</a>
                 <span class="admin-board-date" th:if="${n.feedbackAt != null}"
                       th:text="${#temporals.format(n.feedbackAt, 'yyyy-MM-dd HH:mm')}">2026-11-24 10:00</span>
+                <!-- 알림 1건 삭제 -->
+                <form th:action="@{/notifications/{kind}/{id}/delete(kind=${n.kind}, id=${n.sourceId})}" method="post"
+                      class="inline-form notice-delete" data-confirm="이 알림을 삭제하시겠습니까?">
+                    <button type="submit" class="btn btn-small">삭제</button>
+                </form>
             </div>
             <p class="admin-board-content notice-mine" th:text="'내가 쓴 글 : ' + ${n.myText}">내가 쓴 글</p>
             <p class="admin-board-content" th:text="'골드스타몰 : ' + ${n.feedback}">답변</p>

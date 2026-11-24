@@ -139,6 +139,7 @@ public class ReviewService {
         review.setCommentedAt(LocalDateTime.now());
         // 상품평을 쓴 회원에게 새 알림으로 보이도록
         review.setCommentRead(false);
+        review.setCommentNoticeHidden(false);
         return review.getProduct().getId();
     }
 

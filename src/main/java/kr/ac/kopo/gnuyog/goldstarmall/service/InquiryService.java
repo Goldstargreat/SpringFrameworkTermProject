@@ -83,6 +83,7 @@ public class InquiryService {
         inquiry.setAnsweredAt(LocalDateTime.now());
         // 질문한 회원에게 새 알림으로 보이도록
         inquiry.setAnswerRead(false);
+        inquiry.setAnswerNoticeHidden(false);
         return inquiry.getProduct().getId();
     }
 

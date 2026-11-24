@@ -71,6 +71,18 @@ public class Review {
         this.commentRead = commentRead;
     }
 
+    // 상품평을 쓴 회원이 코멘트 알림을 알림 목록에서 삭제했는지 (상품평과 코멘트 자체는 그대로 남는다)
+    // 관리자가 코멘트를 고치면 새 알림이 되므로 다시 false 가 된다 (비어 있으면 삭제 안 함)
+    private Boolean commentNoticeHidden;
+
+    public boolean isCommentNoticeHidden() {
+        return Boolean.TRUE.equals(commentNoticeHidden);
+    }
+
+    public void setCommentNoticeHidden(boolean commentNoticeHidden) {
+        this.commentNoticeHidden = commentNoticeHidden;
+    }
+
     // 화면에 별 모양으로 보여 주기 위한 문자열 (예: 4점 → ★★★★☆)
     public String getStars() {
         return "★".repeat(rating) + "☆".repeat(5 - rating);

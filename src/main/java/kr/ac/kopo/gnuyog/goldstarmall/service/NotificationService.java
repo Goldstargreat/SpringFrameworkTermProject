@@ -3,6 +3,8 @@ package kr.ac.kopo.gnuyog.goldstarmall.service;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Inquiry;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Review;
+import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
+import kr.ac.kopo.gnuyog.goldstarmall.exception.NotFoundException;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.InquiryRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.MemberRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.ReviewRepository;
@@ -18,6 +20,7 @@ import java.util.List;
 // - 확인하지 않은 알림 개수 : 화면 상단 "알림 N" (MemberNoticeAdvice)
 // - 알림 화면을 열면 그때까지의 알림을 모두 "확인함"으로 바꾼다
 // - 관리자가 답변/코멘트를 고치면 다시 새 알림이 된다 (InquiryService.answer, ReviewService.comment)
+// - 확인한 알림은 알림 목록에서 삭제할 수 있다 (문의/답변, 상품평/코멘트 자체는 그대로 남고 알림만 숨긴다)
 @Service
 @Transactional
 public class NotificationService {
@@ -49,14 +52,14 @@ public class NotificationService {
         Member member = memberRepository.findById(memberId).orElseThrow();
         List<Notification> list = new ArrayList<>();
 
-        for (Inquiry q : inquiryRepository.findByMemberAndAnswerIsNotNullOrderByAnsweredAtDesc(member)) {
-            list.add(new Notification("문의 답변", q.getProduct().getId(), q.getProduct().getIcon(),
+        for (Inquiry q : inquiryRepository.findAnswerNotices(member)) {
+            list.add(new Notification(KIND_INQUIRY, q.getId(), "문의 답변", q.getProduct().getId(), q.getProduct().getIcon(),
                     q.getProduct().getName(), "#tab-qna", q.getQuestion(), q.getAnswer(), q.getAnsweredAt(),
                     q.isAnswerUnread()));
             q.setAnswerRead(true);
         }
-        for (Review r : reviewRepository.findByMemberAndAdminCommentIsNotNullOrderByCommentedAtDesc(member)) {
-            list.add(new Notification("상품평 코멘트", r.getProduct().getId(), r.getProduct().getIcon(),
+        for (Review r : reviewRepository.findCommentNotices(member)) {
+            list.add(new Notification(KIND_REVIEW, r.getId(), "상품평 코멘트", r.getProduct().getId(), r.getProduct().getIcon(),
                     r.getProduct().getName(), "#tab-reviews", r.getContent(), r.getAdminComment(), r.getCommentedAt(),
                     r.isCommentUnread()));
             r.setCommentRead(true);
@@ -68,8 +71,58 @@ public class NotificationService {
         return list;
     }
 
+    // 알림 종류 : 삭제 주소(/notifications/{kind}/{id}/delete)에 쓴다
+    public static final String KIND_INQUIRY = "inquiry";
+    public static final String KIND_REVIEW = "review";
+
+    // 알림 1건 삭제 : 내 알림이고, 확인한 알림만 지울 수 있다
+    public void hide(Long memberId, String kind, Long id) {
+        if (KIND_INQUIRY.equals(kind)) {
+            Inquiry q = inquiryRepository.findById(id).orElse(null);
+            if (q == null || q.getAnswer() == null || q.isAnswerNoticeHidden() || !q.getMember().getId().equals(memberId)) {
+                throw new NotFoundException("알림을 찾을 수 없습니다.");
+            }
+            if (q.isAnswerUnread()) {
+                throw new BusinessException("아직 확인하지 않은 알림은 삭제할 수 없습니다.");
+            }
+            q.setAnswerNoticeHidden(true);
+        } else if (KIND_REVIEW.equals(kind)) {
+            Review r = reviewRepository.findById(id).orElse(null);
+            if (r == null || r.getAdminComment() == null || r.isCommentNoticeHidden() || !r.getMember().getId().equals(memberId)) {
+                throw new NotFoundException("알림을 찾을 수 없습니다.");
+            }
+            if (r.isCommentUnread()) {
+                throw new BusinessException("아직 확인하지 않은 알림은 삭제할 수 없습니다.");
+            }
+            r.setCommentNoticeHidden(true);
+        } else {
+            throw new NotFoundException("알림을 찾을 수 없습니다.");
+        }
+    }
+
+    // 확인한 알림 전체 삭제 : 지운 개수를 돌려준다 (그 사이 새로 온 확인 안 한 알림은 남긴다)
+    public int hideAllRead(Long memberId) {
+        Member member = memberRepository.findById(memberId).orElseThrow();
+        int count = 0;
+        for (Inquiry q : inquiryRepository.findAnswerNotices(member)) {
+            if (!q.isAnswerUnread()) {
+                q.setAnswerNoticeHidden(true);
+                count++;
+            }
+        }
+        for (Review r : reviewRepository.findCommentNotices(member)) {
+            if (!r.isCommentUnread()) {
+                r.setCommentNoticeHidden(true);
+                count++;
+            }
+        }
+        return count;
+    }
+
     // 알림 한 건 (화면에 보여 주기 위한 값만 담는다)
     public static class Notification {
+        private final String kind;          // inquiry / review (삭제할 때 쓴다)
+        private final Long sourceId;        // 문의 번호 / 상품평 번호
         private final String type;          // 문의 답변 / 상품평 코멘트
         private final Long productId;
         private final String productIcon;
@@ -80,8 +133,10 @@ public class NotificationService {
         private final LocalDateTime feedbackAt;
         private final boolean unread;       // 이번에 처음 보는 알림인지
 
-        public Notification(String type, Long productId, String productIcon, String productName, String anchor,
+        public Notification(String kind, Long sourceId, String type, Long productId, String productIcon, String productName, String anchor,
                             String myText, String feedback, LocalDateTime feedbackAt, boolean unread) {
+            this.kind = kind;
+            this.sourceId = sourceId;
             this.type = type;
             this.productId = productId;
             this.productIcon = productIcon;
@@ -93,6 +148,8 @@ public class NotificationService {
             this.unread = unread;
         }
 
+        public String getKind() { return kind; }
+        public Long getSourceId() { return sourceId; }
         public String getType() { return type; }
         public Long getProductId() { return productId; }
         public String getProductIcon() { return productIcon; }

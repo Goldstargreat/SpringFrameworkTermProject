@@ -66,6 +66,18 @@ public class Inquiry {
         this.answerRead = answerRead;
     }
 
+    // 질문한 회원이 답변 알림을 알림 목록에서 삭제했는지 (문의와 답변 자체는 그대로 남는다)
+    // 관리자가 답변을 고치면 새 알림이 되므로 다시 false 가 된다 (비어 있으면 삭제 안 함)
+    private Boolean answerNoticeHidden;
+
+    public boolean isAnswerNoticeHidden() {
+        return Boolean.TRUE.equals(answerNoticeHidden);
+    }
+
+    public void setAnswerNoticeHidden(boolean answerNoticeHidden) {
+        this.answerNoticeHidden = answerNoticeHidden;
+    }
+
     // ===== getter / setter =====
     public Long getId() {
         return id;

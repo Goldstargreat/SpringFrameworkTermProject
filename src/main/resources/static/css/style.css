@@ -1289,6 +1289,17 @@ h2 {
 }
 
 /* 회원 알림 화면 : 새 알림은 배경색으로 구분, 내가 쓴 글은 회색 */
+/* 알림 화면 : 전체 삭제 버튼(오른쪽 위), 알림 1건 삭제 버튼(줄 오른쪽 끝) */
+.notice-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+}
+
+.notice-delete {
+    margin-left: auto;
+}
+
 .admin-board li.notice-new {
     background: #fffbe8;
 }

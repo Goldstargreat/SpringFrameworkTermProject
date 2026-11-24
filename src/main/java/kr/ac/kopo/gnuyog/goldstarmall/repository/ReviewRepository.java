@@ -27,8 +27,10 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     List<Review> findByAdminCommentIsNullOrderByIdDesc();
     long countByAdminCommentIsNull();
 
-    // (회원 알림) 내 상품평 중 관리자 코멘트가 달린 것 (코멘트 단 날짜 최신순)
-    List<Review> findByMemberAndAdminCommentIsNotNullOrderByCommentedAtDesc(Member member);
+    // (회원 알림) 내 상품평 중 관리자 코멘트가 달린 것, 알림 목록에서 삭제한 것은 빼고 (코멘트 단 날짜 최신순)
+    @Query("select r from Review r where r.member = :member and r.adminComment is not null"
+            + " and (r.commentNoticeHidden is null or r.commentNoticeHidden = false) order by r.commentedAt desc")
+    List<Review> findCommentNotices(@Param("member") Member member);
 
     // (회원 알림) 아직 확인하지 않은 관리자 코멘트 개수
     @Query("select count(r) from Review r where r.member = :member and r.adminComment is not null"

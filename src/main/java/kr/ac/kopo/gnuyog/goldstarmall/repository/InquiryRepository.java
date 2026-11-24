@@ -20,8 +20,10 @@ public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
     List<Inquiry> findByAnswerIsNullOrderByIdDesc();
     long countByAnswerIsNull();
 
-    // (회원 알림) 내 문의 중 답변이 달린 것 (답변 날짜 최신순)
-    List<Inquiry> findByMemberAndAnswerIsNotNullOrderByAnsweredAtDesc(Member member);
+    // (회원 알림) 내 문의 중 답변이 달린 것, 알림 목록에서 삭제한 것은 빼고 (답변 날짜 최신순)
+    @Query("select i from Inquiry i where i.member = :member and i.answer is not null"
+            + " and (i.answerNoticeHidden is null or i.answerNoticeHidden = false) order by i.answeredAt desc")
+    List<Inquiry> findAnswerNotices(@Param("member") Member member);
 
     // (회원 알림) 아직 확인하지 않은 답변 개수
     @Query("select count(i) from Inquiry i where i.member = :member and i.answer is not null"
