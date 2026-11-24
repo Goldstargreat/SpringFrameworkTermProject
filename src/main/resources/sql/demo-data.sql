@@ -17,7 +17,7 @@ INSERT INTO members (login_id, password, name, phone, address, second_address, r
 ('jung06', '$2a$10$SyL3NVjJP9ZELrDtOIUXLOcqOo7qailnRWonOq6KL8uOwckjDNgL2', '정다은', '010-6789-0123', '광주광역시 북구 용봉로 77', NULL, 'USER', '2026-11-06 13:08:00.000000'),
 ('hong07', '$2a$10$glJIZHLiKi4hfjUgCZ8CgepOr2NSeRLTh17hLxE.RpN.wW82a4yFi', '홍길동', '010-7890-1234', '인천광역시 연수구 컨벤시아대로 165', NULL, 'USER', '2026-11-17 22:30:00.000000');
 
--- ===== 주문 15건 : 배송 상태가 골고루 보이도록 (주문취소, 주문거절 포함) =====
+-- ===== 주문 17건 : 배송 상태가 골고루 보이도록 (주문취소, 주문거절 포함) =====
 -- [배송완료] hong01 : 신라면 5개입 x3, 제주 삼다수 2L x 6개 x1
 INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, status, total_price, ordered_at) VALUES
 ((SELECT id FROM members WHERE login_id = 'hong01'), '홍길동', '010-2345-6789', '서울특별시 강남구 테헤란로 123', 'DELIVERED', 18780, '2026-11-12 10:21:00.000000');
@@ -40,6 +40,25 @@ INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, 
 SET @order_id = LAST_INSERT_ID();
 INSERT INTO order_items (order_id, product_id, order_price, quantity) VALUES
 (@order_id, (SELECT id FROM products WHERE name = '러닝화'), 49900, 1);
+
+-- [배송완료] kim02 : 2인용 원터치 텐트 x2, 스테인리스 냄비 3종 세트 x1, 플로럴 향수 50ml x2
+-- → 누적 구매액 326,200원 (30만 원 이상) 이라 골드 등급이 된다. 주문할 때는 일반 등급이라 할인 없음
+INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, status, total_price, ordered_at) VALUES
+((SELECT id FROM members WHERE login_id = 'kim02'), '김영희', '010-3456-7890', '경기도 성남시 분당구 판교역로 235', 'DELIVERED', 281500, '2026-11-16 15:40:00.000000');
+SET @order_id = LAST_INSERT_ID();
+INSERT INTO order_items (order_id, product_id, order_price, quantity) VALUES
+(@order_id, (SELECT id FROM products WHERE name = '2인용 원터치 텐트'), 69900, 2),
+(@order_id, (SELECT id FROM products WHERE name = '스테인리스 냄비 3종 세트'), 49900, 1),
+(@order_id, (SELECT id FROM products WHERE name = '플로럴 향수 50ml'), 45900, 2);
+
+-- [배송완료] lee03 : 블루투스 스피커 x1, RC 자동차 x1
+-- → 누적 구매액 141,700원 (10만 원 이상) 이라 실버 등급이 된다. 주문할 때는 일반 등급이라 할인 없음
+INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, status, total_price, ordered_at) VALUES
+((SELECT id FROM members WHERE login_id = 'lee03'), '이민수', '010-4567-8901', '부산광역시 해운대구 해운대로 570', 'DELIVERED', 91800, '2026-11-17 21:05:00.000000');
+SET @order_id = LAST_INSERT_ID();
+INSERT INTO order_items (order_id, product_id, order_price, quantity) VALUES
+(@order_id, (SELECT id FROM products WHERE name = '블루투스 스피커'), 45900, 1),
+(@order_id, (SELECT id FROM products WHERE name = 'RC 자동차'), 45900, 1);
 
 -- [배송중] park04 : 1000피스 직소 퍼즐 x1, 보드게임 패밀리 세트 x1
 INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, status, total_price, ordered_at) VALUES
@@ -72,16 +91,16 @@ INSERT INTO order_items (order_id, product_id, order_price, quantity) VALUES
 (@order_id, (SELECT id FROM products WHERE name = '강아지 사료 2kg'), 24900, 1),
 (@order_id, (SELECT id FROM products WHERE name = '강아지 수제 간식'), 8900, 1);
 
--- [입고] kim02 : 보조배터리 10000mAh x2
-INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, status, total_price, ordered_at) VALUES
-((SELECT id FROM members WHERE login_id = 'kim02'), '김영희', '010-3456-7890', '경기도 성남시 분당구 판교역로 235', 'WAREHOUSED', 39800, '2026-11-23 17:02:00.000000');
+-- [입고] kim02 : 보조배터리 10000mAh x2 → 골드가 된 뒤의 주문이라 골드 할인(5%) 1,990원 (39,800 → 37,810원)
+INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, status, total_price, ordered_at, discount_amount, order_grade) VALUES
+((SELECT id FROM members WHERE login_id = 'kim02'), '김영희', '010-3456-7890', '경기도 성남시 분당구 판교역로 235', 'WAREHOUSED', 37810, '2026-11-23 17:02:00.000000', 1990, 'GOLD');
 SET @order_id = LAST_INSERT_ID();
 INSERT INTO order_items (order_id, product_id, order_price, quantity) VALUES
 (@order_id, (SELECT id FROM products WHERE name = '보조배터리 10000mAh'), 19900, 2);
 
--- [주문접수] lee03 : 오버핏 맨투맨 x2, 요가 매트 10mm x1
-INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, status, total_price, ordered_at) VALUES
-((SELECT id FROM members WHERE login_id = 'lee03'), '이민수', '010-4567-8901', '부산광역시 해운대구 해운대로 570', 'ORDER_RECEIVED', 71700, '2026-11-24 08:15:00.000000');
+-- [주문접수] lee03 : 오버핏 맨투맨 x2, 요가 매트 10mm x1 → 실버가 된 뒤의 주문이라 실버 할인(3%) 2,151원 (71,700 → 69,549원)
+INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, status, total_price, ordered_at, discount_amount, order_grade) VALUES
+((SELECT id FROM members WHERE login_id = 'lee03'), '이민수', '010-4567-8901', '부산광역시 해운대구 해운대로 570', 'ORDER_RECEIVED', 69549, '2026-11-24 08:15:00.000000', 2151, 'SILVER');
 SET @order_id = LAST_INSERT_ID();
 INSERT INTO order_items (order_id, product_id, order_price, quantity) VALUES
 (@order_id, (SELECT id FROM products WHERE name = '오버핏 맨투맨'), 24900, 2),
