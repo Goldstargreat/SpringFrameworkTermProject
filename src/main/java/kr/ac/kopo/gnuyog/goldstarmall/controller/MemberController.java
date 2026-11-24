@@ -120,6 +120,93 @@ public class MemberController {
         return "redirect:/";
     }
 
+    // ===== 아이디 찾기 =====
+
+    // 아이디 찾기 화면
+    @GetMapping("/find-id")
+    public String findIdForm() {
+        return "member/find-id";
+    }
+
+    // 아이디 찾기 처리 : 이름 + 전화번호가 맞으면 가린 아이디를 같은 화면에 보여 준다
+    @PostMapping("/find-id")
+    public String findId(@RequestParam("name") String name,
+                         @RequestParam("phone") String phone,
+                         Model model) {
+        try {
+            model.addAttribute("foundLoginId", memberService.findLoginId(name, phone));
+        } catch (BusinessException e) {
+            model.addAttribute("error", e.getMessage());
+            // 다시 입력하지 않도록 입력값을 돌려준다
+            model.addAttribute("name", name);
+            model.addAttribute("phone", phone);
+        }
+        return "member/find-id";
+    }
+
+    // ===== 비밀번호 찾기 =====
+
+    // 비밀번호 찾기 화면 (1단계 : 본인 확인)
+    @GetMapping("/find-password")
+    public String findPasswordForm() {
+        return "member/find-password";
+    }
+
+    // 본인 확인 처리 : 통과하면 세션에 회원 번호를 기억해 두고 새 비밀번호 화면으로 보낸다
+    // (주소창에 회원 번호를 넣는 방식이면 남의 비밀번호를 바꿀 수 있으므로 세션에 둔다)
+    @PostMapping("/find-password")
+    public String findPassword(@RequestParam("loginId") String loginId,
+                               @RequestParam("name") String name,
+                               @RequestParam("phone") String phone,
+                               HttpSession session,
+                               Model model) {
+        try {
+            Long memberId = memberService.verifyForPasswordReset(loginId, name, phone);
+            session.setAttribute(SessionConst.PASSWORD_RESET_MEMBER_ID, memberId);
+            return "redirect:/members/reset-password";
+        } catch (BusinessException e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("loginId", loginId);
+            model.addAttribute("name", name);
+            model.addAttribute("phone", phone);
+            return "member/find-password";
+        }
+    }
+
+    // 새 비밀번호 화면 (2단계) : 본인 확인을 거치지 않고 바로 들어오면 1단계로 돌려보낸다
+    @GetMapping("/reset-password")
+    public String resetPasswordForm(HttpSession session, RedirectAttributes redirectAttributes) {
+        if (session.getAttribute(SessionConst.PASSWORD_RESET_MEMBER_ID) == null) {
+            redirectAttributes.addFlashAttribute("error", "본인 확인을 먼저 해 주세요.");
+            return "redirect:/members/find-password";
+        }
+        return "member/reset-password";
+    }
+
+    // 새 비밀번호 저장 : 성공하면 세션의 회원 번호를 지우고 로그인 화면으로 보낸다
+    @PostMapping("/reset-password")
+    public String resetPassword(@RequestParam("newPassword") String newPassword,
+                                @RequestParam("newPasswordConfirm") String newPasswordConfirm,
+                                HttpSession session,
+                                Model model,
+                                RedirectAttributes redirectAttributes) {
+        Long memberId = (Long) session.getAttribute(SessionConst.PASSWORD_RESET_MEMBER_ID);
+        if (memberId == null) {
+            redirectAttributes.addFlashAttribute("error", "본인 확인을 먼저 해 주세요.");
+            return "redirect:/members/find-password";
+        }
+        try {
+            memberService.resetPassword(memberId, newPassword, newPasswordConfirm);
+        } catch (BusinessException e) {
+            model.addAttribute("error", e.getMessage());
+            return "member/reset-password";
+        }
+        // 한 번 바꾸면 끝 : 같은 세션으로 다시 바꿀 수 없게 지운다
+        session.removeAttribute(SessionConst.PASSWORD_RESET_MEMBER_ID);
+        redirectAttributes.addFlashAttribute("message", "비밀번호를 변경했습니다. 새 비밀번호로 로그인해 주세요.");
+        return "redirect:/members/login";
+    }
+
     // 로그아웃 처리
     @PostMapping("/logout")
     public String logout(HttpSession session) {

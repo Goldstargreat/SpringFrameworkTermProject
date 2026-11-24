@@ -115,6 +115,59 @@ public class MemberService {
         }
     }
 
+    // ===== 아이디 찾기 / 비밀번호 찾기 =====
+    // 이메일, 문자 발송 기능이 없으므로 "이름 + 전화번호"로 본인 확인을 한다
+    // 전화번호는 회원마다 다르므로(중복 불가) 전화번호로 회원 한 명을 정확히 찾을 수 있다
+
+    // 아이디 찾기 : 이름과 전화번호가 맞으면 아이디를 일부 가려서 돌려준다 (예: goldstar → gold****)
+    @Transactional(readOnly = true)
+    public String findLoginId(String name, String phone) {
+        Member member = findByNameAndPhone(name, phone);
+        return maskLoginId(member.getLoginId());
+    }
+
+    // 비밀번호 찾기 1단계 : 아이디, 이름, 전화번호가 모두 맞는지 확인하고 회원 번호를 돌려준다
+    @Transactional(readOnly = true)
+    public Long verifyForPasswordReset(String loginId, String name, String phone) {
+        Member member = findByNameAndPhone(name, phone);
+        if (loginId == null || !member.getLoginId().equals(loginId.trim())) {
+            throw new BusinessException("입력한 정보와 일치하는 회원이 없습니다.");
+        }
+        // 관리자 계정은 이름/전화번호만으로 비밀번호를 바꿀 수 없게 막는다
+        if ("ADMIN".equals(member.getRole())) {
+            throw new BusinessException("관리자 계정은 비밀번호 찾기를 이용할 수 없습니다.");
+        }
+        return member.getId();
+    }
+
+    // 비밀번호 찾기 2단계 : 본인 확인을 통과한 회원의 비밀번호를 새로 정한다
+    public void resetPassword(Long memberId, String newPassword, String newPasswordConfirm) {
+        Member member = findById(memberId);
+        if (member == null) {
+            throw new NotFoundException("회원을 찾을 수 없습니다.");
+        }
+        MemberValidator.validatePassword(newPassword, newPasswordConfirm);
+        member.setPassword(passwordEncoder.encode(newPassword));
+    }
+
+    // 이름 + 전화번호로 회원 찾기 (없으면 예외)
+    private Member findByNameAndPhone(String name, String phone) {
+        MemberValidator.validateName(name);
+        Member member = memberRepository.findByPhone(MemberValidator.normalizePhone(phone));
+        if (member == null || !member.getName().equals(name.trim())) {
+            // 이름이 틀렸는지 전화번호가 틀렸는지는 알려 주지 않는다 (남의 정보를 알아내는 데 쓰이지 않도록)
+            throw new BusinessException("입력한 정보와 일치하는 회원이 없습니다.");
+        }
+        return member;
+    }
+
+    // 아이디 가리기 : 앞쪽 절반만 보여 주고 나머지는 * 로 바꾼다 (최소 2글자는 보여 준다)
+    // 예) goldstar → gold****, admin → ad***, test → te**
+    private String maskLoginId(String loginId) {
+        int visible = Math.max(2, loginId.length() / 2);
+        return loginId.substring(0, visible) + "*".repeat(loginId.length() - visible);
+    }
+
     // 비밀번호 변경 : 현재 비밀번호가 맞아야 바꿀 수 있다
     public void changePassword(Long memberId, String currentPassword, String newPassword, String newPasswordConfirm) {
         Member member = findById(memberId);

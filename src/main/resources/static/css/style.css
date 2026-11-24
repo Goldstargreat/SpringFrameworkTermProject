@@ -471,6 +471,37 @@ h2 {
     font-weight: bold;
 }
 
+/* 로그인 화면의 아이디 찾기 | 비밀번호 찾기 링크 */
+.find-links {
+    margin: 16px 0 8px;
+}
+
+.find-links a {
+    font-weight: normal;
+    color: #555;
+}
+
+.find-links span {
+    margin: 0 8px;
+    color: #c7ccd6;
+}
+
+/* 아이디 찾기 결과 */
+.found-id {
+    text-align: center;
+    padding: 20px;
+    margin: 16px 0;
+    background: #f4f6fa;
+    border-radius: 8px;
+}
+
+.found-id b {
+    display: block;
+    font-size: 22px;
+    margin-top: 6px;
+    color: #1b3a6b;
+}
+
 /* ----- 표 ----- */
 .table-wrap {
     overflow-x: auto;

@@ -24,6 +24,11 @@
             <button type="submit" class="btn btn-primary btn-block">로그인</button>
         </form>
 
+        <p class="form-footer find-links">
+            <a th:href="@{/members/find-id}">아이디 찾기</a>
+            <span>|</span>
+            <a th:href="@{/members/find-password}">비밀번호 찾기</a>
+        </p>
         <p class="form-footer">아직 회원이 아니신가요? <a th:href="@{/members/join}">회원가입</a></p>
     </div>
 </main>
