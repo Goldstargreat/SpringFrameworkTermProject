@@ -22,12 +22,20 @@ public class SecurityConfig implements WebMvcConfigurer {
             "/admin/**"
     };
 
+    // 일반 회원(손님)만 들어갈 수 있는 주소 (관리자는 물건을 사지 않으므로 장바구니/주문내역이 필요 없다)
+    private static final String[] CUSTOMER_ONLY_PATHS = {
+            "/cart/**", "/orders/**"
+    };
+
     private final LoginCheckInterceptor loginCheckInterceptor;
     private final AdminCheckInterceptor adminCheckInterceptor;
+    private final CustomerOnlyInterceptor customerOnlyInterceptor;
 
-    public SecurityConfig(LoginCheckInterceptor loginCheckInterceptor, AdminCheckInterceptor adminCheckInterceptor) {
+    public SecurityConfig(LoginCheckInterceptor loginCheckInterceptor, AdminCheckInterceptor adminCheckInterceptor,
+                          CustomerOnlyInterceptor customerOnlyInterceptor) {
         this.loginCheckInterceptor = loginCheckInterceptor;
         this.adminCheckInterceptor = adminCheckInterceptor;
+        this.customerOnlyInterceptor = customerOnlyInterceptor;
     }
 
     @Override
@@ -41,6 +49,11 @@ public class SecurityConfig implements WebMvcConfigurer {
         registry.addInterceptor(adminCheckInterceptor)
                 .order(2)
                 .addPathPatterns(ADMIN_ONLY_PATHS);
+
+        // 3) 손님 전용 검사 : 관리자는 장바구니/주문 화면에 들어갈 수 없다
+        registry.addInterceptor(customerOnlyInterceptor)
+                .order(3)
+                .addPathPatterns(CUSTOMER_ONLY_PATHS);
     }
 
     // 비밀번호 암호화 도구를 스프링 빈으로 등록한다 (MemberService, DataInitializer 에서 주입받아 사용)
