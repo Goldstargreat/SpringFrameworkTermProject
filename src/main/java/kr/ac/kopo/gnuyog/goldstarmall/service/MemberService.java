@@ -5,8 +5,10 @@ import kr.ac.kopo.gnuyog.goldstarmall.domain.Order;
 import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
 import kr.ac.kopo.gnuyog.goldstarmall.exception.NotFoundException;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.CartItemRepository;
+import kr.ac.kopo.gnuyog.goldstarmall.repository.InquiryRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.MemberRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.OrderRepository;
+import kr.ac.kopo.gnuyog.goldstarmall.repository.ReviewRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.validator.MemberValidator;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -24,16 +26,22 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final CartItemRepository cartItemRepository;
     private final OrderRepository orderRepository;
+    private final ReviewRepository reviewRepository;
+    private final InquiryRepository inquiryRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
     // 생성자 주입 : 스프링이 필요한 객체를 알아서 넣어 준다
     public MemberService(MemberRepository memberRepository,
                          CartItemRepository cartItemRepository,
                          OrderRepository orderRepository,
+                         ReviewRepository reviewRepository,
+                         InquiryRepository inquiryRepository,
                          BCryptPasswordEncoder passwordEncoder) {
         this.memberRepository = memberRepository;
         this.cartItemRepository = cartItemRepository;
         this.orderRepository = orderRepository;
+        this.reviewRepository = reviewRepository;
+        this.inquiryRepository = inquiryRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -231,6 +239,8 @@ public class MemberService {
         // 2) 회원을 가리키는 데이터부터 지운다 (외래키 때문에 순서가 중요하다)
         //    주문을 지우면 cascade 설정으로 주문 상품도 함께 지워진다
         cartItemRepository.deleteAll(cartItemRepository.findByMember(member));
+        reviewRepository.deleteAll(reviewRepository.findByMember(member));
+        inquiryRepository.deleteAll(inquiryRepository.findByMember(member));
         orderRepository.deleteAll(orders);
 
         // 3) 마지막으로 회원 삭제

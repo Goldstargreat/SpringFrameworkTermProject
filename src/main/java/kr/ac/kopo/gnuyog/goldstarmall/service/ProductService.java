@@ -4,8 +4,10 @@ import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
 import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
 import kr.ac.kopo.gnuyog.goldstarmall.exception.NotFoundException;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.CartItemRepository;
+import kr.ac.kopo.gnuyog.goldstarmall.repository.InquiryRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.OrderItemRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.ProductRepository;
+import kr.ac.kopo.gnuyog.goldstarmall.repository.ReviewRepository;
 import kr.ac.kopo.gnuyog.goldstarmall.validator.ProductValidator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,13 +32,19 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CartItemRepository cartItemRepository;
     private final OrderItemRepository orderItemRepository;
+    private final ReviewRepository reviewRepository;
+    private final InquiryRepository inquiryRepository;
 
     public ProductService(ProductRepository productRepository,
                           CartItemRepository cartItemRepository,
-                          OrderItemRepository orderItemRepository) {
+                          OrderItemRepository orderItemRepository,
+                          ReviewRepository reviewRepository,
+                          InquiryRepository inquiryRepository) {
         this.productRepository = productRepository;
         this.cartItemRepository = cartItemRepository;
         this.orderItemRepository = orderItemRepository;
+        this.reviewRepository = reviewRepository;
+        this.inquiryRepository = inquiryRepository;
     }
 
     // 카테고리 목록
@@ -142,6 +150,9 @@ public class ProductService {
         }
         // 이 상품을 장바구니에 담아 둔 회원이 있으면 그 항목부터 지운다 (외래키 때문에 순서가 중요하다)
         cartItemRepository.deleteAll(cartItemRepository.findByProduct(product));
+        // 상품평은 배송완료된 주문이 있어야 쓸 수 있어서 보통은 없지만, 문의는 주문 없이도 달릴 수 있다
+        reviewRepository.deleteAll(reviewRepository.findByProduct(product));
+        inquiryRepository.deleteAll(inquiryRepository.findByProduct(product));
         productRepository.delete(product);
     }
 

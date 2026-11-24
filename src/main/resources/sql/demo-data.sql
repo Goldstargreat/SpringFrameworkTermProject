@@ -120,6 +120,37 @@ JOIN (SELECT oi.product_id, SUM(oi.quantity) AS qty
       GROUP BY oi.product_id) d ON d.product_id = p.id
 SET p.stock = p.stock - d.qty;
 
+-- ===== 상품평 : 배송완료된 주문의 상품에만 쓸 수 있으므로, 배송완료 주문(hong01, kim02, lee03)의 상품에 단다 =====
+-- (reviews, inquiries 테이블은 앱을 한 번 실행하면 JPA 가 만들어 준다)
+INSERT INTO reviews (member_id, product_id, rating, content, created_at) VALUES
+((SELECT id FROM members WHERE login_id = 'hong01'), (SELECT id FROM products WHERE name = '신라면 5개입'), 5,
+ '국물이 얼큰하고 면발이 쫄깃해요. 역시 라면은 신라면! 재구매 의사 있습니다.', '2026-11-21 19:12:00.000000'),
+((SELECT id FROM members WHERE login_id = 'hong01'), (SELECT id FROM products WHERE name = '제주 삼다수 2L x 6개'), 4,
+ '배송이 빨랐고 포장도 튼튼했습니다. 무거운 물을 집 앞까지 받아서 편해요.', '2026-11-21 19:15:00.000000'),
+((SELECT id FROM members WHERE login_id = 'kim02'), (SELECT id FROM products WHERE name = '수분 크림 50ml'), 5,
+ '건성 피부인데 하루 종일 촉촉해요. 향도 은은해서 좋습니다.', '2026-11-22 22:40:00.000000'),
+((SELECT id FROM members WHERE login_id = 'kim02'), (SELECT id FROM products WHERE name = '시트 마스크팩 10매'), 3,
+ '무난해요. 에센스 양은 넉넉한데 시트가 조금 얇은 편입니다.', '2026-11-22 22:45:00.000000'),
+((SELECT id FROM members WHERE login_id = 'lee03'), (SELECT id FROM products WHERE name = '러닝화'), 4,
+ '쿠션감이 좋아서 오래 뛰어도 발이 편합니다. 평소 신는 사이즈로 주문하면 딱 맞아요.', '2026-11-23 08:30:00.000000');
+
+-- ===== 상품문의 : 답변완료 2개, 답변대기 2개 =====
+INSERT INTO inquiries (member_id, product_id, question, answer, created_at, answered_at) VALUES
+((SELECT id FROM members WHERE login_id = 'kim02'), (SELECT id FROM products WHERE name = '신라면 5개입'),
+ '유통기한이 언제까지인가요?', '제조일로부터 6개월이며, 출고 기준 4개월 이상 남은 상품을 보내 드립니다. 감사합니다.',
+ '2026-11-22 10:20:00.000000', '2026-11-22 14:05:00.000000'),
+((SELECT id FROM members WHERE login_id = 'park04'), (SELECT id FROM products WHERE name = '신라면 5개입'),
+ '한 번에 여러 묶음을 주문하면 박스로 포장되나요?', NULL,
+ '2026-11-24 09:10:00.000000', NULL),
+((SELECT id FROM members WHERE login_id = 'choi05'), (SELECT id FROM products WHERE name = '러닝화'),
+ '발볼이 넓은 편인데 한 치수 크게 주문해야 할까요?', '발볼이 넓으시면 5mm 크게 주문하시는 것을 권해 드립니다. 받은 날로부터 7일 이내 교환 가능합니다.',
+ '2026-11-23 11:00:00.000000', '2026-11-23 15:30:00.000000'),
+((SELECT id FROM members WHERE login_id = 'hong07'), (SELECT id FROM products WHERE name = '수분 크림 50ml'),
+ '민감성 피부도 사용할 수 있나요?', NULL,
+ '2026-11-24 08:45:00.000000', NULL);
+
 -- 확인
 SELECT id, login_id, name, phone FROM members WHERE login_id IN ('hong01','kim02','lee03','park04','choi05','jung06','hong07');
 SELECT o.id, m.login_id, o.status, o.total_price FROM orders o JOIN members m ON m.id = o.member_id WHERE m.login_id IN ('hong01','kim02','lee03','park04','choi05','jung06','hong07');
+SELECT r.id, m.login_id, p.name, r.rating FROM reviews r JOIN members m ON m.id = r.member_id JOIN products p ON p.id = r.product_id;
+SELECT q.id, m.login_id, p.name, q.answer IS NOT NULL AS answered FROM inquiries q JOIN members m ON m.id = q.member_id JOIN products p ON p.id = q.product_id;

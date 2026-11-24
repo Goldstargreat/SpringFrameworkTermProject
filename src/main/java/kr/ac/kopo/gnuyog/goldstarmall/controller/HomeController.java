@@ -1,7 +1,13 @@
 package kr.ac.kopo.gnuyog.goldstarmall.controller;
 
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
+import kr.ac.kopo.gnuyog.goldstarmall.config.SessionConst;
+import kr.ac.kopo.gnuyog.goldstarmall.domain.Inquiry;
+import kr.ac.kopo.gnuyog.goldstarmall.domain.Review;
+import kr.ac.kopo.gnuyog.goldstarmall.service.InquiryService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.ProductService;
+import kr.ac.kopo.gnuyog.goldstarmall.service.ReviewService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,9 +24,13 @@ import java.util.List;
 public class HomeController {
 
     private final ProductService productService;
+    private final ReviewService reviewService;
+    private final InquiryService inquiryService;
 
-    public HomeController(ProductService productService) {
+    public HomeController(ProductService productService, ReviewService reviewService, InquiryService inquiryService) {
         this.productService = productService;
+        this.reviewService = reviewService;
+        this.inquiryService = inquiryService;
     }
 
     // 메인 화면 : 상품 목록
@@ -83,13 +93,31 @@ public class HomeController {
 
     // 상품 상세 화면
     @GetMapping("/products/{productId}")
-    public String productDetail(@PathVariable("productId") Long productId, Model model, RedirectAttributes redirectAttributes) {
+    public String productDetail(@PathVariable("productId") Long productId,
+                                HttpSession session,
+                                Model model,
+                                RedirectAttributes redirectAttributes) {
         Product product = productService.findById(productId);
         if (product == null) {
             redirectAttributes.addFlashAttribute("error", "상품을 찾을 수 없습니다.");
             return "redirect:/";
         }
         model.addAttribute("product", product);
+
+        // 로그인한 회원 정보 (상품평/문의의 삭제 버튼, 관리자 답변 폼을 보여 줄지 정한다)
+        Long loginMemberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
+        model.addAttribute("loginMemberId", loginMemberId);
+        model.addAttribute("isAdmin", "ADMIN".equals(session.getAttribute(SessionConst.LOGIN_MEMBER_ROLE)));
+
+        // 상품평 탭 : 목록, 평균 별점, 작성할 수 없는 이유(작성할 수 있으면 null)
+        List<Review> reviews = reviewService.findReviews(product);
+        model.addAttribute("reviews", reviews);
+        model.addAttribute("averageRating", reviewService.averageRating(product));
+        model.addAttribute("reviewBlockedReason", reviewService.cannotWriteReason(loginMemberId, product));
+
+        // 상품문의 탭 : 목록
+        List<Inquiry> inquiries = inquiryService.findInquiries(product);
+        model.addAttribute("inquiries", inquiries);
         return "product/detail"; // templates/product/detail.html
     }
 }

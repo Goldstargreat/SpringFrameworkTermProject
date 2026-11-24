@@ -85,6 +85,17 @@ public class Member
         return name;
     }
 
+    // 가린 이름 : 상품평/상품문의에 글쓴이를 보여 줄 때 쓴다 (예: 홍길동 → 홍*동, 김철 → 김*)
+    public String getMaskedName() {
+        if (name == null || name.length() < 2) {
+            return name;
+        }
+        if (name.length() == 2) {
+            return name.charAt(0) + "*";
+        }
+        return name.charAt(0) + "*".repeat(name.length() - 2) + name.charAt(name.length() - 1);
+    }
+
     public void setName(String name) {
         this.name = name;
     }

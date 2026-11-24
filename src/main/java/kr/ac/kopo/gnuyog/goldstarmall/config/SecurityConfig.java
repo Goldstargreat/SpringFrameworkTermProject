@@ -13,7 +13,8 @@ public class SecurityConfig implements WebMvcConfigurer {
 
     // 로그인해야 들어갈 수 있는 주소
     private static final String[] LOGIN_REQUIRED_PATHS = {
-            "/cart/**", "/orders/**", "/members/mypage/**", "/admin/**"
+            "/cart/**", "/orders/**", "/members/mypage/**", "/admin/**",
+            "/reviews/**", "/inquiries/**"   // 상품평, 상품문의 쓰기/삭제
     };
 
     // 관리자(ADMIN)만 들어갈 수 있는 주소

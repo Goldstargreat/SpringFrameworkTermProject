@@ -143,3 +143,27 @@ document.querySelectorAll('button[data-check-url]').forEach(function (button) {
         });
     }
 });
+
+// 6) 상품 상세 탭 메뉴 : data-tab-nav 안의 링크(#영역id) 중, 지금 화면에 보이는 영역의 탭에 active 를 붙인다
+//    탭을 누르면 그 영역으로 이동하고(링크 기본 동작), 스크롤하면 보고 있는 영역의 탭에 색이 칠해진다
+document.querySelectorAll('[data-tab-nav]').forEach(function (nav) {
+    var links = Array.prototype.slice.call(nav.querySelectorAll('a[href^="#"]'));
+
+    function update() {
+        // 탭 메뉴 바로 아래 지점을 지나간 영역 중 마지막 영역을 "지금 보는 영역"으로 본다
+        var line = nav.getBoundingClientRect().bottom + 10;
+        var current = links[0];
+        links.forEach(function (link) {
+            var section = document.getElementById(link.getAttribute('href').substring(1));
+            if (section && section.getBoundingClientRect().top <= line) {
+                current = link;
+            }
+        });
+        links.forEach(function (link) {
+            link.classList.toggle('active', link === current);
+        });
+    }
+
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+});

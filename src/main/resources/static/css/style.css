@@ -376,18 +376,220 @@ h2 {
     color: #666;
 }
 
-/* 상품 상세 아래 : 상품 정보 / 판매자 정보 / 배송·교환·반품 안내 표 */
-.info-section {
-    background: #fff;
-    border: 1px solid #e3e6eb;
-    border-radius: 10px;
-    padding: 20px 28px;
-    margin-top: 16px;
+/* ----- 상품 상세 탭 (상품상세 / 상품평 / 상품문의 / 배송·교환·반품 안내) ----- */
+/* 이름 아래 평균 별점 링크 */
+.rating-link {
+    display: inline-block;
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 4px;
 }
 
-.info-section h2 {
-    font-size: 18px;
-    margin: 0 0 12px;
+/* 화면을 내려도 탭 메뉴가 위에 붙어 있다 (position: sticky) */
+.detail-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    margin-top: 24px;
+    background: #fff;
+    border: 1px solid #e3e6eb;
+    border-radius: 10px 10px 0 0;
+    overflow-x: auto;
+}
+
+.detail-tabs a {
+    flex: 1;
+    text-align: center;
+    padding: 14px 10px;
+    font-size: 15px;
+    color: #555;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+}
+
+.detail-tabs a.active,
+.detail-tabs a:hover {
+    color: #1b3a6b;
+    font-weight: bold;
+    border-bottom-color: #1b3a6b;
+}
+
+.tab-count {
+    color: #c0392b;
+    font-size: 13px;
+}
+
+/* 탭을 눌러 이동했을 때 탭 메뉴에 가려지지 않도록 위쪽 여백을 둔다 */
+.tab-section {
+    scroll-margin-top: 60px;
+    background: #fff;
+    border: 1px solid #e3e6eb;
+    border-top: 0;
+    padding: 24px 28px;
+}
+
+.tab-section:last-of-type {
+    border-radius: 0 0 10px 10px;
+}
+
+.tab-section h2 {
+    font-size: 20px;
+    margin: 0 0 14px;
+}
+
+.tab-section h3 {
+    font-size: 16px;
+    margin: 20px 0 10px;
+}
+
+.tab-section h2 + h3 {
+    margin-top: 0;
+}
+
+/* 상품평 평균 별점 */
+.rating-summary {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.rating-big {
+    font-size: 32px;
+    font-weight: bold;
+    color: #f0a500;
+}
+
+.rating-out {
+    color: #888;
+}
+
+/* 상품평/문의 작성 폼 */
+.board-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 12px 0 18px;
+}
+
+.board-form textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #c7ccd6;
+    border-radius: 6px;
+    font: inherit;
+    resize: vertical;
+}
+
+.board-form .btn {
+    align-self: flex-end;
+}
+
+.rating-input {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+    font-size: 14px;
+}
+
+.rating-input label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+}
+
+.board-notice {
+    background: #f7f8fb;
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 14px;
+    color: #555;
+}
+
+.board-notice a {
+    color: #1b3a6b;
+    font-weight: bold;
+    margin-left: 8px;
+}
+
+/* 상품평/문의 목록 */
+.board-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.board-list > li {
+    border-top: 1px solid #eef0f4;
+    padding: 14px 0;
+}
+
+.board-head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 13px;
+}
+
+.board-head .badge {
+    margin: 0;
+}
+
+.board-head .inline-form {
+    margin-left: auto;
+}
+
+.stars {
+    color: #f0a500;
+    font-size: 15px;
+    letter-spacing: 1px;
+}
+
+.writer {
+    font-weight: bold;
+    color: #333;
+}
+
+.date {
+    color: #999;
+    font-size: 12px;
+}
+
+.board-body {
+    margin: 8px 0 0;
+    line-height: 1.6;
+    white-space: pre-line;
+}
+
+.qa-mark {
+    color: #1b3a6b;
+    margin-right: 4px;
+}
+
+.answer {
+    margin-top: 10px;
+    padding: 12px 14px;
+    background: #f4f6fa;
+    border-radius: 6px;
+    line-height: 1.6;
+}
+
+/* 답변 글의 줄바꿈은 그대로 보여 준다 */
+.answer-text {
+    white-space: pre-line;
+}
+
+.answer .date {
+    display: block;
+    margin-top: 4px;
+}
+
+.answer-form {
+    margin: 10px 0 0;
 }
 
 .info-table {
