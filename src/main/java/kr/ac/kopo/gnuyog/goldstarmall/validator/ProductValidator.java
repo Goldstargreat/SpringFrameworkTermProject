@@ -15,7 +15,8 @@ public final class ProductValidator {
     public static final int INFO_MAX_LENGTH = 50;   // 제조사/브랜드, 원산지
 
     // 객체를 만들 필요가 없는 클래스이므로 생성자를 막아 둔다
-    private ProductValidator() {
+    private ProductValidator()
+    {
     }
 
     // 새 상품 등록 검사 : 상품명, 카테고리, 가격/재고, 글자 수

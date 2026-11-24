@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 // 주문 서비스 : 주문 생성, 조회, 취소, 배송 상태 변경
@@ -212,6 +214,57 @@ public class OrderService {
     public List<Order> findAllOrders() {
         return orderRepository.findAllByOrderByIdDesc();
     }
+
+    // (관리자) 주문 검색 : 검색 기준(type)에 따라 일부만 맞아도 찾는다 (최신 주문부터)
+    //   all     : 아래 네 가지 중 하나라도 맞으면
+    //   id      : 주문번호 (숫자가 정확히 같아야 한다. 예: 12)
+    //   member  : 주문자 이름 또는 아이디 (예: 홍길동, hong01)
+    //   date    : 주문일시 "yyyy-MM-dd HH:mm" 의 일부 (예: 2026-11-24, 11-24, 2026-11)
+    //   address : 배송지 (예: 마포구)
+    // 검색어가 비어 있으면 전체 주문
+    // 주문 수가 많지 않은 쇼핑몰이라, 전체를 불러와서 자바에서 조건에 맞는 것만 골라낸다
+    @Transactional(readOnly = true)
+    public List<Order> searchOrders(String type, String keyword) {
+        List<Order> all = orderRepository.findAllByOrderByIdDesc();
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return all;
+        }
+        String text = keyword.trim();
+        List<Order> result = new ArrayList<>();
+        for (Order order : all) {
+            if (matches(order, type, text)) {
+                result.add(order);
+            }
+        }
+        return result;
+    }
+
+    // 주문 하나가 검색 조건에 맞는지
+    private boolean matches(Order order, String type, String text) {
+        boolean byId = String.valueOf(order.getId()).equals(text.replaceAll("[^0-9]", ""));
+        boolean byMember = order.getMember().getName().contains(text)
+                || order.getMember().getLoginId().toLowerCase().contains(text.toLowerCase());
+        boolean byDate = order.getOrderedAt() != null
+                && order.getOrderedAt().format(ORDERED_AT_FORMAT).contains(text);
+        boolean byAddress = order.getShippingAddress().contains(text);
+
+        if ("id".equals(type)) {
+            return byId;
+        }
+        if ("member".equals(type)) {
+            return byMember;
+        }
+        if ("date".equals(type)) {
+            return byDate;
+        }
+        if ("address".equals(type)) {
+            return byAddress;
+        }
+        return byId || byMember || byDate || byAddress;
+    }
+
+    // 주문일시 검색에 쓰는 형식 (화면에 보이는 형식과 같다)
+    private static final DateTimeFormatter ORDERED_AT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     // (관리자) 배송 상태를 다음 단계로 넘긴다 : 주문접수 → 입고 → 출고 → 배송중 → 배송완료
     public void moveToNextStatus(Long orderId) {

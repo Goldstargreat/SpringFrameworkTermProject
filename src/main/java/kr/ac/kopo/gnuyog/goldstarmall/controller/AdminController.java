@@ -37,11 +37,17 @@ public class AdminController {
         this.productService = productService;
     }
 
-    // 전체 주문 목록
+    // 주문 목록 : 검색어(keyword)가 있으면 검색 기준(type)에 따른 검색 결과, 없으면 전체 주문
+    // type : all(전체), id(주문번호), member(주문자), date(주문일시), address(배송지)
     @GetMapping("/orders")
-    public String orders(Model model) {
-        List<Order> orders = orderService.findAllOrders();
+    public String orders(@RequestParam(name = "type", defaultValue = "all") String type,
+                         @RequestParam(name = "keyword", required = false) String keyword,
+                         Model model) {
+        List<Order> orders = orderService.searchOrders(type, keyword);
         model.addAttribute("orders", orders);
+        // 검색창에 검색 기준과 검색어를 그대로 남겨 두고, 결과 건수를 보여 주는 데 쓴다
+        model.addAttribute("type", type);
+        model.addAttribute("keyword", keyword);
         return "admin/orders";
     }
 
