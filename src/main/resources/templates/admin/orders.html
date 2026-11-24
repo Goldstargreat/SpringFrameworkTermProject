@@ -13,6 +13,7 @@
     <h1>주문관리 <small>(관리자 전용)</small></h1>
     <p class="guide">버튼을 누르면 배송 상태가 한 단계씩 넘어갑니다: 주문접수 → 입고 → 출고 → 배송중 → 배송완료<br>
         출고 전(주문접수, 입고) 주문은 거절할 수 있습니다. 거절하면 결제 금액 전체가 환불되고 재고가 돌아오며, 거절 사유는 손님에게 보여집니다.<br>
+        반품신청 주문은 돌려받은 상품에 하자가 없으면 승인하세요. 승인하면 결제 금액 전체가 환불되고 재고가 돌아옵니다. 거절하면 사유와 함께 배송완료로 돌아갑니다.<br>
         주문번호는 칸에서 고친 뒤 '변경'을 누르세요. 영문, 숫자, -, _ 만 쓸 수 있고 다른 주문과 겹칠 수 없습니다. 바꾼 번호는 손님 주문내역에도 보입니다.</p>
     <div th:replace="~{fragments/layout :: messages}"></div>
 
@@ -83,10 +84,27 @@
                          th:text="${#numbers.formatInteger(order.refundAmount, 1, 'COMMA')} + '원 환불완료'">0원 환불완료</div>
                     <div class="refund-note" th:if="${order.rejectReason != null}"
                          th:text="'사유: ' + ${order.rejectReason}">사유</div>
+                    <!-- 반품 : 손님이 남긴 반품 사유, 관리자가 남긴 반품 거절 사유 -->
+                    <div class="refund-note" th:if="${order.returnReason != null}"
+                         th:text="'반품 사유: ' + ${order.returnReason}">반품 사유</div>
+                    <div class="refund-note" th:if="${order.returnRejectReason != null}"
+                         th:text="'반품 거절: ' + ${order.returnRejectReason}">반품 거절</div>
                 </td>
                 <td>
-                    <!-- 진행 중인 주문이면 '다음 단계' 버튼을 보여 준다 -->
-                    <form th:if="${!order.status.finished}"
+                    <!-- 반품 신청된 주문 : 돌려받은 상품을 확인하고 승인(환불) 또는 거절(사유 필요) -->
+                    <th:block th:if="${order.status.name() == 'RETURN_REQUESTED'}">
+                        <form th:action="@{/admin/orders/{id}/return/approve(id=${order.id})}" method="post" class="inline-form"
+                              th:attr="data-confirm='주문번호 ' + ${order.displayNumber} + ' 반품을 승인하고 ' + ${#numbers.formatInteger(order.totalPrice, 1, 'COMMA')} + '원을 환불하시겠습니까?'">
+                            <button type="submit" class="btn btn-small btn-primary">반품 승인·환불</button>
+                        </form>
+                        <form th:action="@{/admin/orders/{id}/return/reject(id=${order.id})}" method="post" class="inline-form reject-form"
+                              data-confirm="반품을 거절하시겠습니까? 주문은 배송완료 상태로 돌아갑니다.">
+                            <input type="text" name="reason" maxlength="200" placeholder="반품 거절 사유 (예: 사용 흔적)" required>
+                            <button type="submit" class="btn btn-small btn-danger">반품 거절</button>
+                        </form>
+                    </th:block>
+                    <!-- 배송 진행 중인 주문이면 '다음 단계' 버튼을 보여 준다 -->
+                    <form th:if="${order.status.inProgress}"
                           th:action="@{/admin/orders/{id}/next(id=${order.id})}" method="post" class="inline-form">
                         <button type="submit" class="btn btn-small btn-primary"
                                 th:text="${order.status.next().label} + ' 처리'">입고 처리</button>
@@ -98,7 +116,7 @@
                         <input type="text" name="reason" maxlength="200" placeholder="거절 사유 (예: 재고 부족)" required>
                         <button type="submit" class="btn btn-small btn-danger">거절·환불</button>
                     </form>
-                    <!-- 끝난 주문(배송완료, 주문취소, 주문거절)이면 '삭제' 버튼을 보여 준다 -->
+                    <!-- 끝난 주문(배송완료, 주문취소, 주문거절, 반품완료)이면 '삭제' 버튼을 보여 준다 -->
                     <form th:if="${order.status.finished}"
                           th:action="@{/admin/orders/{id}/delete(id=${order.id})}" method="post" class="inline-form"
                           data-confirm="이 주문을 삭제하시겠습니까?">

@@ -29,8 +29,11 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     // 아직 주문번호가 없는 주문들 (SQL 로 직접 넣은 시연용 주문 등) → 서버를 켤 때 기본 주문번호를 채운다
     List<Order> findByOrderNumberIsNull();
 
-    // 한 회원의 누적 구매액 : status(배송완료) 주문의 결제 금액 합계 (주문이 없으면 0)
-    // → select coalesce(sum(total_price), 0) from orders where member_id = ? and status = 'DELIVERED'
-    @Query("select coalesce(sum(o.totalPrice), 0) from Order o where o.member = :member and o.status = :status")
-    long sumTotalPriceByMemberAndStatus(@Param("member") Member member, @Param("status") ShippingStatus status);
+    // 한 회원의 누적 구매액 : statuses(배송완료, 반품신청) 주문의 결제 금액 합계 (주문이 없으면 0)
+    // → select coalesce(sum(total_price), 0) from orders where member_id = ? and status in ('DELIVERED', 'RETURN_REQUESTED')
+    @Query("select coalesce(sum(o.totalPrice), 0) from Order o where o.member = :member and o.status in :statuses")
+    long sumTotalPriceByMemberAndStatusIn(@Param("member") Member member, @Param("statuses") List<ShippingStatus> statuses);
+
+    // 상태별 주문 개수 (관리자 화면 상단 '주문관리' 옆의 반품 신청 건수에 쓴다)
+    long countByStatus(ShippingStatus status);
 }

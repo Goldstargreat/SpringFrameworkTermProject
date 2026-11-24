@@ -205,6 +205,75 @@ public class OrderService {
         return order.getDisplayNumber();
     }
 
+    // ===== 반품 : 배송완료 후 14일 이내, 하자 없는 상품만 =====
+    // 손님이 신청(반품신청) → 관리자가 돌려받은 상품을 검수 → 승인(반품완료, 환불) 또는 거절(배송완료로 되돌림)
+
+    // 반품 신청 : 반품 사유와 "하자 없음" 확인이 꼭 있어야 한다. 신청한 주문의 주문번호를 돌려준다
+    public String requestReturn(Long memberId, Long orderId, String reason, boolean noDefectConfirmed) {
+        Order order = findMyOrder(memberId, orderId);
+        if (order.getStatus() != ShippingStatus.DELIVERED) {
+            throw new BusinessException("배송완료된 주문만 반품을 신청할 수 있습니다. (현재 상태: " + order.getStatus().getLabel() + ")");
+        }
+        if (order.getReturnRejectReason() != null) {
+            throw new BusinessException("반품이 거절된 주문은 다시 신청할 수 없습니다.");
+        }
+        if (!order.isReturnable()) {
+            throw new BusinessException("반품 신청 기간(배송완료 후 " + Order.RETURN_PERIOD_DAYS + "일)이 지났습니다.");
+        }
+        if (reason == null || reason.trim().isEmpty()) {
+            throw new BusinessException("반품 사유를 입력해 주세요.");
+        }
+        if (reason.trim().length() > 200) {
+            throw new BusinessException("반품 사유는 200글자까지 쓸 수 있습니다.");
+        }
+        if (!noDefectConfirmed) {
+            throw new BusinessException("상품에 하자(파손, 오염, 사용 흔적, 구성품 누락)가 없는 경우에만 반품할 수 있습니다. 확인란에 체크해 주세요.");
+        }
+        order.setReturnReason(reason.trim());
+        order.setReturnRequestedAt(LocalDateTime.now());
+        order.setStatus(ShippingStatus.RETURN_REQUESTED);
+        return order.getDisplayNumber();
+    }
+
+    // (관리자) 반품 승인 : 결제 금액 전체를 환불하고 재고를 돌려놓는다. 누적 구매액에서 빠지므로 등급을 다시 계산한다
+    public int approveReturn(Long orderId) {
+        Order order = findReturnRequested(orderId);
+        int refund = refund(order, ShippingStatus.RETURNED);
+        gradeService.refreshGrade(order.getMember());
+        return refund;
+    }
+
+    // (관리자) 반품 거절 : 검수 결과 하자가 있는 등의 이유로 거절한다. 사유가 꼭 있어야 하고, 배송완료 상태로 되돌린다
+    public void rejectReturn(Long orderId, String reason) {
+        Order order = findReturnRequested(orderId);
+        if (reason == null || reason.trim().isEmpty()) {
+            throw new BusinessException("반품 거절 사유를 입력해 주세요. (손님에게 보여집니다)");
+        }
+        if (reason.trim().length() > 200) {
+            throw new BusinessException("반품 거절 사유는 200글자까지 쓸 수 있습니다.");
+        }
+        order.setReturnRejectReason(reason.trim());
+        order.setStatus(ShippingStatus.DELIVERED);
+    }
+
+    // (관리자) 반품 신청 상태인 주문 찾기 (없거나 반품신청 상태가 아니면 오류)
+    private Order findReturnRequested(Long orderId) {
+        Order order = orderRepository.findById(orderId).orElse(null);
+        if (order == null) {
+            throw new NotFoundException("주문을 찾을 수 없습니다.");
+        }
+        if (order.getStatus() != ShippingStatus.RETURN_REQUESTED) {
+            throw new BusinessException("반품 신청된 주문이 아닙니다. (현재 상태: " + order.getStatus().getLabel() + ")");
+        }
+        return order;
+    }
+
+    // (관리자) 처리를 기다리는 반품 신청 개수 (화면 상단 '주문관리' 옆 빨간 숫자)
+    @Transactional(readOnly = true)
+    public long countPendingReturns() {
+        return orderRepository.countByStatus(ShippingStatus.RETURN_REQUESTED);
+    }
+
     // (관리자) 주문 거절 : 출고 전(주문접수, 입고)까지만 가능하고, 거절 사유가 꼭 있어야 한다
     // 손님이 이미 결제했으므로 거절하면 반드시 환불한다. 환불한 금액을 돌려준다
     public int rejectOrder(Long orderId, String reason) {
@@ -225,7 +294,7 @@ public class OrderService {
         return refund(order, ShippingStatus.REJECTED);
     }
 
-    // 환불 처리 : 주문취소와 주문거절이 함께 쓴다
+    // 환불 처리 : 주문취소, 주문거절, 반품승인이 함께 쓴다
     // 1) 줄였던 재고를 다시 돌려놓고  2) 결제 금액 전체를 환불 기록으로 남기고  3) 상태를 바꾼다
     private int refund(Order order, ShippingStatus newStatus) {
         for (OrderItem orderItem : order.getOrderItems()) {
@@ -365,6 +434,11 @@ public class OrderService {
             throw new BusinessException("더 이상 진행할 수 없는 주문입니다. (현재 상태: " + current.getLabel() + ")");
         }
         order.setStatus(next);
+
+        // 배송완료 일시를 남긴다 (반품 신청 기한 14일을 이 날짜부터 센다)
+        if (next == ShippingStatus.DELIVERED) {
+            order.setDeliveredAt(LocalDateTime.now());
+        }
 
         // 배송완료되면 누적 구매액이 늘어나므로 주문한 회원의 등급을 다시 계산한다
         if (next == ShippingStatus.DELIVERED) {

@@ -105,7 +105,35 @@ public class AdminController {
         return "redirect:/admin/orders";
     }
 
-    // 주문 삭제 (배송완료, 주문취소, 주문거절된 주문만)
+    // 반품 승인 : 돌려받은 상품에 하자가 없으면 승인하고 결제 금액 전체를 환불한다
+    @PostMapping("/orders/{orderId}/return/approve")
+    public String approveReturn(@PathVariable("orderId") Long orderId, RedirectAttributes redirectAttributes) {
+        try {
+            int refund = orderService.approveReturn(orderId);
+            redirectAttributes.addFlashAttribute("message",
+                    "주문번호 " + orderService.findOrderNumber(orderId) + " 반품을 승인하고 " + String.format("%,d", refund) + "원을 환불했습니다.");
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/orders";
+    }
+
+    // 반품 거절 : 하자가 있는 등의 이유로 거절한다. 사유가 필요하고, 주문은 배송완료 상태로 돌아간다
+    @PostMapping("/orders/{orderId}/return/reject")
+    public String rejectReturn(@PathVariable("orderId") Long orderId,
+                               @RequestParam(name = "reason", required = false) String reason,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            orderService.rejectReturn(orderId, reason);
+            redirectAttributes.addFlashAttribute("message",
+                    "주문번호 " + orderService.findOrderNumber(orderId) + " 반품을 거절했습니다.");
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/orders";
+    }
+
+    // 주문 삭제 (배송완료, 주문취소, 주문거절, 반품완료된 주문만)
     @PostMapping("/orders/{orderId}/delete")
     public String deleteOrder(@PathVariable("orderId") Long orderId, RedirectAttributes redirectAttributes) {
         // 삭제하면 주문번호를 찾을 수 없으므로 먼저 알아 둔다

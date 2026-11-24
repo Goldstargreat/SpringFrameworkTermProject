@@ -78,7 +78,7 @@ public class Order {
     // 주문 일시
     private LocalDateTime orderedAt;
 
-    // 환불 금액 : 주문취소/주문거절 때 결제 금액 전체를 돌려준다 (환불 전에는 null)
+    // 환불 금액 : 주문취소/주문거절/반품완료 때 결제 금액 전체를 돌려준다 (환불 전에는 null)
     // 실제 결제(카드, 계좌) 기능이 없으므로 "얼마를 언제 환불했는지"를 기록해 화면에 보여 준다
     private Integer refundAmount;
 
@@ -89,12 +89,78 @@ public class Order {
     @Column(length = 200)
     private String rejectReason;
 
+    // 배송완료 일시 : 반품 신청 기한(배송완료 후 14일)을 계산하는 데 쓴다
+    // 이 기능이 생기기 전에 배송완료된 주문은 비어 있을(null) 수 있어서, 그때는 주문 일시로 계산한다
+    private LocalDateTime deliveredAt;
+
+    // 반품 사유 : 손님이 반품을 신청할 때 남긴다
+    @Column(length = 200)
+    private String returnReason;
+
+    // 반품 신청 일시
+    private LocalDateTime returnRequestedAt;
+
+    // 반품 거절 사유 : 관리자가 검수 후 반품을 거절할 때 남긴다 (손님에게 보여 준다, 거절된 주문은 다시 신청할 수 없다)
+    @Column(length = 200)
+    private String returnRejectReason;
+
     // 회원이 내 주문내역에서 삭제했는지 : 실제로 지우지 않고 회원 화면에서만 숨긴다
     // (지워 버리면 누적 구매액/등급, 상품평 작성 자격이 사라지고, 관리자도 주문을 볼 수 없게 된다)
     // 이 기능이 생기기 전의 주문은 비어 있을(null) 수 있어서, isHiddenByMember() 에서 false 로 본다
     private Boolean hiddenByMember;
 
     public Order() {
+    }
+
+    // 반품 신청 기간 (배송완료 후 며칠까지)
+    public static final int RETURN_PERIOD_DAYS = 14;
+
+    // 반품 신청 마감 일시 = 배송완료 일시 + 14일 (화면에서 order.returnDeadline 으로 사용)
+    public LocalDateTime getReturnDeadline() {
+        LocalDateTime base = deliveredAt != null ? deliveredAt : orderedAt;
+        return base == null ? null : base.plusDays(RETURN_PERIOD_DAYS);
+    }
+
+    // 지금 반품을 신청할 수 있는지 : 배송완료 상태 + 14일 이내 + 반품을 거절당한 적이 없음
+    // 화면에서 order.returnable 로 사용
+    public boolean isReturnable() {
+        LocalDateTime deadline = getReturnDeadline();
+        return status == ShippingStatus.DELIVERED
+                && returnRejectReason == null
+                && deadline != null
+                && !LocalDateTime.now().isAfter(deadline);
+    }
+
+    public LocalDateTime getDeliveredAt() {
+        return deliveredAt;
+    }
+
+    public void setDeliveredAt(LocalDateTime deliveredAt) {
+        this.deliveredAt = deliveredAt;
+    }
+
+    public String getReturnReason() {
+        return returnReason;
+    }
+
+    public void setReturnReason(String returnReason) {
+        this.returnReason = returnReason;
+    }
+
+    public LocalDateTime getReturnRequestedAt() {
+        return returnRequestedAt;
+    }
+
+    public void setReturnRequestedAt(LocalDateTime returnRequestedAt) {
+        this.returnRequestedAt = returnRequestedAt;
+    }
+
+    public String getReturnRejectReason() {
+        return returnRejectReason;
+    }
+
+    public void setReturnRejectReason(String returnRejectReason) {
+        this.returnRejectReason = returnRejectReason;
     }
 
     public boolean isHiddenByMember() {

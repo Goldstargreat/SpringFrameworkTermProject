@@ -36,7 +36,10 @@
                         class="notice-count" th:if="${myNoticeCount > 0}" th:text="${myNoticeCount}">2</span></a>
                 <a th:href="@{/members/mypage}">마이페이지</a>
                 <!-- 관리자에게만 보이는 메뉴 -->
-                <a th:if="${session.loginMemberRole == 'ADMIN'}" th:href="@{/admin/orders}">주문관리</a>
+                <!-- 주문관리 : 처리 대기 반품 신청 개수를 빨간 숫자로 보여 준다 (AdminNoticeAdvice) -->
+                <a th:if="${session.loginMemberRole == 'ADMIN'}" th:href="@{/admin/orders}">주문관리<span
+                        class="notice-count" th:if="${adminPendingReturns > 0}"
+                        th:text="${adminPendingReturns}">1</span></a>
                 <a th:if="${session.loginMemberRole == 'ADMIN'}" th:href="@{/admin/members}">회원관리</a>
                 <a th:if="${session.loginMemberRole == 'ADMIN'}" th:href="@{/admin/products}">상품관리</a>
                 <!-- 리뷰/문의 : 답변 대기 문의 + 코멘트 대기 상품평 개수를 빨간 숫자로 보여 준다 (AdminNoticeAdvice) -->

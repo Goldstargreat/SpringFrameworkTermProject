@@ -184,6 +184,25 @@ public class OrderController {
         return "redirect:/orders/" + orderId;
     }
 
+    // 반품 신청 : 배송완료 후 14일 이내, 하자 없는 상품만 (관리자가 검수 후 승인하면 환불된다)
+    // noDefect : "하자가 없음을 확인합니다" 체크박스 (체크하지 않으면 값이 넘어오지 않는다)
+    @PostMapping("/{orderId}/return")
+    public String requestReturn(@PathVariable("orderId") Long orderId,
+                                @RequestParam(name = "reason", required = false) String reason,
+                                @RequestParam(name = "noDefect", required = false) String noDefect,
+                                HttpSession session,
+                                RedirectAttributes redirectAttributes) {
+        Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
+        try {
+            orderService.requestReturn(memberId, orderId, reason, noDefect != null);
+            redirectAttributes.addFlashAttribute("message",
+                    "반품을 신청했습니다. 상품을 돌려받아 확인한 뒤 결제 금액 전체를 환불해 드립니다.");
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/orders/" + orderId;
+    }
+
     // 주문내역 삭제 : 끝난 주문(배송완료, 주문취소, 주문거절)만 내 주문내역에서 지울 수 있다
     @PostMapping("/{orderId}/delete")
     public String delete(@PathVariable("orderId") Long orderId,

@@ -33,8 +33,9 @@ public class ProductService {
             "생활용품", "홈인테리어", "가전디지털", "스포츠/레저", "자동차용품",
             "음반/dvd", "완구/취미", "문구/오피스", "반려동물용품", "헬스/건강식품");
 
-    // 판매로 치지 않는 주문 상태 : 주문취소, 주문거절 (환불된 주문)
-    private static final List<ShippingStatus> VOIDED_STATUSES = List.of(ShippingStatus.CANCELED, ShippingStatus.REJECTED);
+    // 판매로 치지 않는 주문 상태 : 주문취소, 주문거절, 반품완료 (환불된 주문)
+    private static final List<ShippingStatus> VOIDED_STATUSES =
+            List.of(ShippingStatus.CANCELED, ShippingStatus.REJECTED, ShippingStatus.RETURNED);
 
     private final ProductRepository productRepository;
     private final CartItemRepository cartItemRepository;

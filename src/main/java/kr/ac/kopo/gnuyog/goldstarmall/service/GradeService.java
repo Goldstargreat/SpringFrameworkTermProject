@@ -9,11 +9,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 // 회원 등급 서비스 : 누적 구매액 계산, 등급 자동 책정
 // 규칙
-//  - 누적 구매액 = 배송완료된 주문의 결제 금액 합계 (취소/거절, 아직 배송 중인 주문은 세지 않는다)
+//  - 누적 구매액 = 배송완료된 주문의 결제 금액 합계 (취소/거절/반품완료, 아직 배송 중인 주문은 세지 않는다)
+//    반품신청 중인 주문은 아직 반품이 확정되지 않았으므로 그대로 센다 (반품이 승인되면 빠진다)
 //  - 누적 구매액이 기준 금액(MemberGrade)을 충족하면 그 등급이 자동으로 정해진다
 //    (주문이 배송완료될 때, 서버를 켤 때 다시 계산한다)
 //  - 등급은 기준 금액으로만 정해지고, 관리자가 직접 바꾸지 않는다
@@ -30,10 +32,14 @@ public class GradeService {
         this.orderRepository = orderRepository;
     }
 
+    // 누적 구매액에 넣는 주문 상태 : 배송완료, 반품신청(아직 확정 전)
+    private static final List<ShippingStatus> PURCHASED_STATUSES =
+            List.of(ShippingStatus.DELIVERED, ShippingStatus.RETURN_REQUESTED);
+
     // 한 회원의 누적 구매액 (배송완료 주문의 결제 금액 합계)
     @Transactional(readOnly = true)
     public long totalPurchase(Member member) {
-        return orderRepository.sumTotalPriceByMemberAndStatus(member, ShippingStatus.DELIVERED);
+        return orderRepository.sumTotalPriceByMemberAndStatusIn(member, PURCHASED_STATUSES);
     }
 
     // 다음 등급까지 남은 금액 (가장 높은 등급이면 0)
@@ -47,7 +53,7 @@ public class GradeService {
     }
 
     // 한 회원의 등급을 누적 구매액에 맞게 다시 정한다 (관리자 계정은 그대로)
-    // 주문이 배송완료될 때 OrderService 가 부른다
+    // 주문이 배송완료되거나 반품이 승인될 때 OrderService 가 부른다
     public void refreshGrade(Member member) {
         if ("ADMIN".equals(member.getRole())) {
             return;

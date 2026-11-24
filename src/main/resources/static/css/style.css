@@ -913,6 +913,38 @@ h2 {
     color: #a12626;
 }
 
+.status-RETURN_REQUESTED {
+    background: #fff4e0;
+    color: #8a5a00;
+}
+
+.status-RETURNED {
+    background: #eceef1;
+    color: #777;
+}
+
+/* 주문 상세의 반품 신청 폼 */
+.return-form {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.return-form input[type="text"] {
+    width: 100%;
+    max-width: 480px;
+    padding: 8px 10px;
+}
+
+.return-form .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+}
+
 /* 취소/거절된 주문 아래의 환불 안내, 거절 사유 */
 .refund-note {
     margin-top: 4px;

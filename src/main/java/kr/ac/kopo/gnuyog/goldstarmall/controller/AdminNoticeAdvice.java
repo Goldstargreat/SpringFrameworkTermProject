@@ -2,6 +2,7 @@ package kr.ac.kopo.gnuyog.goldstarmall.controller;
 
 import kr.ac.kopo.gnuyog.goldstarmall.config.SessionConst;
 import kr.ac.kopo.gnuyog.goldstarmall.service.InquiryService;
+import kr.ac.kopo.gnuyog.goldstarmall.service.OrderService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.ReviewService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -15,10 +16,12 @@ public class AdminNoticeAdvice {
 
     private final InquiryService inquiryService;
     private final ReviewService reviewService;
+    private final OrderService orderService;
 
-    public AdminNoticeAdvice(InquiryService inquiryService, ReviewService reviewService) {
+    public AdminNoticeAdvice(InquiryService inquiryService, ReviewService reviewService, OrderService orderService) {
         this.inquiryService = inquiryService;
         this.reviewService = reviewService;
+        this.orderService = orderService;
     }
 
     // 답변 대기 문의 개수 (관리자가 아니면 null)
@@ -31,6 +34,12 @@ public class AdminNoticeAdvice {
     @ModelAttribute("adminPendingReviews")
     public Long adminPendingReviews(HttpSession session) {
         return isAdmin(session) ? reviewService.countPending() : null;
+    }
+
+    // 처리 대기 반품 신청 개수 (관리자가 아니면 null) → 화면 상단 '주문관리' 옆 빨간 숫자
+    @ModelAttribute("adminPendingReturns")
+    public Long adminPendingReturns(HttpSession session) {
+        return isAdmin(session) ? orderService.countPendingReturns() : null;
     }
 
     private boolean isAdmin(HttpSession session) {
