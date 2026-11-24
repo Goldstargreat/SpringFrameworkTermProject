@@ -9,11 +9,14 @@ import java.util.List;
 // 검사에 실패하면 BusinessException 을 던지고, 컨트롤러가 메시지를 화면에 보여 준다
 public final class MemberValidator {
 
-    // 아이디 최소 글자 수
+    // 아이디 규칙 : 영문 소문자만, 4 ~ 20글자 (숫자, 한글, 대문자, 공백, 특수문자는 안 된다)
     public static final int LOGIN_ID_MIN_LENGTH = 4;
+    public static final int LOGIN_ID_MAX_LENGTH = 20;
 
-    // 비밀번호 최소 글자 수
-    public static final int PASSWORD_MIN_LENGTH = 4;
+    // 비밀번호 규칙 : 8 ~ 20글자, 영문 + 숫자 + 특수문자를 모두 포함, 공백 안 됨
+    // 추가로 아이디가 들어간 비밀번호, 같은 글자를 4번 이상 연속으로 쓴 비밀번호(aaaa, 1111)는 막는다
+    public static final int PASSWORD_MIN_LENGTH = 8;
+    public static final int PASSWORD_MAX_LENGTH = 20;
 
     // 일반 회원이 아이디에 쓸 수 없는 단어 (관리자나 쇼핑몰로 착각하지 않도록)
     // 대소문자, 띄어쓰기와 상관없이 들어 있기만 해도 막는다 (예: Admin1, myadmin, GoldStarMall)
@@ -56,17 +59,39 @@ public final class MemberValidator {
         return false;
     }
 
-    // 아이디 검사
+    // 아이디 검사 : 영문 소문자만 4 ~ 20글자
     public static void validateLoginId(String loginId) {
-        if (loginId == null || loginId.trim().length() < LOGIN_ID_MIN_LENGTH) {
-            throw new BusinessException("아이디는 " + LOGIN_ID_MIN_LENGTH + "글자 이상이어야 합니다.");
+        String id = loginId == null ? "" : loginId.trim();
+        if (id.length() < LOGIN_ID_MIN_LENGTH || id.length() > LOGIN_ID_MAX_LENGTH) {
+            throw new BusinessException("아이디는 " + LOGIN_ID_MIN_LENGTH + " ~ " + LOGIN_ID_MAX_LENGTH + "글자로 입력해 주세요.");
+        }
+        if (!id.matches("[a-z]+")) {
+            throw new BusinessException("아이디는 영문 소문자만 쓸 수 있습니다. (숫자, 한글, 대문자, 공백, 특수문자 불가)");
         }
     }
 
-    // 새 비밀번호 검사 : 글자 수 + 비밀번호 확인과 일치하는지
-    public static void validatePassword(String password, String passwordConfirm) {
-        if (password == null || password.length() < PASSWORD_MIN_LENGTH) {
-            throw new BusinessException("비밀번호는 " + PASSWORD_MIN_LENGTH + "글자 이상이어야 합니다.");
+    // 새 비밀번호 검사 : 글자 수, 영문/숫자/특수문자 포함, 공백, 아이디 포함, 같은 글자 연속, 비밀번호 확인 일치
+    // loginId : 이 비밀번호를 쓸 회원의 아이디 (비밀번호에 아이디가 들어 있는지 보기 위해)
+    public static void validatePassword(String password, String passwordConfirm, String loginId) {
+        if (password == null || password.length() < PASSWORD_MIN_LENGTH || password.length() > PASSWORD_MAX_LENGTH) {
+            throw new BusinessException("비밀번호는 " + PASSWORD_MIN_LENGTH + " ~ " + PASSWORD_MAX_LENGTH + "글자로 입력해 주세요.");
+        }
+        if (password.matches(".*\\s.*")) {
+            throw new BusinessException("비밀번호에는 공백을 쓸 수 없습니다.");
+        }
+        boolean hasLetter = password.matches(".*[A-Za-z].*");
+        boolean hasDigit = password.matches(".*[0-9].*");
+        boolean hasSpecial = password.matches(".*[^A-Za-z0-9].*");
+        if (!hasLetter || !hasDigit || !hasSpecial) {
+            throw new BusinessException("비밀번호는 영문, 숫자, 특수문자(!@#$ 등)를 모두 포함해야 합니다.");
+        }
+        if (loginId != null && !loginId.trim().isEmpty()
+                && password.toLowerCase().contains(loginId.trim().toLowerCase())) {
+            throw new BusinessException("비밀번호에 아이디를 넣을 수 없습니다.");
+        }
+        // (.)\\1{3} : 아무 글자 하나 뒤에 같은 글자가 3번 더 = 같은 글자 4번 연속
+        if (password.matches(".*(.)\\1{3}.*")) {
+            throw new BusinessException("같은 글자를 4번 이상 연속으로 쓸 수 없습니다. (예: aaaa, 1111)");
         }
         if (!password.equals(passwordConfirm)) {
             throw new BusinessException("비밀번호와 비밀번호 확인이 서로 다릅니다.");

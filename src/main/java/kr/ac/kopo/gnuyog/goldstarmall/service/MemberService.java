@@ -159,7 +159,7 @@ public class MemberService {
         if (member == null) {
             throw new NotFoundException("회원을 찾을 수 없습니다.");
         }
-        MemberValidator.validatePassword(newPassword, newPasswordConfirm);
+        MemberValidator.validatePassword(newPassword, newPasswordConfirm, member.getLoginId());
         member.setPassword(passwordEncoder.encode(newPassword));
     }
 
@@ -187,7 +187,7 @@ public class MemberService {
         if (!passwordEncoder.matches(currentPassword, member.getPassword())) {
             throw new BusinessException("현재 비밀번호가 올바르지 않습니다.");
         }
-        MemberValidator.validatePassword(newPassword, newPasswordConfirm);
+        MemberValidator.validatePassword(newPassword, newPasswordConfirm, member.getLoginId());
         member.setPassword(passwordEncoder.encode(newPassword));
     }
 

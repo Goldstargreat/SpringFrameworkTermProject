@@ -53,7 +53,7 @@ public class MemberController {
         try {
             MemberValidator.validateLoginId(loginId);
             MemberValidator.checkReservedLoginId(loginId);
-            MemberValidator.validatePassword(password, passwordConfirm);
+            MemberValidator.validatePassword(password, passwordConfirm, loginId);
             MemberValidator.validateName(name);
             MemberValidator.checkReservedName(name);
             memberService.join(loginId.trim(), password, name.trim(), phone, address);

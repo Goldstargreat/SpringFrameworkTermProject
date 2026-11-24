@@ -16,11 +16,11 @@
 
         <!-- 입력한 값은 POST /members/join 으로 전송된다 -->
         <form th:action="@{/members/join}" method="post">
-            <label>아이디 (4글자 이상)
+            <label>아이디 <span class="field-hint">영문 소문자만 4~20자 (숫자·한글·특수문자 불가)</span>
                 <!-- 중복 확인 버튼 : 누르면 js/common.js 가 data-check-url 주소로 물어보고 결과를 아래 칸에 보여 준다 -->
                 <!-- data-check-required : 중복 확인에서 "사용 가능"을 받아야 가입할 수 있다 -->
                 <span class="input-with-button">
-                    <input type="text" id="loginId" name="loginId" th:value="${loginId}" required>
+                    <input type="text" id="loginId" name="loginId" th:value="${loginId}" required minlength="4" maxlength="20" pattern="[a-z]+" title="영문 소문자만 4~20자">
                     <button type="button" class="btn btn-small"
                             th:data-check-url="@{/members/check-login-id}"
                             data-check-input="loginId"
@@ -29,8 +29,8 @@
                 </span>
             </label>
             <p id="loginIdResult" class="check-message"></p>
-            <label>비밀번호 (4글자 이상)
-                <input type="password" name="password" required>
+            <label>비밀번호 <span class="field-hint">8~20자, 영문 + 숫자 + 특수문자(!@#$ 등) 모두 포함, 아이디·같은 글자 4번 연속 불가</span>
+                <input type="password" name="password" required minlength="8" maxlength="20">
             </label>
             <label>비밀번호 확인
                 <input type="password" name="passwordConfirm" required>
