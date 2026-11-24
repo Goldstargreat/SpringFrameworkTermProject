@@ -147,9 +147,11 @@ public class AdminController {
                                 @RequestParam("stock") int stock,
                                 @RequestParam(name = "description", required = false) String description,
                                 @RequestParam(name = "icon", required = false) String icon,
+                                @RequestParam(name = "manufacturer", required = false) String manufacturer,
+                                @RequestParam(name = "origin", required = false) String origin,
                                 RedirectAttributes redirectAttributes) {
         try {
-            Product product = productService.create(name, category, price, stock, description, icon);
+            Product product = productService.create(name, category, price, stock, description, icon, manufacturer, origin);
             redirectAttributes.addFlashAttribute("message", product.getId() + "번 상품 '" + product.getName() + "'을(를) 등록했습니다.");
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());

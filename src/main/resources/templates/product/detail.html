@@ -50,6 +50,41 @@
             <a class="back-link" th:href="@{/}">← 상품 목록으로</a>
         </div>
     </div>
+
+    <!-- 상품 정보 : 상품마다 다른 정보 (제조사/원산지는 products 테이블에 들어 있다) -->
+    <section class="info-section">
+        <h2>상품 정보</h2>
+        <table class="info-table">
+            <tr><th>상품번호</th><td th:text="${product.id}">2</td></tr>
+            <tr><th>상품명</th><td th:text="${product.name}">상품명</td></tr>
+            <tr><th>카테고리</th><td th:text="${product.category}">식품</td></tr>
+            <!-- 값이 없으면(관리자가 비워 두고 등록한 상품) "-" 로 보여 준다 -->
+            <tr><th>제조사/브랜드</th><td th:text="${product.manufacturer} ?: '-'">농심</td></tr>
+            <tr><th>원산지</th><td th:text="${product.origin} ?: '-'">대한민국</td></tr>
+        </table>
+    </section>
+
+    <!-- 판매자 정보 : 골드스타몰이 직접 사서 파는 상품만 있으므로 모든 상품이 같다 -->
+    <section class="info-section">
+        <h2>판매자 정보</h2>
+        <table class="info-table">
+            <tr><th>판매자</th><td>골드스타몰</td></tr>
+            <tr><th>판매 방식</th><td>골드스타몰 직매입 (골드스타몰이 직접 구매해 판매합니다)</td></tr>
+            <tr><th>출고지</th><td>골드스타몰 물류센터</td></tr>
+            <tr><th>고객 문의</th><td>평일 09:00 ~ 18:00 (주말, 공휴일 휴무)</td></tr>
+        </table>
+    </section>
+
+    <!-- 배송 / 교환·반품 안내 : 이 쇼핑몰의 실제 규칙 (OrderService, ShippingStatus 참고) -->
+    <section class="info-section">
+        <h2>배송 / 교환·반품 안내</h2>
+        <table class="info-table">
+            <tr><th>배송비</th><td>무료배송</td></tr>
+            <tr><th>배송 과정</th><td>주문접수 → 입고 → 출고 → 배송중 → 배송완료 (주문내역에서 확인할 수 있습니다)</td></tr>
+            <tr><th>주문 취소</th><td>주문접수 단계에서만 취소할 수 있습니다. 물류센터에 입고된 뒤에는 취소할 수 없습니다.</td></tr>
+            <tr><th>교환/반품</th><td>상품을 받은 날로부터 7일 이내에 신청할 수 있습니다. 단순 변심으로 인한 교환/반품 배송비는 고객 부담입니다.</td></tr>
+        </table>
+    </section>
 </main>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>

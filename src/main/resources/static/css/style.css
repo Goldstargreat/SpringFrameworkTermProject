@@ -376,6 +376,42 @@ h2 {
     color: #666;
 }
 
+/* 상품 상세 아래 : 상품 정보 / 판매자 정보 / 배송·교환·반품 안내 표 */
+.info-section {
+    background: #fff;
+    border: 1px solid #e3e6eb;
+    border-radius: 10px;
+    padding: 20px 28px;
+    margin-top: 16px;
+}
+
+.info-section h2 {
+    font-size: 18px;
+    margin: 0 0 12px;
+}
+
+.info-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.info-table th,
+.info-table td {
+    padding: 10px 12px;
+    border-top: 1px solid #eef0f4;
+    text-align: left;
+    vertical-align: top;
+}
+
+.info-table th {
+    width: 140px;
+    background: #f7f8fb;
+    color: #555;
+    font-weight: normal;
+    white-space: nowrap;
+}
+
 .cart-add-form {
     display: flex;
     align-items: center;

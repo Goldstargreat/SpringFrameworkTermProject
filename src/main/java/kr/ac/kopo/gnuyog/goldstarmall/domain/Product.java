@@ -40,6 +40,14 @@ public class Product
     @Column(length = 10)
     private String icon;
 
+    // 제조사/브랜드 (예: 신라면 → 농심). 상품 상세 화면의 "상품 정보" 표에 보인다
+    @Column(length = 50)
+    private String manufacturer;
+
+    // 원산지 (예: 대한민국, 국내산 (제주), 중국)
+    @Column(length = 50)
+    private String origin;
+
     public Product() {
     }
 
@@ -98,5 +106,21 @@ public class Product
 
     public void setIcon(String icon) {
         this.icon = icon;
+    }
+
+    public String getManufacturer() {
+        return manufacturer;
+    }
+
+    public void setManufacturer(String manufacturer) {
+        this.manufacturer = manufacturer;
+    }
+
+    public String getOrigin() {
+        return origin;
+    }
+
+    public void setOrigin(String origin) {
+        this.origin = origin;
     }
 }

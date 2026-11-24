@@ -12,6 +12,7 @@ public final class ProductValidator {
     public static final int NAME_MAX_LENGTH = 100;
     public static final int DESCRIPTION_MAX_LENGTH = 500;
     public static final int ICON_MAX_LENGTH = 10;
+    public static final int INFO_MAX_LENGTH = 50;   // 제조사/브랜드, 원산지
 
     // 객체를 만들 필요가 없는 클래스이므로 생성자를 막아 둔다
     private ProductValidator() {
@@ -35,6 +36,16 @@ public final class ProductValidator {
         }
         if (icon != null && icon.trim().length() > ICON_MAX_LENGTH) {
             throw new BusinessException("이모지는 한두 개만 입력해 주세요.");
+        }
+    }
+
+    // 상품 정보(제조사/브랜드, 원산지) 검사 : 선택 입력이라 비어 있어도 되고, 글자 수만 본다
+    public static void validateProductInfo(String manufacturer, String origin) {
+        if (manufacturer != null && manufacturer.trim().length() > INFO_MAX_LENGTH) {
+            throw new BusinessException("제조사/브랜드는 " + INFO_MAX_LENGTH + "글자까지 입력할 수 있습니다.");
+        }
+        if (origin != null && origin.trim().length() > INFO_MAX_LENGTH) {
+            throw new BusinessException("원산지는 " + INFO_MAX_LENGTH + "글자까지 입력할 수 있습니다.");
         }
     }
 

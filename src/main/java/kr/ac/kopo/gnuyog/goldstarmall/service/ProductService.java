@@ -93,8 +93,10 @@ public class ProductService {
     // (관리자) 상품 등록
     // 클래스에 readOnly = true 가 붙어 있으므로, 저장/수정하는 메서드에는 @Transactional 을 따로 붙인다
     @Transactional
-    public Product create(String name, String category, int price, int stock, String description, String icon) {
+    public Product create(String name, String category, int price, int stock, String description, String icon,
+                          String manufacturer, String origin) {
         ProductValidator.validateNewProduct(name, category, CATEGORIES, price, stock, description, icon);
+        ProductValidator.validateProductInfo(manufacturer, origin);
 
         Product product = new Product();
         product.setName(name.trim());
@@ -108,6 +110,9 @@ public class ProductService {
         } else {
             product.setIcon(icon.trim());
         }
+        // 제조사/원산지는 선택 입력 : 비워 두면 null (상세 화면에는 "-" 로 보인다)
+        product.setManufacturer(blankToNull(manufacturer));
+        product.setOrigin(blankToNull(origin));
         return productRepository.save(product);
     }
 
@@ -138,5 +143,13 @@ public class ProductService {
         // 이 상품을 장바구니에 담아 둔 회원이 있으면 그 항목부터 지운다 (외래키 때문에 순서가 중요하다)
         cartItemRepository.deleteAll(cartItemRepository.findByProduct(product));
         productRepository.delete(product);
+    }
+
+    // 빈 문자열은 null 로, 앞뒤 공백은 지워서 저장한다
+    private String blankToNull(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        return value.trim();
     }
 }
