@@ -17,7 +17,7 @@ INSERT INTO members (login_id, password, name, phone, address, second_address, r
 ('jung06', '$2a$10$SyL3NVjJP9ZELrDtOIUXLOcqOo7qailnRWonOq6KL8uOwckjDNgL2', '정다은', '010-6789-0123', '광주광역시 북구 용봉로 77', NULL, 'USER', '2026-11-06 13:08:00.000000'),
 ('hong07', '$2a$10$glJIZHLiKi4hfjUgCZ8CgepOr2NSeRLTh17hLxE.RpN.wW82a4yFi', '홍길동', '010-7890-1234', '인천광역시 연수구 컨벤시아대로 165', NULL, 'USER', '2026-11-17 22:30:00.000000');
 
--- ===== 주문 12건 : 배송 상태가 골고루 보이도록 =====
+-- ===== 주문 13건 : 배송 상태가 골고루 보이도록 (주문취소, 주문거절 포함) =====
 -- [배송완료] hong01 : 신라면 5개입 x3, 제주 삼다수 2L x 6개 x1
 INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, status, total_price, ordered_at) VALUES
 ((SELECT id FROM members WHERE login_id = 'hong01'), '홍길동', '010-2345-6789', '서울특별시 강남구 테헤란로 123', 'DELIVERED', 18780, '2026-11-12 10:21:00.000000');
@@ -96,8 +96,9 @@ INSERT INTO order_items (order_id, product_id, order_price, quantity) VALUES
 (@order_id, (SELECT id FROM products WHERE name = '스테인리스 프라이팬 28cm'), 32900, 1);
 
 -- [주문취소] park04 : LED 무드등 x1
-INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, status, total_price, ordered_at) VALUES
-((SELECT id FROM members WHERE login_id = 'park04'), '박지은', '02-345-6789', '서울특별시 마포구 월드컵북로 396', 'CANCELED', 19900, '2026-11-23 20:36:00.000000');
+-- 손님이 직접 취소한 주문이라 결제 금액 전체가 환불된 기록이 남는다
+INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, status, total_price, ordered_at, refund_amount, refunded_at) VALUES
+((SELECT id FROM members WHERE login_id = 'park04'), '박지은', '02-345-6789', '서울특별시 마포구 월드컵북로 396', 'CANCELED', 19900, '2026-11-23 20:36:00.000000', 19900, '2026-11-23 20:41:00.000000');
 SET @order_id = LAST_INSERT_ID();
 INSERT INTO order_items (order_id, product_id, order_price, quantity) VALUES
 (@order_id, (SELECT id FROM products WHERE name = 'LED 무드등'), 19900, 1);
@@ -110,13 +111,20 @@ INSERT INTO order_items (order_id, product_id, order_price, quantity) VALUES
 (@order_id, (SELECT id FROM products WHERE name = '젤펜 12색 세트'), 6900, 2),
 (@order_id, (SELECT id FROM products WHERE name = 'A4 복사용지 500매'), 5900, 3);
 
--- ===== 재고 차감 : 앱에서 주문할 때처럼, 취소되지 않은 주문의 수량만큼 재고를 줄인다 =====
+-- [주문거절] choi05 : 스마트 워치 x2 → 관리자가 재고 부족으로 거절하고 전액 환불
+INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, status, total_price, ordered_at, refund_amount, refunded_at, reject_reason) VALUES
+((SELECT id FROM members WHERE login_id = 'choi05'), '최현우', '010-5678-9012', '대전광역시 유성구 대학로 99', 'REJECTED', 258000, '2026-11-23 16:20:00.000000', 258000, '2026-11-23 17:05:00.000000', '창고 재고 확인 결과 2개를 보내 드릴 수 없어 주문을 거절합니다. 죄송합니다.');
+SET @order_id = LAST_INSERT_ID();
+INSERT INTO order_items (order_id, product_id, order_price, quantity) VALUES
+(@order_id, (SELECT id FROM products WHERE name = '스마트 워치'), 129000, 2);
+
+-- ===== 재고 차감 : 앱에서 주문할 때처럼, 취소/거절되지 않은 주문의 수량만큼 재고를 줄인다 =====
 UPDATE products p
 JOIN (SELECT oi.product_id, SUM(oi.quantity) AS qty
       FROM order_items oi
       JOIN orders o ON o.id = oi.order_id
       JOIN members m ON m.id = o.member_id
-      WHERE m.login_id IN ('hong01','kim02','lee03','park04','choi05','jung06','hong07') AND o.status <> 'CANCELED'
+      WHERE m.login_id IN ('hong01','kim02','lee03','park04','choi05','jung06','hong07') AND o.status NOT IN ('CANCELED', 'REJECTED')
       GROUP BY oi.product_id) d ON d.product_id = p.id
 SET p.stock = p.stock - d.qty;
 
@@ -133,6 +141,12 @@ INSERT INTO reviews (member_id, product_id, rating, content, created_at) VALUES
  '무난해요. 에센스 양은 넉넉한데 시트가 조금 얇은 편입니다.', '2026-11-22 22:45:00.000000'),
 ((SELECT id FROM members WHERE login_id = 'lee03'), (SELECT id FROM products WHERE name = '러닝화'), 4,
  '쿠션감이 좋아서 오래 뛰어도 발이 편합니다. 평소 신는 사이즈로 주문하면 딱 맞아요.', '2026-11-23 08:30:00.000000');
+
+-- ===== 관리자 코멘트 : 상품평 2개에 관리자가 코멘트를 단다 =====
+UPDATE reviews SET admin_comment = '소중한 상품평 감사합니다! 앞으로도 신선한 상품으로 찾아뵙겠습니다.', commented_at = '2026-11-22 09:00:00.000000'
+WHERE member_id = (SELECT id FROM members WHERE login_id = 'hong01') AND product_id = (SELECT id FROM products WHERE name = '신라면 5개입');
+UPDATE reviews SET admin_comment = '시트가 얇게 느껴지셨군요. 의견 전달하여 더 좋은 상품으로 준비하겠습니다.', commented_at = '2026-11-23 10:10:00.000000'
+WHERE member_id = (SELECT id FROM members WHERE login_id = 'kim02') AND product_id = (SELECT id FROM products WHERE name = '시트 마스크팩 10매');
 
 -- ===== 상품문의 : 답변완료 2개, 답변대기 2개 =====
 INSERT INTO inquiries (member_id, product_id, question, answer, created_at, answered_at) VALUES
