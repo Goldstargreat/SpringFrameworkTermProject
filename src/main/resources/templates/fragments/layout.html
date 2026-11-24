@@ -31,19 +31,20 @@
                 <!-- 장바구니, 주문내역은 손님에게만 보인다 (관리자는 물건을 사지 않는다) -->
                 <a th:if="${session.loginMemberRole != 'ADMIN'}" th:href="@{/cart}">장바구니</a>
                 <a th:if="${session.loginMemberRole != 'ADMIN'}" th:href="@{/orders}">주문내역</a>
+                <!-- 종 아이콘(bell-icon) : 알림이 오는 메뉴(손님 알림, 관리자 주문관리·리뷰/문의) 앞에 붙인다 -->
                 <!-- 알림 : 내 문의 답변, 내 상품평 코멘트. 확인하지 않은 개수를 빨간 숫자로 (MemberNoticeAdvice) -->
-                <a th:if="${myNoticeCount != null}" th:href="@{/notifications}">알림<span
+                <a th:if="${myNoticeCount != null}" th:href="@{/notifications}" class="bell-link"><svg class="bell-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2z"/></svg>알림<span
                         class="notice-count" th:if="${myNoticeCount > 0}" th:text="${myNoticeCount}">2</span></a>
                 <a th:href="@{/members/mypage}">마이페이지</a>
                 <!-- 관리자에게만 보이는 메뉴 -->
                 <!-- 주문관리 : 처리 대기 반품 신청 개수를 빨간 숫자로 보여 준다 (AdminNoticeAdvice) -->
-                <a th:if="${session.loginMemberRole == 'ADMIN'}" th:href="@{/admin/orders}">주문관리<span
+                <a th:if="${session.loginMemberRole == 'ADMIN'}" th:href="@{/admin/orders}" class="bell-link"><svg class="bell-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2z"/></svg>주문관리<span
                         class="notice-count" th:if="${adminPendingReturns > 0}"
                         th:text="${adminPendingReturns}">1</span></a>
                 <a th:if="${session.loginMemberRole == 'ADMIN'}" th:href="@{/admin/members}">회원관리</a>
                 <a th:if="${session.loginMemberRole == 'ADMIN'}" th:href="@{/admin/products}">상품관리</a>
                 <!-- 리뷰/문의 : 답변 대기 문의 + 코멘트 대기 상품평 개수를 빨간 숫자로 보여 준다 (AdminNoticeAdvice) -->
-                <a th:if="${session.loginMemberRole == 'ADMIN'}" th:href="@{/admin/board}">리뷰/문의<span
+                <a th:if="${session.loginMemberRole == 'ADMIN'}" th:href="@{/admin/board}" class="bell-link"><svg class="bell-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2z"/></svg>리뷰/문의<span
                         class="notice-count" th:if="${adminPendingInquiries + adminPendingReviews > 0}"
                         th:text="${adminPendingInquiries + adminPendingReviews}">3</span></a>
                 <form class="logout-form" th:action="@{/members/logout}" method="post">

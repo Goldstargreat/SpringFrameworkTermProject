@@ -1211,6 +1211,20 @@ h2 {
 }
 
 /* 관리자 메뉴, 리뷰/문의 탭의 빨간 숫자 (처리하지 않은 문의/상품평 개수) */
+/* 상단 메뉴의 종 아이콘 : 알림이 오는 메뉴 앞에 붙는다 (글자색을 따라간다) */
+.bell-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.bell-icon {
+    width: 15px;
+    height: 15px;
+    fill: currentColor;
+    flex-shrink: 0;
+}
+
 .notice-count {
     display: inline-block;
     min-width: 18px;
