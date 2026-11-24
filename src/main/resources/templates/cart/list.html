@@ -37,7 +37,7 @@
                     <td>
                         <a th:href="@{/products/{id}(id=${item.product.id})}">
                             <span class="thumb">
-                                <img th:src="@{/images/products/{id}.jpg(id=${item.product.id})}" th:alt="${item.product.name}" onerror="this.remove()">
+                                <img th:src="@{/images/products/{id}.jpg(id=${item.product.id})}" th:alt="${item.product.name}" data-remove-on-error>
                                 <span th:text="${item.product.icon}">📦</span>
                             </span>
                             <span th:text="${item.product.name}">상품명</span>
@@ -78,12 +78,12 @@
                     <input type="text" name="receiverPhone" th:value="${member.phone}" required>
                 </label>
                 <!-- 추가 배송지가 있을 때만 "어디로 보낼지" 고르는 버튼을 보여 준다 -->
-                <!-- 버튼을 누르면 그 주소가 아래 배송지 칸에 채워진다 (this.value = 누른 버튼의 주소) -->
+                <!-- 버튼을 누르면 그 주소가 아래 배송지 칸에 채워진다 (data-fill-target : 채울 입력칸 id, 동작은 js/common.js) -->
                 <div class="address-choice" th:if="${!#strings.isEmpty(member.secondAddress)}">
                     <label><input type="radio" name="addressChoice" th:value="${member.address}" checked
-                                  onclick="document.getElementById('shippingAddress').value = this.value"> 기본 배송지</label>
+                                  data-fill-target="shippingAddress"> 기본 배송지</label>
                     <label><input type="radio" name="addressChoice" th:value="${member.secondAddress}"
-                                  onclick="document.getElementById('shippingAddress').value = this.value"> 추가 배송지</label>
+                                  data-fill-target="shippingAddress"> 추가 배송지</label>
                 </div>
                 <label>배송지 주소
                     <!-- 회원의 기본 주소를 미리 채워 두지만, 다른 곳으로 보내려면 바꿔 쓰면 된다 -->

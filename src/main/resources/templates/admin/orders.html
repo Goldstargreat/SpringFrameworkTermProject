@@ -50,7 +50,7 @@
                     <!-- 끝난 주문(배송완료, 주문취소)이면 '삭제' 버튼을 보여 준다 -->
                     <form th:if="${order.status.finished}"
                           th:action="@{/admin/orders/{id}/delete(id=${order.id})}" method="post" class="inline-form"
-                          onsubmit="return confirm('이 주문을 삭제하시겠습니까?');">
+                          data-confirm="이 주문을 삭제하시겠습니까?">
                         <button type="submit" class="btn btn-small btn-danger">삭제</button>
                     </form>
                 </td>

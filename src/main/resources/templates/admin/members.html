@@ -54,7 +54,7 @@
                     <!-- 관리자 계정은 삭제 버튼을 보여 주지 않는다 -->
                     <form th:if="${m.role != 'ADMIN'}"
                           th:action="@{/admin/members/{id}/delete(id=${m.id})}" method="post" class="inline-form"
-                          onsubmit="return confirm('이 회원을 삭제하시겠습니까? 주문 내역도 함께 삭제됩니다.');">
+                          data-confirm="이 회원을 삭제하시겠습니까? 주문 내역도 함께 삭제됩니다.">
                         <button type="submit" class="btn btn-small btn-danger">삭제</button>
                     </form>
                 </td>

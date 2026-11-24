@@ -46,8 +46,11 @@
 </div>
 
 <!-- 모든 화면 아래쪽에 공통으로 들어가는 꼬리말 조각 -->
+<!-- 공통 자바스크립트(js/common.js)도 여기서 불러온다 : 모든 화면이 꼬리말을 쓰므로 한 번만 적으면 된다 -->
+<!-- 꼬리말은 화면 맨 아래에 있으므로, 스크립트가 실행될 때는 위쪽 HTML 이 이미 다 만들어져 있다 -->
 <footer th:fragment="footer" class="site-footer">
     <p>골드스타몰 · 프레임워크실습 기말 Term Project · Spring Boot + JPA + MySQL</p>
+    <script th:src="@{/js/common.js}"></script>
 </footer>
 
 </body>

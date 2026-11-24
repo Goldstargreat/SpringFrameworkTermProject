@@ -15,7 +15,7 @@
     <div class="detail-box">
         <!-- 사진 파일이 있으면 사진, 없으면 이모지 -->
         <div class="detail-icon">
-            <img th:src="@{/images/products/{id}.jpg(id=${product.id})}" th:alt="${product.name}" onerror="this.remove()">
+            <img th:src="@{/images/products/{id}.jpg(id=${product.id})}" th:alt="${product.name}" data-remove-on-error>
             <span th:text="${product.icon}">📦</span>
         </div>
 
