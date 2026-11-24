@@ -57,9 +57,18 @@ public class Order {
     @Column(nullable = false, length = 200)
     private String shippingAddress;
 
-    // 총 결제 금액
+    // 총 결제 금액 : 등급 할인을 뺀, 손님이 실제로 낸 금액 (환불도 이 금액으로 한다)
     @Column(nullable = false)
     private int totalPrice;
+
+    // 등급 할인 금액 : 주문할 때의 등급 할인율로 계산해 저장한다 (나중에 등급이 바뀌어도 그대로)
+    // 이 기능이 생기기 전의 주문은 비어 있을(null) 수 있어서, getDiscountAmount() 에서 0 으로 본다
+    private Integer discountAmount;
+
+    // 주문할 때의 회원 등급 (할인 내역에 "골드 5%" 처럼 보여 주기 위해)
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    private MemberGrade orderGrade;
 
     // 배송 상태. EnumType.STRING : DB에 "SHIPPED" 같은 글자로 저장된다
     @Enumerated(EnumType.STRING)
@@ -93,6 +102,27 @@ public class Order {
     // SQL 로 직접 넣은 주문처럼 아직 주문번호가 없으면 기본 주문번호를 보여 준다
     public String getDisplayNumber() {
         return orderNumber != null ? orderNumber : makeDefaultOrderNumber();
+    }
+
+    // 상품 금액 합계 (할인 전) = 결제 금액 + 할인 금액. 화면에서 order.originalPrice 로 사용
+    public int getOriginalPrice() {
+        return totalPrice + getDiscountAmount();
+    }
+
+    public int getDiscountAmount() {
+        return discountAmount == null ? 0 : discountAmount;
+    }
+
+    public void setDiscountAmount(int discountAmount) {
+        this.discountAmount = discountAmount;
+    }
+
+    public MemberGrade getOrderGrade() {
+        return orderGrade;
+    }
+
+    public void setOrderGrade(MemberGrade orderGrade) {
+        this.orderGrade = orderGrade;
     }
 
     // 환불이 끝난 주문인지 (화면에서 order.refunded 로 사용)

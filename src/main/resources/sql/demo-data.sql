@@ -17,7 +17,7 @@ INSERT INTO members (login_id, password, name, phone, address, second_address, r
 ('jung06', '$2a$10$SyL3NVjJP9ZELrDtOIUXLOcqOo7qailnRWonOq6KL8uOwckjDNgL2', '정다은', '010-6789-0123', '광주광역시 북구 용봉로 77', NULL, 'USER', '2026-11-06 13:08:00.000000'),
 ('hong07', '$2a$10$glJIZHLiKi4hfjUgCZ8CgepOr2NSeRLTh17hLxE.RpN.wW82a4yFi', '홍길동', '010-7890-1234', '인천광역시 연수구 컨벤시아대로 165', NULL, 'USER', '2026-11-17 22:30:00.000000');
 
--- ===== 주문 13건 : 배송 상태가 골고루 보이도록 (주문취소, 주문거절 포함) =====
+-- ===== 주문 14건 : 배송 상태가 골고루 보이도록 (주문취소, 주문거절 포함) =====
 -- [배송완료] hong01 : 신라면 5개입 x3, 제주 삼다수 2L x 6개 x1
 INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, status, total_price, ordered_at) VALUES
 ((SELECT id FROM members WHERE login_id = 'hong01'), '홍길동', '010-2345-6789', '서울특별시 강남구 테헤란로 123', 'DELIVERED', 18780, '2026-11-12 10:21:00.000000');
@@ -117,6 +117,15 @@ INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, 
 SET @order_id = LAST_INSERT_ID();
 INSERT INTO order_items (order_id, product_id, order_price, quantity) VALUES
 (@order_id, (SELECT id FROM products WHERE name = '스마트 워치'), 129000, 2);
+
+-- [배송완료] hong01 : 애플 아이폰 16 128GB x1 → 누적 구매액이 100만 원을 넘어 VIP 등급이 된다 (서버를 켤 때 자동 계산)
+INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, status, total_price, ordered_at) VALUES
+((SELECT id FROM members WHERE login_id = 'hong01'), '홍길동', '010-2345-6789', '서울특별시 중구 세종대로 110 (회사)', 'DELIVERED', 1250000, '2026-11-14 13:02:00.000000');
+SET @order_id = LAST_INSERT_ID();
+INSERT INTO order_items (order_id, product_id, order_price, quantity) VALUES
+(@order_id, (SELECT id FROM products WHERE name = '애플 아이폰 16 128GB'), 1250000, 1);
+
+-- ===== 회원 등급 : SQL 로 넣지 않는다. 서버를 켤 때 누적 구매액(배송완료 주문)으로 자동으로 정해진다 =====
 
 -- ===== 재고 차감 : 앱에서 주문할 때처럼, 취소/거절되지 않은 주문의 수량만큼 재고를 줄인다 =====
 UPDATE products p

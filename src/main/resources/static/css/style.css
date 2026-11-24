@@ -1062,3 +1062,97 @@ h2 {
     justify-content: space-between;
     gap: 8px;
 }
+
+/* ----- 회원 등급 ----- */
+.grade-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: bold;
+    text-decoration: none;
+    background: #eceef1;
+    color: #555;
+}
+
+.grade-SILVER {
+    background: #e9edf2;
+    color: #4a5868;
+}
+
+.grade-GOLD {
+    background: #fdf3d8;
+    color: #8a6100;
+}
+
+.grade-VIP {
+    background: #f3e6fb;
+    color: #6b2a8f;
+}
+
+/* 마이페이지의 내 등급 상자 */
+.grade-box {
+    background: #fafbfc;
+    border: 1px solid #e3e6eb;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+}
+
+.grade-box p {
+    margin: 4px 0;
+}
+
+/* 주문서/주문 상세의 금액 내역 (상품 금액, 등급 할인) */
+.price-breakdown {
+    text-align: right;
+    font-size: 14px;
+    color: #555;
+    margin-top: 16px;
+    line-height: 1.8;
+}
+
+.price-breakdown .discount-line {
+    color: #c0392b;
+}
+
+.price-breakdown .discount-line span + span {
+    margin-left: 8px;
+}
+
+/* 상품 상세의 내 등급 할인가 */
+.member-price {
+    font-size: 14px;
+    color: #c0392b;
+    margin: 4px 0 8px;
+}
+
+.member-price b {
+    margin-left: 6px;
+    font-size: 16px;
+}
+
+/* 마이페이지의 등급 기준표 (내 등급 줄은 굵게) */
+.grade-table {
+    width: 100%;
+    margin-top: 10px;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.grade-table th,
+.grade-table td {
+    padding: 4px 6px;
+    border-bottom: 1px solid #e3e6eb;
+    text-align: left;
+}
+
+.grade-table tr.current td {
+    font-weight: bold;
+    background: #fffbe8;
+}
+
+/* 회원관리 화면 위의 등급 기준 안내 */
+.grade-rule {
+    line-height: 2;
+}

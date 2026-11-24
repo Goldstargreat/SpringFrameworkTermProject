@@ -1,6 +1,7 @@
 package kr.ac.kopo.gnuyog.goldstarmall.controller;
 
 import kr.ac.kopo.gnuyog.goldstarmall.config.SessionConst;
+import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Order;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
 import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
@@ -83,11 +84,17 @@ public class OrderController {
         }
 
         Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
+        Member member = memberService.findById(memberId);
         model.addAttribute("product", product);
         model.addAttribute("quantity", count);
-        model.addAttribute("totalPrice", product.getPrice() * count);
+        // 등급 할인 : 상품 금액, 할인 금액, 결제 금액 (실제 계산은 주문할 때 OrderService 가 한다)
+        int originalPrice = product.getPrice() * count;
+        int discount = member.getGrade().discountOf(originalPrice);
+        model.addAttribute("originalPrice", originalPrice);
+        model.addAttribute("discount", discount);
+        model.addAttribute("totalPrice", originalPrice - discount);
         // 받는 사람 정보를 회원 정보로 미리 채우기 위해
-        model.addAttribute("member", memberService.findById(memberId));
+        model.addAttribute("member", member);
         return "order/direct";
     }
 

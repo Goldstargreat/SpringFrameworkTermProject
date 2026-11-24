@@ -2,9 +2,11 @@ package kr.ac.kopo.gnuyog.goldstarmall.controller;
 
 import kr.ac.kopo.gnuyog.goldstarmall.config.SessionConst;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
+import kr.ac.kopo.gnuyog.goldstarmall.domain.MemberGrade;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Order;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
 import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
+import kr.ac.kopo.gnuyog.goldstarmall.service.GradeService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.MemberService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.OrderService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.ProductService;
@@ -30,8 +32,11 @@ public class AdminController {
     private final OrderService orderService;
     private final MemberService memberService;
     private final ProductService productService;
+    private final GradeService gradeService;
 
-    public AdminController(OrderService orderService, MemberService memberService, ProductService productService) {
+    public AdminController(OrderService orderService, MemberService memberService, ProductService productService,
+                           GradeService gradeService) {
+        this.gradeService = gradeService;
         this.orderService = orderService;
         this.memberService = memberService;
         this.productService = productService;
@@ -119,8 +124,12 @@ public class AdminController {
         // 검색창에 검색 기준과 검색어를 그대로 남겨 두고, 결과 건수를 보여 주는 데 쓴다
         model.addAttribute("type", type);
         model.addAttribute("keyword", keyword);
+        // 등급 : 회원마다 누적 구매액, 화면 위에 보여 줄 등급 기준표
+        model.addAttribute("totalPurchase", gradeService.totalPurchaseByMember());
+        model.addAttribute("grades", MemberGrade.values());
         return "admin/members";
     }
+
 
     // 회원 정보 수정 화면
     // 이름, 전화번호, 배송지만 고칠 수 있다

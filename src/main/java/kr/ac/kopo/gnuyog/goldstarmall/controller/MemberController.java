@@ -2,7 +2,9 @@ package kr.ac.kopo.gnuyog.goldstarmall.controller;
 
 import kr.ac.kopo.gnuyog.goldstarmall.config.SessionConst;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
+import kr.ac.kopo.gnuyog.goldstarmall.domain.MemberGrade;
 import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
+import kr.ac.kopo.gnuyog.goldstarmall.service.GradeService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.MemberService;
 import kr.ac.kopo.gnuyog.goldstarmall.validator.MemberValidator;
 import jakarta.servlet.http.HttpSession;
@@ -23,9 +25,11 @@ import java.util.Map;
 public class MemberController {
 
     private final MemberService memberService;
+    private final GradeService gradeService;
 
-    public MemberController(MemberService memberService) {
+    public MemberController(MemberService memberService, GradeService gradeService) {
         this.memberService = memberService;
+        this.gradeService = gradeService;
     }
 
     // 회원가입 화면 보여 주기
@@ -224,7 +228,12 @@ public class MemberController {
     @GetMapping("/mypage")
     public String mypage(HttpSession session, Model model) {
         Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
-        model.addAttribute("member", memberService.findById(memberId));
+        Member member = memberService.findById(memberId);
+        model.addAttribute("member", member);
+        // 내 등급 : 누적 구매액과 다음 등급까지 남은 금액
+        model.addAttribute("totalPurchase", gradeService.totalPurchase(member));
+        model.addAttribute("remainingToNext", gradeService.remainingToNextGrade(member));
+        model.addAttribute("grades", MemberGrade.values());
         return "member/mypage";
     }
 

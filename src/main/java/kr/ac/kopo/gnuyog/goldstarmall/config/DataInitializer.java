@@ -2,6 +2,7 @@ package kr.ac.kopo.gnuyog.goldstarmall.config;
 
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.repository.MemberRepository;
+import kr.ac.kopo.gnuyog.goldstarmall.service.GradeService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.OrderService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -19,13 +20,15 @@ public class DataInitializer implements CommandLineRunner
     private final MemberRepository memberRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final OrderService orderService;
+    private final GradeService gradeService;
 
     public DataInitializer(MemberRepository memberRepository, BCryptPasswordEncoder passwordEncoder,
-                           OrderService orderService)
+                           OrderService orderService, GradeService gradeService)
     {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
         this.orderService = orderService;
+        this.gradeService = gradeService;
     }
 
     @Override
@@ -47,5 +50,8 @@ public class DataInitializer implements CommandLineRunner
 
         // 주문번호가 비어 있는 주문(시연용 SQL 로 넣은 주문 등)에 기본 주문번호를 채운다
         orderService.fillMissingOrderNumbers();
+
+        // 회원 등급을 누적 구매액에 맞게 다시 정한다 (시연용 SQL 로 넣은 배송완료 주문도 반영)
+        gradeService.refreshAllGrades();
     }
 }

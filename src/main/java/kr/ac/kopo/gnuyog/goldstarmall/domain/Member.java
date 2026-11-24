@@ -2,6 +2,8 @@ package kr.ac.kopo.gnuyog.goldstarmall.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -50,6 +52,14 @@ public class Member
 
     // 가입 일시
     private LocalDateTime createdAt;
+
+    // 회원 등급 : 배송완료된 주문의 누적 결제 금액이 기준 금액을 넘으면 자동으로 정해진다 (MemberGrade 참고)
+    // 관리자가 직접 바꾸지 않는다. 기준 금액과 할인율은 MemberGrade 에서 정한다
+    // 이 기능이 생기기 전에 가입한 회원은 비어 있을(null) 수 있어서, getGrade() 에서 '일반'으로 본다
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    private MemberGrade grade;
+
 
     // JPA 는 기본 생성자가 반드시 필요하다
     public Member()
@@ -131,6 +141,15 @@ public class Member
     public void setRole(String role) {
         this.role = role;
     }
+
+    public MemberGrade getGrade() {
+        return grade == null ? MemberGrade.NORMAL : grade;
+    }
+
+    public void setGrade(MemberGrade grade) {
+        this.grade = grade;
+    }
+
 
     public LocalDateTime getCreatedAt() {
         return createdAt;

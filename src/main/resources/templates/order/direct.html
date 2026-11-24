@@ -29,6 +29,14 @@
         </div>
     </div>
 
+    <!-- 금액 내역 : 등급 할인이 있으면 상품 금액과 할인 금액을 따로 보여 준다 -->
+    <div class="price-breakdown" th:if="${discount > 0}">
+        <div>상품 금액 <span th:text="${#numbers.formatInteger(originalPrice, 1, 'COMMA')} + '원'">0원</span></div>
+        <div class="discount-line">
+            <span th:text="${member.grade.label} + ' 등급 할인 (' + ${member.grade.discountRate} + '%)'">골드 등급 할인 (5%)</span>
+            <span th:text="'-' + ${#numbers.formatInteger(discount, 1, 'COMMA')} + '원'">-0원</span>
+        </div>
+    </div>
     <p class="total-price">
         총 결제 금액: <b th:text="${#numbers.formatInteger(totalPrice, 1, 'COMMA')}">0</b>원
     </p>

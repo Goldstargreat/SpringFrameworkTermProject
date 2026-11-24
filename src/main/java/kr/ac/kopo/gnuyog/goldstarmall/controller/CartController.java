@@ -43,8 +43,12 @@ public class CartController {
         Member member = memberService.findById(memberId);
 
         model.addAttribute("cartItems", cartItems);
-        model.addAttribute("totalPrice", totalPrice);
         model.addAttribute("member", member);
+        // 등급 할인 : 상품 금액 합계, 할인 금액, 결제 금액을 나눠서 보여 준다 (실제 계산은 주문할 때 OrderService 가 한다)
+        int discount = member.getGrade().discountOf(totalPrice);
+        model.addAttribute("originalPrice", totalPrice);
+        model.addAttribute("discount", discount);
+        model.addAttribute("totalPrice", totalPrice - discount);
         return "cart/list";
     }
 

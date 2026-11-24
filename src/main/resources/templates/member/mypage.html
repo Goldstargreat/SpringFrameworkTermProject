@@ -15,6 +15,32 @@
         <h1>마이페이지</h1>
         <div th:replace="~{fragments/layout :: messages}"></div>
 
+        <!-- 내 등급 (손님에게만) : 누적 구매액 = 배송완료된 주문의 결제 금액 합계 -->
+        <div class="grade-box" th:if="${member.role != 'ADMIN'}">
+            <p>
+                내 등급 <span class="grade-badge" th:classappend="'grade-' + ${member.grade.name()}" th:text="${member.grade.label}">일반</span>
+                <span th:if="${member.grade.discountRate > 0}" th:text="'· 주문할 때 ' + ${member.grade.discountRate} + '% 할인'">· 주문할 때 5% 할인</span>
+            </p>
+            <p class="guide">
+                누적 구매액 <b th:text="${#numbers.formatInteger(totalPurchase, 1, 'COMMA')}">0</b>원 (배송완료된 주문 기준)
+                <th:block th:if="${member.grade.next != null}">
+                    <br><span th:text="${member.grade.next.label}">실버</span> 등급까지
+                    <b th:text="${#numbers.formatInteger(remainingToNext, 1, 'COMMA')}">0</b>원 남았습니다.
+                    (<span th:text="${member.grade.next.label}">실버</span> 등급 할인 <span th:text="${member.grade.next.discountRate}">3</span>%)
+                </th:block>
+                <th:block th:if="${member.grade.next == null}"><br>최고 등급입니다. 감사합니다!</th:block>
+            </p>
+            <!-- 등급 기준표 : 기준 금액을 충족하면 자동으로 등급이 올라간다 -->
+            <table class="grade-table">
+                <tr><th>등급</th><th>기준 금액 (배송완료 누적)</th><th>할인</th></tr>
+                <tr th:each="g : ${grades}" th:classappend="${g == member.grade} ? 'current'">
+                    <td><span class="grade-badge" th:classappend="'grade-' + ${g.name()}" th:text="${g.label}">일반</span></td>
+                    <td th:text="${#numbers.formatInteger(g.minAmount, 1, 'COMMA')} + '원 이상'">0원 이상</td>
+                    <td th:text="${g.discountRate} + '%'">0%</td>
+                </tr>
+            </table>
+        </div>
+
         <h2>내 정보 수정</h2>
         <form th:action="@{/members/mypage/edit}" method="post">
             <label>아이디 (변경 불가)

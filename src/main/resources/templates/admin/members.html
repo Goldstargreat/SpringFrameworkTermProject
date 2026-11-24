@@ -14,6 +14,15 @@
     <p class="guide">회원을 삭제하면 그 회원의 장바구니와 주문 내역도 함께 삭제됩니다. 배송 중인 주문이 있는 회원은 삭제할 수 없습니다.</p>
     <div th:replace="~{fragments/layout :: messages}"></div>
 
+    <!-- 등급 기준표 : 배송완료된 주문의 누적 결제 금액이 기준 금액을 충족하면 자동으로 등급이 정해진다 -->
+    <p class="guide grade-rule">
+        회원 등급은 배송완료된 주문의 누적 결제 금액으로 자동으로 정해집니다:
+        <th:block th:each="g, stat : ${grades}">
+            <span class="grade-badge" th:classappend="'grade-' + ${g.name()}" th:text="${g.label}">일반</span>
+            <span th:text="${#numbers.formatInteger(g.minAmount, 1, 'COMMA')} + '원 이상 · ' + ${g.discountRate} + '% 할인'">0원 이상</span><span th:if="${!stat.last}"> / </span>
+        </th:block>
+    </p>
+
     <!-- 회원 검색 : 검색 기준을 고르고 일부만 입력해도 된다 (예: 홍, gold, 5678) -->
     <form th:action="@{/admin/members}" method="get" class="inline-form member-search">
         <select name="type">
@@ -52,6 +61,8 @@
                 <th>기본 배송지</th>
                 <th>가입일시</th>
                 <th>권한</th>
+                <!-- 등급 : 누적 구매액(배송완료 주문)이 기준 금액을 충족하면 자동으로 정해진다 -->
+                <th>등급 / 누적 구매액</th>
                 <th>처리</th>
             </tr>
             </thead>
@@ -67,6 +78,13 @@
                 <td th:text="${m.role == 'ADMIN'} ? '-' : ${m.address}">주소</td>
                 <td th:text="${#temporals.format(m.createdAt, 'yyyy-MM-dd HH:mm')}">2026-01-01 00:00</td>
                 <td th:text="${m.role == 'ADMIN'} ? '관리자' : '일반'">일반</td>
+                <td>
+                    <th:block th:if="${m.role != 'ADMIN'}">
+                        <span class="grade-badge" th:classappend="'grade-' + ${m.grade.name()}" th:text="${m.grade.label}">일반</span>
+                        <div class="refund-note" th:text="${#numbers.formatInteger(totalPurchase[m.id] ?: 0, 1, 'COMMA')} + '원'">0원</div>
+                    </th:block>
+                    <span th:if="${m.role == 'ADMIN'}">-</span>
+                </td>
                 <td>
                     <a th:href="@{/admin/members/{id}/edit(id=${m.id})}" class="btn btn-small btn-primary">수정</a>
                     <!-- 관리자 계정은 삭제 버튼을 보여 주지 않는다 -->

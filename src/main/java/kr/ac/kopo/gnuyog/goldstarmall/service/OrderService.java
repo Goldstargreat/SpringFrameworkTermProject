@@ -29,15 +29,18 @@ public class OrderService {
     private final CartItemRepository cartItemRepository;
     private final MemberRepository memberRepository;
     private final ProductRepository productRepository;
+    private final GradeService gradeService;
 
     public OrderService(OrderRepository orderRepository,
                         CartItemRepository cartItemRepository,
                         MemberRepository memberRepository,
-                        ProductRepository productRepository) {
+                        ProductRepository productRepository,
+                        GradeService gradeService) {
         this.orderRepository = orderRepository;
         this.cartItemRepository = cartItemRepository;
         this.memberRepository = memberRepository;
         this.productRepository = productRepository;
+        this.gradeService = gradeService;
     }
 
     // 주문 생성 : 장바구니에 담긴 상품 전체를 주문한다
@@ -77,7 +80,8 @@ public class OrderService {
 
             totalPrice = totalPrice + orderItem.getTotalPrice();
         }
-        order.setTotalPrice(totalPrice);
+        // 상품 금액 합계에서 등급 할인을 뺀 금액이 결제 금액이다
+        applyGradeDiscount(order, member, totalPrice);
 
         // 4) 주문 저장 (cascade 설정으로 주문 상품들도 함께 저장된다)
         //    저장해야 id 가 생기므로, 저장한 뒤 그 id 로 기본 주문번호를 붙인다
@@ -116,7 +120,7 @@ public class OrderService {
         orderItem.setOrderPrice(product.getPrice());
         orderItem.setQuantity(quantity);
         order.addOrderItem(orderItem);
-        order.setTotalPrice(orderItem.getTotalPrice());
+        applyGradeDiscount(order, member, orderItem.getTotalPrice());
 
         // 4) 저장 후 기본 주문번호 붙이기
         orderRepository.save(order);
@@ -135,6 +139,15 @@ public class OrderService {
         if (quantity > product.getStock()) {
             throw new BusinessException(product.getName() + " : " + product.getStockShortageMessage());
         }
+    }
+
+    // 등급 할인 적용 : 주문할 때의 등급과 할인 금액을 주문에 저장하고, 결제 금액 = 상품 금액 - 할인
+    // 장바구니 주문과 바로 주문이 함께 쓴다
+    private void applyGradeDiscount(Order order, Member member, int originalPrice) {
+        int discount = member.getGrade().discountOf(originalPrice);
+        order.setOrderGrade(member.getGrade());
+        order.setDiscountAmount(discount);
+        order.setTotalPrice(originalPrice - discount);
     }
 
     // 주문 객체 만들기 : 장바구니 주문과 바로 주문이 함께 쓴다
@@ -339,6 +352,11 @@ public class OrderService {
             throw new BusinessException("더 이상 진행할 수 없는 주문입니다. (현재 상태: " + current.getLabel() + ")");
         }
         order.setStatus(next);
+
+        // 배송완료되면 누적 구매액이 늘어나므로 주문한 회원의 등급을 다시 계산한다
+        if (next == ShippingStatus.DELIVERED) {
+            gradeService.refreshGrade(order.getMember());
+        }
     }
 
     // (관리자) 주문 삭제 : 배송완료, 주문취소, 주문거절로 끝난 주문만 지울 수 있다
