@@ -1053,3 +1053,12 @@ h2 {
     padding: 4px 6px;
     font-size: 12px;
 }
+
+/* 상품관리 화면의 전체 판매 합계 + 전체 초기화 버튼 */
+.sales-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}

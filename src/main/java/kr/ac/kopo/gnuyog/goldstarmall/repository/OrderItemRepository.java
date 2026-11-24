@@ -24,9 +24,12 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
                             @Param("status") ShippingStatus status);
 
     // (관리자) 상품별 누적 판매량, 누적 매출 : 취소/거절된 주문(excluded)은 빼고 상품마다 더한다
+    // 관리자가 집계를 초기화한 상품은 초기화 시각(salesResetAt) 이후의 주문만 센다
     // 한 줄 = [상품 번호, 판매 수량 합계, 매출 합계(주문 당시 가격 x 수량)]
     // → select product_id, sum(quantity), sum(order_price * quantity) from order_items ... group by product_id
     @Query("select oi.product.id, sum(oi.quantity), sum(oi.orderPrice * oi.quantity) from OrderItem oi " +
-           "where oi.order.status not in :excluded group by oi.product.id")
+           "where oi.order.status not in :excluded " +
+           "and (oi.product.salesResetAt is null or oi.order.orderedAt > oi.product.salesResetAt) " +
+           "group by oi.product.id")
     List<Object[]> sumSalesByProduct(@Param("excluded") List<ShippingStatus> excluded);
 }

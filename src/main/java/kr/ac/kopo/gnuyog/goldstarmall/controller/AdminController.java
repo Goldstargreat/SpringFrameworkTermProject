@@ -227,6 +227,27 @@ public class AdminController {
         return "redirect:/admin/products";
     }
 
+    // 한 상품의 누적 판매량/매출 초기화 (주문 기록은 지우지 않고, 지금부터 다시 센다)
+    @PostMapping("/products/{productId}/reset-sales")
+    public String resetSales(@PathVariable("productId") Long productId, RedirectAttributes redirectAttributes) {
+        try {
+            Product product = productService.resetSales(productId);
+            redirectAttributes.addFlashAttribute("message",
+                    "'" + product.getName() + "'의 누적 판매량/매출을 초기화했습니다. 지금부터 다시 집계합니다.");
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/products";
+    }
+
+    // 모든 상품의 누적 판매량/매출 초기화
+    @PostMapping("/products/reset-sales")
+    public String resetAllSales(RedirectAttributes redirectAttributes) {
+        productService.resetAllSales();
+        redirectAttributes.addFlashAttribute("message", "모든 상품의 누적 판매량/매출을 초기화했습니다. 지금부터 다시 집계합니다.");
+        return "redirect:/admin/products";
+    }
+
     // 상품 삭제 (주문된 적 없는 상품만)
     @PostMapping("/products/{productId}/delete")
     public String deleteProduct(@PathVariable("productId") Long productId, RedirectAttributes redirectAttributes) {

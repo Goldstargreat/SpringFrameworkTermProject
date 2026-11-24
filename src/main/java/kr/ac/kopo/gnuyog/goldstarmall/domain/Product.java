@@ -7,6 +7,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import java.time.LocalDateTime;
+
 // 상품 엔티티 : products 테이블
 @Entity
 @Table(name = "products")
@@ -48,10 +50,22 @@ public class Product
     @Column(length = 50)
     private String origin;
 
+    // 판매 집계 초기화 시각 : 관리자가 누적 판매량/매출을 초기화한 때 (한 번도 안 했으면 null)
+    // 주문 기록은 지우지 않고, 이 시각 이후의 주문만 누적 판매량/매출에 센다
+    private LocalDateTime salesResetAt;
+
     public Product() {
     }
 
     // ===== getter / setter =====
+    public LocalDateTime getSalesResetAt() {
+        return salesResetAt;
+    }
+
+    public void setSalesResetAt(LocalDateTime salesResetAt) {
+        this.salesResetAt = salesResetAt;
+    }
+
     public Long getId() {
         return id;
     }

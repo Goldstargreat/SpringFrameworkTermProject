@@ -15,12 +15,19 @@
         주문된 적이 있는 상품은 주문 내역을 지키기 위해 삭제할 수 없습니다. 판매를 멈추려면 재고를 0으로 바꾸세요.</p>
     <div th:replace="~{fragments/layout :: messages}"></div>
 
-    <!-- 전체 판매 합계 : 취소된 주문은 빼고, 주문 당시 가격으로 계산한다 -->
-    <p class="search-result">
-        전체 누적 판매량 <b th:text="${#numbers.formatInteger(totalSalesQuantity, 1, 'COMMA')}">0</b>개 ·
-        누적 매출 <b th:text="${#numbers.formatInteger(totalSalesAmount, 1, 'COMMA')}">0</b>원
-        <span class="guide">(취소된 주문 제외)</span>
-    </p>
+    <!-- 전체 판매 합계 : 취소/거절된 주문은 빼고, 주문 당시 가격으로 계산한다 -->
+    <!-- 전체 초기화 : 주문 기록은 그대로 두고, 모든 상품을 지금부터 다시 센다 -->
+    <div class="search-result sales-summary">
+        <span>
+            전체 누적 판매량 <b th:text="${#numbers.formatInteger(totalSalesQuantity, 1, 'COMMA')}">0</b>개 ·
+            누적 매출 <b th:text="${#numbers.formatInteger(totalSalesAmount, 1, 'COMMA')}">0</b>원
+            <span class="guide">(취소/거절된 주문 제외, 초기화한 상품은 초기화 이후 주문만)</span>
+        </span>
+        <form th:action="@{/admin/products/reset-sales}" method="post" class="inline-form"
+              data-confirm="모든 상품의 누적 판매량/매출을 0으로 초기화하시겠습니까? (주문 기록은 지워지지 않습니다)">
+            <button type="submit" class="btn btn-small btn-danger">전체 판매 집계 초기화</button>
+        </form>
+    </div>
 
     <!-- 1. 상품 목록 : 줄마다 가격/재고 수정 폼이 하나씩 있다 -->
     <div class="table-wrap">
@@ -33,6 +40,7 @@
                 <th>가격(원) / 재고(개)</th>
                 <th>누적 판매량</th>
                 <th>누적 매출</th>
+                <th>집계 초기화</th>
                 <th>삭제</th>
             </tr>
             </thead>
@@ -56,6 +64,15 @@
                 <!-- 한 번도 안 팔린 상품은 Map 에 없으므로 0 으로 보여 준다 -->
                 <td th:text="${#numbers.formatInteger(salesQuantity[p.id] ?: 0, 1, 'COMMA')} + '개'">0개</td>
                 <td th:text="${#numbers.formatInteger(salesAmount[p.id] ?: 0, 1, 'COMMA')} + '원'">0원</td>
+                <!-- 이 상품만 초기화 : 마지막으로 초기화한 때가 있으면 그 날짜부터 센다는 안내를 보여 준다 -->
+                <td>
+                    <form th:action="@{/admin/products/{id}/reset-sales(id=${p.id})}" method="post" class="inline-form"
+                          th:attr="data-confirm='\'' + ${p.name} + '\'의 누적 판매량/매출을 0으로 초기화하시겠습니까? (주문 기록은 지워지지 않습니다)'">
+                        <button type="submit" class="btn btn-small">초기화</button>
+                    </form>
+                    <div class="refund-note" th:if="${p.salesResetAt != null}"
+                         th:text="${#temporals.format(p.salesResetAt, 'yyyy-MM-dd HH:mm')} + ' 부터 집계'">2026-11-24 14:50 부터 집계</div>
+                </td>
                 <td>
                     <form th:action="@{/admin/products/{id}/delete(id=${p.id})}" method="post" class="inline-form"
                           data-confirm="이 상품을 삭제하시겠습니까?">

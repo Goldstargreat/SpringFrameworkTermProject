@@ -17,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -149,6 +150,26 @@ public class ProductService {
     }
 
     // (관리자) 가격, 재고 수정
+    // (관리자) 한 상품의 누적 판매량/매출 초기화 : 주문 기록은 그대로 두고, 지금부터 다시 센다
+    @Transactional
+    public Product resetSales(Long productId) {
+        Product product = findById(productId);
+        if (product == null) {
+            throw new NotFoundException("상품을 찾을 수 없습니다.");
+        }
+        product.setSalesResetAt(LocalDateTime.now());
+        return product;
+    }
+
+    // (관리자) 모든 상품의 누적 판매량/매출 초기화
+    @Transactional
+    public void resetAllSales() {
+        LocalDateTime now = LocalDateTime.now();
+        for (Product product : productRepository.findAll()) {
+            product.setSalesResetAt(now);
+        }
+    }
+
     @Transactional
     public void updatePriceAndStock(Long productId, int price, int stock) {
         Product product = findById(productId);
