@@ -40,6 +40,19 @@ public class ReviewService {
         this.orderItemRepository = orderItemRepository;
     }
 
+    // (관리자) 모든 상품평 (최신순). pendingOnly 면 코멘트를 아직 안 단 것만
+    @Transactional(readOnly = true)
+    public List<Review> findAllForAdmin(boolean pendingOnly) {
+        return pendingOnly ? reviewRepository.findByAdminCommentIsNullOrderByIdDesc()
+                           : reviewRepository.findAllByOrderByIdDesc();
+    }
+
+    // (관리자) 코멘트를 아직 안 단 상품평 개수
+    @Transactional(readOnly = true)
+    public long countPending() {
+        return reviewRepository.countByAdminCommentIsNull();
+    }
+
     // 한 상품의 상품평 목록 (최신순)
     @Transactional(readOnly = true)
     public List<Review> findReviews(Product product) {

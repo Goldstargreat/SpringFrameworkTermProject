@@ -64,12 +64,17 @@ public class ProductBoardController {
     public String commentReview(@PathVariable("reviewId") Long reviewId,
                                 @RequestParam("comment") String comment,
                                 @RequestParam("productId") Long productId,
+                                // returnTo=board : 관리자 리뷰/문의 화면에서 썼으면 그 화면으로 돌아간다
+                                @RequestParam(name = "returnTo", required = false) String returnTo,
                                 RedirectAttributes redirectAttributes) {
         try {
             reviewService.comment(reviewId, comment);
             redirectAttributes.addFlashAttribute("message", "코멘트를 등록했습니다.");
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        if ("board".equals(returnTo)) {
+            return "redirect:/admin/board?tab=reviews";
         }
         return "redirect:/products/" + productId + "#tab-reviews";
     }
@@ -111,12 +116,17 @@ public class ProductBoardController {
     public String answer(@PathVariable("inquiryId") Long inquiryId,
                          @RequestParam("answer") String answer,
                          @RequestParam("productId") Long productId,
+                         // returnTo=board : 관리자 리뷰/문의 화면에서 썼으면 그 화면으로 돌아간다
+                         @RequestParam(name = "returnTo", required = false) String returnTo,
                          RedirectAttributes redirectAttributes) {
         try {
             inquiryService.answer(inquiryId, answer);
             redirectAttributes.addFlashAttribute("message", "답변을 등록했습니다.");
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        if ("board".equals(returnTo)) {
+            return "redirect:/admin/board?tab=inquiries";
         }
         return "redirect:/products/" + productId + "#tab-qna";
     }

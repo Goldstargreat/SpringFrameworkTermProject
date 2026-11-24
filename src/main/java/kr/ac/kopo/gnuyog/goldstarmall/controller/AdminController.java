@@ -7,9 +7,11 @@ import kr.ac.kopo.gnuyog.goldstarmall.domain.Order;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
 import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
 import kr.ac.kopo.gnuyog.goldstarmall.service.GradeService;
+import kr.ac.kopo.gnuyog.goldstarmall.service.InquiryService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.MemberService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.OrderService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.ProductService;
+import kr.ac.kopo.gnuyog.goldstarmall.service.ReviewService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -33,10 +35,14 @@ public class AdminController {
     private final MemberService memberService;
     private final ProductService productService;
     private final GradeService gradeService;
+    private final ReviewService reviewService;
+    private final InquiryService inquiryService;
 
     public AdminController(OrderService orderService, MemberService memberService, ProductService productService,
-                           GradeService gradeService) {
+                           GradeService gradeService, ReviewService reviewService, InquiryService inquiryService) {
         this.gradeService = gradeService;
+        this.reviewService = reviewService;
+        this.inquiryService = inquiryService;
         this.orderService = orderService;
         this.memberService = memberService;
         this.productService = productService;
@@ -282,5 +288,26 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/admin/products";
+    }
+
+    // ===== 리뷰/문의 =====
+
+    // 리뷰/문의 화면 : 손님이 남긴 상품문의와 상품평을 한곳에서 보고 바로 답변/코멘트를 단다
+    // tab    : inquiries(상품문의, 기본) / reviews(상품평)
+    // filter : pending(답변/코멘트 대기만, 기본) / all(전체)
+    @GetMapping("/board")
+    public String board(@RequestParam(name = "tab", defaultValue = "inquiries") String tab,
+                        @RequestParam(name = "filter", defaultValue = "pending") String filter,
+                        Model model) {
+        boolean pendingOnly = !"all".equals(filter);
+        if ("reviews".equals(tab)) {
+            model.addAttribute("reviews", reviewService.findAllForAdmin(pendingOnly));
+        } else {
+            tab = "inquiries";
+            model.addAttribute("inquiries", inquiryService.findAllForAdmin(pendingOnly));
+        }
+        model.addAttribute("tab", tab);
+        model.addAttribute("filter", pendingOnly ? "pending" : "all");
+        return "admin/board";
     }
 }

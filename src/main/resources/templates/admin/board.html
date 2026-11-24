@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>리뷰/문의 - 골드스타몰</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main class="container">
+    <h1>리뷰/문의 <small>(관리자 전용)</small></h1>
+    <p class="guide">손님이 남긴 상품문의와 상품평입니다. 처음에는 아직 답변(코멘트)하지 않은 글만 보여 줍니다.</p>
+    <div th:replace="~{fragments/layout :: messages}"></div>
+
+    <!-- 탭 : 상품문의 / 상품평 (빨간 숫자는 대기 개수, AdminNoticeAdvice 가 넣어 준다) -->
+    <nav class="board-tabs">
+        <a th:href="@{/admin/board(tab='inquiries')}" th:classappend="${tab == 'inquiries'} ? 'active'">
+            상품문의<span class="notice-count" th:if="${adminPendingInquiries > 0}" th:text="${adminPendingInquiries}">1</span></a>
+        <a th:href="@{/admin/board(tab='reviews')}" th:classappend="${tab == 'reviews'} ? 'active'">
+            상품평<span class="notice-count" th:if="${adminPendingReviews > 0}" th:text="${adminPendingReviews}">3</span></a>
+    </nav>
+
+    <!-- 보기 : 대기만 / 전체 -->
+    <p class="board-filter">
+        <a th:href="@{/admin/board(tab=${tab}, filter='pending')}" class="btn btn-small"
+           th:classappend="${filter == 'pending'} ? 'btn-primary'"
+           th:text="${tab == 'inquiries'} ? '답변 대기만' : '코멘트 대기만'">답변 대기만</a>
+        <a th:href="@{/admin/board(tab=${tab}, filter='all')}" class="btn btn-small"
+           th:classappend="${filter == 'all'} ? 'btn-primary'">전체 보기</a>
+    </p>
+
+    <!-- ===== 상품문의 ===== -->
+    <th:block th:if="${tab == 'inquiries'}">
+        <p class="empty" th:if="${inquiries.isEmpty()}"
+           th:text="${filter == 'pending'} ? '답변을 기다리는 문의가 없습니다.' : '문의가 없습니다.'">답변을 기다리는 문의가 없습니다.</p>
+        <ul class="admin-board" th:unless="${inquiries.isEmpty()}">
+            <li th:each="q : ${inquiries}">
+                <div class="admin-board-meta">
+                    <span class="badge" th:classappend="${q.answered} ? 'badge-rocket' : 'badge-few'"
+                          th:text="${q.answered} ? '답변 완료' : '답변 대기'">답변 대기</span>
+                    <a th:href="@{/products/{id}(id=${q.product.id})} + '#tab-qna'"
+                       th:text="${q.product.icon} + ' ' + ${q.product.name}">상품</a>
+                    <span class="admin-board-date" th:text="${q.member.name} + ' (' + ${q.member.loginId} + ') · '
+                          + ${#temporals.format(q.createdAt, 'yyyy-MM-dd HH:mm')}">홍길동 (hong) · 2026-11-24 10:00</span>
+                </div>
+                <p class="admin-board-content" th:text="'Q. ' + ${q.question}">질문</p>
+                <!-- 바로 답변 : 답변이 있으면 고치기. returnTo=board 라서 등록 후 이 화면으로 돌아온다 -->
+                <form th:action="@{/admin/inquiries/{id}/answer(id=${q.id})}" method="post" class="board-form answer-form">
+                    <input type="hidden" name="productId" th:value="${q.product.id}">
+                    <input type="hidden" name="returnTo" value="board">
+                    <textarea name="answer" rows="2" maxlength="500" th:text="${q.answer}"
+                              th:placeholder="${q.answered} ? '답변 고치기' : '답변 쓰기'" required></textarea>
+                    <button type="submit" class="btn btn-small btn-primary" th:text="${q.answered} ? '답변 수정' : '답변 등록'">답변 등록</button>
+                </form>
+            </li>
+        </ul>
+    </th:block>
+
+    <!-- ===== 상품평 ===== -->
+    <th:block th:if="${tab == 'reviews'}">
+        <p class="empty" th:if="${reviews.isEmpty()}"
+           th:text="${filter == 'pending'} ? '코멘트를 기다리는 상품평이 없습니다.' : '상품평이 없습니다.'">코멘트를 기다리는 상품평이 없습니다.</p>
+        <ul class="admin-board" th:unless="${reviews.isEmpty()}">
+            <li th:each="r : ${reviews}">
+                <div class="admin-board-meta">
+                    <span class="badge" th:classappend="${r.commented} ? 'badge-rocket' : 'badge-few'"
+                          th:text="${r.commented} ? '코멘트 완료' : '코멘트 대기'">코멘트 대기</span>
+                    <a th:href="@{/products/{id}(id=${r.product.id})} + '#tab-reviews'"
+                       th:text="${r.product.icon} + ' ' + ${r.product.name}">상품</a>
+                    <span class="admin-board-stars" th:text="${r.stars}">★★★★☆</span>
+                    <span class="admin-board-date" th:text="${r.member.name} + ' (' + ${r.member.loginId} + ') · '
+                          + ${#temporals.format(r.createdAt, 'yyyy-MM-dd HH:mm')}">홍길동 (hong) · 2026-11-24 10:00</span>
+                </div>
+                <p class="admin-board-content" th:text="${r.content}">상품평 내용</p>
+                <form th:action="@{/admin/reviews/{id}/comment(id=${r.id})}" method="post" class="board-form answer-form">
+                    <input type="hidden" name="productId" th:value="${r.product.id}">
+                    <input type="hidden" name="returnTo" value="board">
+                    <textarea name="comment" rows="2" maxlength="500" th:text="${r.adminComment}"
+                              th:placeholder="${r.commented} ? '코멘트 고치기' : '코멘트 쓰기'" required></textarea>
+                    <button type="submit" class="btn btn-small btn-primary" th:text="${r.commented} ? '코멘트 수정' : '코멘트 등록'">코멘트 등록</button>
+                </form>
+            </li>
+        </ul>
+    </th:block>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

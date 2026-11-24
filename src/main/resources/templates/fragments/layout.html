@@ -36,6 +36,10 @@
                 <a th:if="${session.loginMemberRole == 'ADMIN'}" th:href="@{/admin/orders}">주문관리</a>
                 <a th:if="${session.loginMemberRole == 'ADMIN'}" th:href="@{/admin/members}">회원관리</a>
                 <a th:if="${session.loginMemberRole == 'ADMIN'}" th:href="@{/admin/products}">상품관리</a>
+                <!-- 리뷰/문의 : 답변 대기 문의 + 코멘트 대기 상품평 개수를 빨간 숫자로 보여 준다 (AdminNoticeAdvice) -->
+                <a th:if="${session.loginMemberRole == 'ADMIN'}" th:href="@{/admin/board}">리뷰/문의<span
+                        class="notice-count" th:if="${adminPendingInquiries + adminPendingReviews > 0}"
+                        th:text="${adminPendingInquiries + adminPendingReviews}">3</span></a>
                 <form class="logout-form" th:action="@{/members/logout}" method="post">
                     <button type="submit">로그아웃</button>
                 </form>

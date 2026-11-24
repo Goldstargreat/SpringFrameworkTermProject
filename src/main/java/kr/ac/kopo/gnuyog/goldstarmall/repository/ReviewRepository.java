@@ -22,6 +22,11 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     @Query("select avg(r.rating) from Review r where r.product = :product")
     Double averageRating(@Param("product") Product product);
 
+    // (관리자) 리뷰/문의 화면 : 전체 최신순, 코멘트를 아직 안 단 것만 최신순, 코멘트 대기 개수
+    List<Review> findAllByOrderByIdDesc();
+    List<Review> findByAdminCommentIsNullOrderByIdDesc();
+    long countByAdminCommentIsNull();
+
     // 회원/상품을 지울 때 함께 지우기 위해
     List<Review> findByMember(Member member);
 

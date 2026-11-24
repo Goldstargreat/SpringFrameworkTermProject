@@ -1177,3 +1177,81 @@ h2 {
     width: auto;
     margin: 0;
 }
+
+/* 관리자 메뉴, 리뷰/문의 탭의 빨간 숫자 (처리하지 않은 문의/상품평 개수) */
+.notice-count {
+    display: inline-block;
+    min-width: 18px;
+    margin-left: 4px;
+    padding: 1px 6px;
+    border-radius: 9px;
+    background: #e53935;
+    color: #fff;
+    font-size: 11px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 16px;
+}
+
+/* 관리자 리뷰/문의 화면 */
+.board-tabs {
+    display: flex;
+    gap: 4px;
+    margin: 16px 0 10px;
+    border-bottom: 2px solid #e3e6eb;
+}
+
+.board-tabs a {
+    padding: 8px 18px;
+    color: #555;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+}
+
+.board-tabs a.active {
+    color: #1a56db;
+    font-weight: bold;
+    border-bottom-color: #1a56db;
+}
+
+.board-filter {
+    margin: 10px 0;
+}
+
+.admin-board {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.admin-board li {
+    padding: 14px 0;
+    border-bottom: 1px solid #e3e6eb;
+}
+
+.admin-board-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.admin-board-meta .badge {
+    margin-top: 0;
+}
+
+.admin-board-date {
+    color: #888;
+    font-size: 13px;
+}
+
+.admin-board-stars {
+    color: #f5a623;
+}
+
+.admin-board-content {
+    margin: 8px 0;
+    white-space: pre-wrap;
+}

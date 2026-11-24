@@ -34,6 +34,19 @@ public class InquiryService {
         this.productRepository = productRepository;
     }
 
+    // (관리자) 모든 문의 (최신순). pendingOnly 면 답변을 아직 안 단 것만
+    @Transactional(readOnly = true)
+    public List<Inquiry> findAllForAdmin(boolean pendingOnly) {
+        return pendingOnly ? inquiryRepository.findByAnswerIsNullOrderByIdDesc()
+                           : inquiryRepository.findAllByOrderByIdDesc();
+    }
+
+    // (관리자) 답변을 아직 안 단 문의 개수
+    @Transactional(readOnly = true)
+    public long countPending() {
+        return inquiryRepository.countByAnswerIsNull();
+    }
+
     // 한 상품의 문의 목록 (최신순)
     @Transactional(readOnly = true)
     public List<Inquiry> findInquiries(Product product) {
