@@ -15,6 +15,11 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     // 한 회원의 주문 목록을 최신순으로 → select * from orders where member_id = ? order by id desc
     List<Order> findByMemberOrderByIdDesc(Member member);
 
+    // 회원 화면용 내 주문 목록 : 회원이 삭제(숨김)한 주문은 빼고 최신순으로
+    @Query("select o from Order o where o.member = :member"
+            + " and (o.hiddenByMember is null or o.hiddenByMember = false) order by o.id desc")
+    List<Order> findVisibleByMember(@Param("member") Member member);
+
     // 전체 주문 목록을 최신순으로 (관리자 화면용)
     List<Order> findAllByOrderByIdDesc();
 

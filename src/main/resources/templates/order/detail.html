@@ -91,6 +91,12 @@
               th:attr="data-confirm='주문을 취소하시겠습니까? 결제 금액 ' + ${#numbers.formatInteger(order.totalPrice, 1, 'COMMA')} + '원이 환불됩니다.'">
             <button type="submit" class="btn btn-danger">주문 취소</button>
         </form>
+        <!-- 끝난 주문(배송완료, 주문취소, 주문거절)만 주문내역에서 삭제할 수 있다 -->
+        <form th:if="${order.status.finished}"
+              th:action="@{/orders/{id}/delete(id=${order.id})}" method="post" class="inline-form"
+              data-confirm="이 주문을 주문내역에서 삭제하시겠습니까? 삭제한 주문은 다시 볼 수 없습니다.">
+            <button type="submit" class="btn btn-danger">주문내역 삭제</button>
+        </form>
     </div>
 </main>
 

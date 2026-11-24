@@ -162,18 +162,18 @@ public class OrderService {
         return order;
     }
 
-    // 내 주문 목록 (최신순)
+    // 내 주문 목록 (최신순, 내가 삭제한 주문은 빼고)
     @Transactional(readOnly = true)
     public List<Order> findMyOrders(Long memberId) {
         Member member = memberRepository.findById(memberId).orElse(null);
-        return orderRepository.findByMemberOrderByIdDesc(member);
+        return orderRepository.findVisibleByMember(member);
     }
 
-    // 내 주문 1건 조회 (본인 주문이 아니면 오류)
+    // 내 주문 1건 조회 (본인 주문이 아니거나, 내가 삭제한 주문이면 오류)
     @Transactional(readOnly = true)
     public Order findMyOrder(Long memberId, Long orderId) {
         Order order = orderRepository.findById(orderId).orElse(null);
-        if (order == null) {
+        if (order == null || order.isHiddenByMember()) {
             throw new NotFoundException("주문을 찾을 수 없습니다.");
         }
         if (!order.getMember().getId().equals(memberId)) {
@@ -190,6 +190,18 @@ public class OrderService {
             throw new BusinessException("이미 물류센터에 입고된 주문은 취소할 수 없습니다.");
         }
         return refund(order, ShippingStatus.CANCELED);
+    }
+
+    // 내 주문내역에서 삭제 : 배송완료, 주문취소, 주문거절로 끝난 주문만 가능하다
+    // 실제로 지우지 않고 회원 화면에서만 숨긴다 (등급, 상품평 자격, 관리자 주문 관리는 그대로)
+    // 삭제한 주문의 주문번호를 돌려준다 (화면 안내 메시지용)
+    public String hideMyOrder(Long memberId, Long orderId) {
+        Order order = findMyOrder(memberId, orderId);
+        if (!order.getStatus().isFinished()) {
+            throw new BusinessException("진행 중인 주문은 삭제할 수 없습니다. (현재 상태: " + order.getStatus().getLabel() + ")");
+        }
+        order.setHiddenByMember(true);
+        return order.getDisplayNumber();
     }
 
     // (관리자) 주문 거절 : 출고 전(주문접수, 입고)까지만 가능하고, 거절 사유가 꼭 있어야 한다

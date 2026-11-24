@@ -183,4 +183,19 @@ public class OrderController {
         }
         return "redirect:/orders/" + orderId;
     }
+
+    // 주문내역 삭제 : 끝난 주문(배송완료, 주문취소, 주문거절)만 내 주문내역에서 지울 수 있다
+    @PostMapping("/{orderId}/delete")
+    public String delete(@PathVariable("orderId") Long orderId,
+                         HttpSession session,
+                         RedirectAttributes redirectAttributes) {
+        Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
+        try {
+            String orderNumber = orderService.hideMyOrder(memberId, orderId);
+            redirectAttributes.addFlashAttribute("message", "주문번호 " + orderNumber + " 주문내역을 삭제했습니다.");
+        } catch (BusinessException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/orders";
+    }
 }

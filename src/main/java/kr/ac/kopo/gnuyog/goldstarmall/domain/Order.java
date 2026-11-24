@@ -89,7 +89,20 @@ public class Order {
     @Column(length = 200)
     private String rejectReason;
 
+    // 회원이 내 주문내역에서 삭제했는지 : 실제로 지우지 않고 회원 화면에서만 숨긴다
+    // (지워 버리면 누적 구매액/등급, 상품평 작성 자격이 사라지고, 관리자도 주문을 볼 수 없게 된다)
+    // 이 기능이 생기기 전의 주문은 비어 있을(null) 수 있어서, isHiddenByMember() 에서 false 로 본다
+    private Boolean hiddenByMember;
+
     public Order() {
+    }
+
+    public boolean isHiddenByMember() {
+        return Boolean.TRUE.equals(hiddenByMember);
+    }
+
+    public void setHiddenByMember(boolean hiddenByMember) {
+        this.hiddenByMember = hiddenByMember;
     }
 
     // 자동으로 붙이는 기본 주문번호 : 주문 날짜 + "-" + id 4자리 (예: 2026-11-24 의 12번 주문 → 20261124-0012)

@@ -47,7 +47,15 @@
                     <div class="refund-note" th:if="${order.refunded}"
                          th:text="${#numbers.formatInteger(order.refundAmount, 1, 'COMMA')} + '원 환불완료'">0원 환불완료</div>
                 </td>
-                <td><a class="btn btn-small" th:href="@{/orders/{id}(id=${order.id})}">배송 조회</a></td>
+                <td>
+                    <a class="btn btn-small" th:href="@{/orders/{id}(id=${order.id})}">배송 조회</a>
+                    <!-- 끝난 주문(배송완료, 주문취소, 주문거절)만 삭제 버튼이 보인다 -->
+                    <form th:if="${order.status.finished}"
+                          th:action="@{/orders/{id}/delete(id=${order.id})}" method="post" class="inline-form"
+                          data-confirm="이 주문을 주문내역에서 삭제하시겠습니까? 삭제한 주문은 다시 볼 수 없습니다.">
+                        <button type="submit" class="btn btn-small btn-danger">삭제</button>
+                    </form>
+                </td>
             </tr>
             </tbody>
         </table>
