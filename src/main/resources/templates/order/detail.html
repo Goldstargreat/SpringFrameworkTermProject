@@ -85,8 +85,8 @@
 
     <div class="button-row">
         <a class="btn" th:href="@{/orders}">주문내역으로</a>
-        <!-- 주문접수 상태일 때만 취소 버튼이 보인다 (취소하면 결제 금액 전체가 환불된다) -->
-        <form th:if="${order.status.name() == 'ORDER_RECEIVED'}"
+        <!-- 배송완료 전(주문접수, 입고, 출고, 배송중)까지 취소 버튼이 보인다 (취소하면 결제 금액 전체가 환불된다) -->
+        <form th:if="${order.status.cancelable}"
               th:action="@{/orders/{id}/cancel(id=${order.id})}" method="post" class="inline-form"
               th:attr="data-confirm='주문을 취소하시겠습니까? 결제 금액 ' + ${#numbers.formatInteger(order.totalPrice, 1, 'COMMA')} + '원이 환불됩니다.'">
             <button type="submit" class="btn btn-danger">주문 취소</button>

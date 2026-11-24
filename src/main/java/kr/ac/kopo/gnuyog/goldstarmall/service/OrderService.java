@@ -182,12 +182,13 @@ public class OrderService {
         return order;
     }
 
-    // 주문 취소 : 아직 '주문접수' 상태일 때만 가능하다. 결제 금액을 환불하고 재고를 돌려놓는다
+    // 주문 취소 : 배송완료 전(주문접수, 입고, 출고, 배송중)까지 가능하다. 결제 금액을 환불하고 재고를 돌려놓는다
     // 환불한 금액을 돌려준다 (화면에 "N원 환불" 안내를 보여 주기 위해)
     public int cancelOrder(Long memberId, Long orderId) {
         Order order = findMyOrder(memberId, orderId);
-        if (order.getStatus() != ShippingStatus.ORDER_RECEIVED) {
-            throw new BusinessException("이미 물류센터에 입고된 주문은 취소할 수 없습니다.");
+        if (!order.getStatus().isCancelable()) {
+            throw new BusinessException("배송완료되었거나 이미 취소/거절된 주문은 취소할 수 없습니다. (현재 상태: "
+                    + order.getStatus().getLabel() + ")");
         }
         return refund(order, ShippingStatus.CANCELED);
     }

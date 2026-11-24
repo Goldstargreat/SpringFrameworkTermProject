@@ -8,7 +8,7 @@ public enum ShippingStatus {
     SHIPPED("출고", 3),
     IN_DELIVERY("배송중", 4),
     DELIVERED("배송완료", 5),
-    CANCELED("주문취소", 0),     // 손님이 직접 취소 (주문접수 단계에서만)
+    CANCELED("주문취소", 0),     // 손님이 직접 취소 (배송완료 전까지)
     REJECTED("주문거절", 0);     // 관리자가 거절 (출고 전까지, 거절 사유를 남긴다)
 
     // 화면에 보여 줄 한글 이름
@@ -61,6 +61,13 @@ public enum ShippingStatus {
     public boolean isVoided()
     {
         return this == CANCELED || this == REJECTED;
+    }
+
+    // 손님이 취소할 수 있는 단계인지 : 아직 배송완료되기 전(주문접수, 입고, 출고, 배송중)
+    // 화면에서는 ${order.status.cancelable} 로 쓸 수 있다
+    public boolean isCancelable()
+    {
+        return !isFinished();
     }
 
     // 관리자가 거절할 수 있는 단계인지 : 아직 출고되기 전(주문접수, 입고)
