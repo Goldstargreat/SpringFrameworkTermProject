@@ -1255,3 +1255,13 @@ h2 {
     margin: 8px 0;
     white-space: pre-wrap;
 }
+
+/* 회원 알림 화면 : 새 알림은 배경색으로 구분, 내가 쓴 글은 회색 */
+.admin-board li.notice-new {
+    background: #fffbe8;
+}
+
+.notice-mine {
+    color: #888;
+    font-size: 14px;
+}

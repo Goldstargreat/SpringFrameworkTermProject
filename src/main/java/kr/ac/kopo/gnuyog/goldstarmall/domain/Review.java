@@ -50,12 +50,25 @@ public class Review {
     // 관리자가 코멘트를 단 날짜
     private LocalDateTime commentedAt;
 
+    // 상품평을 쓴 회원이 관리자 코멘트 알림을 확인했는지
+    // 관리자가 코멘트를 달거나 고치면 false 가 되고, 회원이 알림 화면을 보면 true 가 된다 (비어 있으면 확인 안 함)
+    private Boolean commentRead;
+
     public Review() {
     }
 
     // 관리자 코멘트가 달렸는지 (화면에서 review.commented 로 사용)
     public boolean isCommented() {
         return adminComment != null;
+    }
+
+    // 아직 확인하지 않은 관리자 코멘트가 있는지 (회원 알림)
+    public boolean isCommentUnread() {
+        return adminComment != null && !Boolean.TRUE.equals(commentRead);
+    }
+
+    public void setCommentRead(boolean commentRead) {
+        this.commentRead = commentRead;
     }
 
     // 화면에 별 모양으로 보여 주기 위한 문자열 (예: 4점 → ★★★★☆)

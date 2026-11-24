@@ -14,7 +14,8 @@ public class SecurityConfig implements WebMvcConfigurer {
     // 로그인해야 들어갈 수 있는 주소
     private static final String[] LOGIN_REQUIRED_PATHS = {
             "/cart/**", "/orders/**", "/members/mypage/**", "/admin/**",
-            "/reviews/**", "/inquiries/**"   // 상품평, 상품문의 쓰기/삭제
+            "/reviews/**", "/inquiries/**",  // 상품평, 상품문의 쓰기/삭제
+            "/notifications/**"               // 내 알림
     };
 
     // 관리자(ADMIN)만 들어갈 수 있는 주소
@@ -24,7 +25,7 @@ public class SecurityConfig implements WebMvcConfigurer {
 
     // 일반 회원(손님)만 들어갈 수 있는 주소 (관리자는 물건을 사지 않으므로 장바구니/주문내역이 필요 없다)
     private static final String[] CUSTOMER_ONLY_PATHS = {
-            "/cart/**", "/orders/**"
+            "/cart/**", "/orders/**", "/notifications/**"
     };
 
     private final LoginCheckInterceptor loginCheckInterceptor;

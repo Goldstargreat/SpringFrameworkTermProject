@@ -31,6 +31,9 @@
                 <!-- 장바구니, 주문내역은 손님에게만 보인다 (관리자는 물건을 사지 않는다) -->
                 <a th:if="${session.loginMemberRole != 'ADMIN'}" th:href="@{/cart}">장바구니</a>
                 <a th:if="${session.loginMemberRole != 'ADMIN'}" th:href="@{/orders}">주문내역</a>
+                <!-- 알림 : 내 문의 답변, 내 상품평 코멘트. 확인하지 않은 개수를 빨간 숫자로 (MemberNoticeAdvice) -->
+                <a th:if="${myNoticeCount != null}" th:href="@{/notifications}">알림<span
+                        class="notice-count" th:if="${myNoticeCount > 0}" th:text="${myNoticeCount}">2</span></a>
                 <a th:href="@{/members/mypage}">마이페이지</a>
                 <!-- 관리자에게만 보이는 메뉴 -->
                 <a th:if="${session.loginMemberRole == 'ADMIN'}" th:href="@{/admin/orders}">주문관리</a>

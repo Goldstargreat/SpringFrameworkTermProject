@@ -4,6 +4,8 @@ import kr.ac.kopo.gnuyog.goldstarmall.domain.Inquiry;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -17,6 +19,14 @@ public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
     List<Inquiry> findAllByOrderByIdDesc();
     List<Inquiry> findByAnswerIsNullOrderByIdDesc();
     long countByAnswerIsNull();
+
+    // (회원 알림) 내 문의 중 답변이 달린 것 (답변 날짜 최신순)
+    List<Inquiry> findByMemberAndAnswerIsNotNullOrderByAnsweredAtDesc(Member member);
+
+    // (회원 알림) 아직 확인하지 않은 답변 개수
+    @Query("select count(i) from Inquiry i where i.member = :member and i.answer is not null"
+            + " and (i.answerRead is null or i.answerRead = false)")
+    long countUnreadAnswers(@Param("member") Member member);
 
     // 회원/상품을 지울 때 함께 지우기 위해
     List<Inquiry> findByMember(Member member);

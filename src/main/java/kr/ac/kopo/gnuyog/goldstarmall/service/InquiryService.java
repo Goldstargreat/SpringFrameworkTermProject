@@ -81,6 +81,8 @@ public class InquiryService {
         Inquiry inquiry = findInquiry(inquiryId);
         inquiry.setAnswer(checkText(answer, "답변 내용"));
         inquiry.setAnsweredAt(LocalDateTime.now());
+        // 질문한 회원에게 새 알림으로 보이도록
+        inquiry.setAnswerRead(false);
         return inquiry.getProduct().getId();
     }
 

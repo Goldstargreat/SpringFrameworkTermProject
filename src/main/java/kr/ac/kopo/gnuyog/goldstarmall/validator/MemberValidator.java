@@ -52,7 +52,8 @@ public final class MemberValidator
     // 띄어쓰기를 지우고 소문자로 바꾼 뒤, 금지 단어가 하나라도 들어 있는지
     private static boolean containsReservedWord(String text, List<String> words)
     {
-        if (text == null) {
+        if (text == null)
+        {
             return false;
         }
         String normalized = text.replaceAll("\\s", "").toLowerCase();

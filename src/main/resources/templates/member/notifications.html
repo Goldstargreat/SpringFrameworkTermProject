@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>알림 - 골드스타몰</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main class="container">
+    <h1>알림</h1>
+    <p class="guide">내 상품문의에 달린 답변과 내 상품평에 달린 골드스타몰 코멘트입니다. 이 화면을 열면 새 알림은 모두 확인한 것으로 바뀝니다.</p>
+
+    <p class="empty" th:if="${notifications.isEmpty()}">아직 받은 알림이 없습니다.</p>
+
+    <ul class="admin-board" th:unless="${notifications.isEmpty()}">
+        <!-- n.unread : 이번에 처음 보는 알림이면 "새 알림" 표시와 배경색 -->
+        <li th:each="n : ${notifications}" th:classappend="${n.unread} ? 'notice-new'">
+            <div class="admin-board-meta">
+                <span class="notice-count" th:if="${n.unread}">N</span>
+                <span class="badge badge-rocket" th:text="${n.type}">문의 답변</span>
+                <a th:href="@{/products/{id}(id=${n.productId})} + ${n.anchor}"
+                   th:text="${n.productIcon} + ' ' + ${n.productName}">상품</a>
+                <span class="admin-board-date" th:if="${n.feedbackAt != null}"
+                      th:text="${#temporals.format(n.feedbackAt, 'yyyy-MM-dd HH:mm')}">2026-11-24 10:00</span>
+            </div>
+            <p class="admin-board-content notice-mine" th:text="'내가 쓴 글 : ' + ${n.myText}">내가 쓴 글</p>
+            <p class="admin-board-content" th:text="'골드스타몰 : ' + ${n.feedback}">답변</p>
+        </li>
+    </ul>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -45,12 +45,25 @@ public class Inquiry {
     // 답변한 날짜
     private LocalDateTime answeredAt;
 
+    // 질문한 회원이 답변 알림을 확인했는지
+    // 관리자가 답변을 달거나 고치면 false 가 되고, 회원이 알림 화면을 보면 true 가 된다 (비어 있으면 확인 안 함)
+    private Boolean answerRead;
+
     public Inquiry() {
     }
 
     // 답변이 달렸는지 (화면에서 inquiry.answered 로 사용)
     public boolean isAnswered() {
         return answer != null;
+    }
+
+    // 아직 확인하지 않은 답변이 있는지 (회원 알림)
+    public boolean isAnswerUnread() {
+        return answer != null && !Boolean.TRUE.equals(answerRead);
+    }
+
+    public void setAnswerRead(boolean answerRead) {
+        this.answerRead = answerRead;
     }
 
     // ===== getter / setter =====
