@@ -63,7 +63,8 @@
                 <td th:text="${m.loginId}">hong</td>
                 <td th:text="${m.name}">홍길동</td>
                 <td th:text="${m.phone}">010-0000-0000</td>
-                <td th:text="${m.address}">주소</td>
+                <!-- 관리자 계정은 주문하지 않으므로 배송지를 보여 주지 않는다 -->
+                <td th:text="${m.role == 'ADMIN'} ? '-' : ${m.address}">주소</td>
                 <td th:text="${#temporals.format(m.createdAt, 'yyyy-MM-dd HH:mm')}">2026-01-01 00:00</td>
                 <td th:text="${m.role == 'ADMIN'} ? '관리자' : '일반'">일반</td>
                 <td>
