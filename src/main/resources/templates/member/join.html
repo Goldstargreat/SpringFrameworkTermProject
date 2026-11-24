@@ -17,8 +17,16 @@
         <!-- 입력한 값은 POST /members/join 으로 전송된다 -->
         <form th:action="@{/members/join}" method="post">
             <label>아이디 (4글자 이상)
-                <input type="text" name="loginId" th:value="${loginId}" required>
+                <!-- 중복 확인 버튼 : 누르면 js/common.js 가 data-check-url 주소로 물어보고 결과를 아래 칸에 보여 준다 -->
+                <span class="input-with-button">
+                    <input type="text" id="loginId" name="loginId" th:value="${loginId}" required>
+                    <button type="button" class="btn btn-small"
+                            th:data-check-url="@{/members/check-login-id}"
+                            data-check-input="loginId"
+                            data-check-result="loginIdResult">중복 확인</button>
+                </span>
             </label>
+            <p id="loginIdResult" class="check-message"></p>
             <label>비밀번호 (4글자 이상)
                 <input type="password" name="password" required>
             </label>

@@ -472,6 +472,38 @@ h2 {
     padding: 5px;
 }
 
+/* 회원가입 화면 : 입력칸 옆에 버튼 (아이디 중복 확인) */
+.input-with-button {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.form-box .input-with-button input {
+    flex: 1;
+    margin-top: 0;
+}
+
+.input-with-button .btn {
+    white-space: nowrap;
+}
+
+/* 중복 확인 결과 문구 */
+.check-message {
+    margin: 4px 0 0;
+    font-size: 13px;
+    min-height: 1em;
+}
+
+.check-message.ok {
+    color: #1d6b34;
+}
+
+.check-message.fail {
+    color: #a12626;
+}
+
 /* 회원관리 화면의 전화번호 검색 */
 .member-search {
     margin: 12px 0;

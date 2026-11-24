@@ -87,3 +87,33 @@ document.querySelectorAll('input[data-phone-format]').forEach(function (input) {
         input.setSelectionRange(cursor, cursor);
     });
 });
+
+// 5) 중복 확인 버튼 : data-check-url 이 붙은 버튼을 누르면 새로고침 없이 서버에 물어보고 결과를 보여 준다
+//    data-check-url    : 물어볼 주소 (예: /members/check-login-id)
+//    data-check-input  : 검사할 입력칸 id   (그 값을 ?loginId=... 처럼 입력칸 name 으로 보낸다)
+//    data-check-result : 결과 문구를 넣을 칸 id
+//    서버는 {"available": true/false, "message": "..."} 형태의 JSON 을 돌려준다
+document.querySelectorAll('button[data-check-url]').forEach(function (button) {
+    var input = document.getElementById(button.dataset.checkInput);
+    var result = document.getElementById(button.dataset.checkResult);
+
+    function showResult(text, ok) {
+        result.textContent = text;
+        result.className = 'check-message ' + (ok ? 'ok' : 'fail');
+    }
+
+    button.addEventListener('click', function () {
+        var url = button.dataset.checkUrl + '?' + encodeURIComponent(input.name) + '=' + encodeURIComponent(input.value.trim());
+        // fetch : 페이지를 그대로 둔 채 서버와 데이터만 주고받는다 (AJAX)
+        fetch(url)
+            .then(function (response) { return response.json(); })
+            .then(function (data) { showResult(data.message, data.available); })
+            .catch(function () { showResult('확인하지 못했습니다. 잠시 후 다시 시도해 주세요.', false); });
+    });
+
+    // 확인한 뒤에 아이디를 바꾸면 예전 결과는 지운다 (다시 확인해야 한다)
+    input.addEventListener('input', function () {
+        result.textContent = '';
+        result.className = 'check-message';
+    });
+});

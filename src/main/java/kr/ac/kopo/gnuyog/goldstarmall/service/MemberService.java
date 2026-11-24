@@ -63,6 +63,12 @@ public class MemberService {
         return memberRepository.save(member);
     }
 
+    // 아이디 사용 가능 여부 (회원가입 화면의 "중복 확인" 버튼에서 사용)
+    @Transactional(readOnly = true)
+    public boolean isLoginIdAvailable(String loginId) {
+        return memberRepository.findByLoginId(loginId) == null;
+    }
+
     // 로그인 : 성공하면 회원 객체, 실패하면 null 을 돌려준다
     @Transactional(readOnly = true)
     public Member login(String loginId, String password) {

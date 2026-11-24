@@ -12,7 +12,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.Map;
 
 // 회원 컨트롤러 : 회원가입, 로그인, 로그아웃
 @Controller
@@ -66,6 +69,26 @@ public class MemberController {
         // addFlashAttribute : 리다이렉트된 다음 화면에서 딱 한 번만 보이는 메시지
         redirectAttributes.addFlashAttribute("message", "회원가입이 완료되었습니다. 로그인해 주세요.");
         return "redirect:/members/login";
+    }
+
+    // 아이디 중복 확인 : 회원가입 화면의 "중복 확인" 버튼이 자바스크립트(fetch)로 부른다
+    // @ResponseBody : 화면(HTML) 대신 데이터를 돌려준다. Map 은 JSON 으로 바뀌어 전달된다
+    // 예) {"available": true, "message": "사용할 수 있는 아이디입니다."}
+    // 화면을 새로고침하지 않고 결과만 받아 보여 주기 위한 것이고, 가입할 때 서버에서 한 번 더 검사한다
+    @GetMapping("/check-login-id")
+    @ResponseBody
+    public Map<String, Object> checkLoginId(@RequestParam(name = "loginId", required = false) String loginId) {
+        // 1) 글자 수 등 아이디 규칙 검사
+        try {
+            MemberValidator.validateLoginId(loginId);
+        } catch (BusinessException e) {
+            return Map.of("available", false, "message", e.getMessage());
+        }
+        // 2) 이미 쓰는 아이디인지 검사
+        if (!memberService.isLoginIdAvailable(loginId.trim())) {
+            return Map.of("available", false, "message", "이미 사용 중인 아이디입니다.");
+        }
+        return Map.of("available", true, "message", "사용할 수 있는 아이디입니다.");
     }
 
     // 로그인 화면 보여 주기
