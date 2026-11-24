@@ -21,7 +21,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 import java.util.Map;
 
-// 관리자 컨트롤러 : 배송관리(배송 상태 변경, 주문 삭제), 회원관리(회원 정보 수정, 삭제), 상품관리(등록, 가격/재고 수정)
+// 관리자 컨트롤러 : 주문관리(배송 상태 변경, 주문 삭제), 회원관리(회원 정보 수정, 삭제), 상품관리(등록, 가격/재고 수정)
 // AdminCheckInterceptor 때문에 관리자(ADMIN)만 들어올 수 있다
 @Controller
 @RequestMapping("/admin")
