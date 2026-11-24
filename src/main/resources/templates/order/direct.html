@@ -58,10 +58,16 @@
             <!-- 추가 배송지가 있을 때만 기본/추가 배송지를 고르는 버튼을 보여 준다 (동작은 js/common.js) -->
             <div class="address-choice" th:if="${!#strings.isEmpty(member.secondAddress)}">
                 <label><input type="radio" name="addressChoice" th:value="${member.address}" checked
-                              data-fill-target="shippingAddress"> 기본 배송지</label>
+                              data-fill-target="shippingAddress"> 기본 배송지
+                    <small class="refund-note" th:text="${member.address}">주소</small></label>
                 <label><input type="radio" name="addressChoice" th:value="${member.secondAddress}"
-                              data-fill-target="shippingAddress"> 추가 배송지</label>
+                              data-fill-target="shippingAddress"> 추가 배송지
+                    <small class="refund-note" th:text="${member.secondAddress}">주소</small></label>
             </div>
+            <!-- 추가 배송지가 없으면 마이페이지에서 등록할 수 있다고 알려 준다 -->
+            <p class="guide" th:if="${#strings.isEmpty(member.secondAddress)}">
+                추가 배송지(회사, 부모님 댁 등)를 <a th:href="@{/members/mypage}">마이페이지</a>에 등록해 두면 여기서 골라 쓸 수 있습니다.
+            </p>
             <label>배송지 주소
                 <input type="text" id="shippingAddress" name="shippingAddress" th:value="${member.address}" required>
             </label>
