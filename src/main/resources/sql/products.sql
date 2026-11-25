@@ -15,7 +15,7 @@ INSERT INTO products (name, category, price, stock, description, icon) VALUES
 ('미니 선풍기', '가전디지털', 12900, 40, 'USB 충전식 휴대용 선풍기입니다.', '🌀'),
 ('전기 주전자 1.7L', '가전디지털', 24900, 3, '빠르게 끓는 스테인리스 전기 주전자입니다.', '🫖'),
 ('기능성 티셔츠', '패션의류', 9900, 70, '땀을 빠르게 흡수하고 말려 주는 가벼운 기능성 티셔츠입니다.', '👕'),
-('러닝화', '스포츠/레저', 49900, 15, '가볍고 쿠션감 좋은 러닝화입니다.', '👟'),
+('런닝화', '스포츠/레저', 49900, 15, '가볍고 쿠션감 좋은 런닝화입니다.', '👟'),
 ('노트북 백팩', '잡화', 29900, 0, '노트북 수납이 가능한 캔버스 백팩입니다.', '🎒');
 
 -- 추가 상품 (13번 ~ 32번) : 모든 카테고리에 상품이 2개 이상 보이도록 추가
@@ -155,7 +155,7 @@ UPDATE products SET manufacturer = '골드스타 PB', origin = '베트남' WHERE
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '경량 패딩 조끼';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '플리츠 롱스커트';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WHERE name = '수면 양말 5켤레';
-UPDATE products SET manufacturer = '골드스타 PB', origin = '베트남' WHERE name = '러닝화';
+UPDATE products SET manufacturer = '골드스타 PB', origin = '베트남' WHERE name = '런닝화';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '요가 매트 10mm';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '덤벨 5kg 2개';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '2인용 원터치 텐트';
@@ -471,6 +471,41 @@ ORDER BY o.seq;
 -- 상품 재고 = 옵션 재고 합계 (7 + 6 + 5 = 18)
 UPDATE products SET stock = (SELECT SUM(o.stock) FROM product_options o WHERE o.product_id = products.id)
 WHERE name = '플리츠 롱스커트';
+
+-- ===== 상품 옵션 : 런닝화 (색상 2가지 x 사이즈 230~280mm 5mm 단위 11가지 = 22가지, 가격은 모두 같다) =====
+-- 옵션이 22가지라 재고를 15개에서 40개로 늘렸다. 많이 팔리는 260~270mm 와 블랙 색상에 재고를 더 많이 둔다
+INSERT INTO product_options (product_id, name, stock)
+SELECT p.id, o.name, o.stock
+FROM products p
+JOIN (
+    SELECT 1 AS seq, '블랙 / 230mm' AS name, 1 AS stock UNION ALL
+    SELECT 2, '블랙 / 235mm', 1 UNION ALL
+    SELECT 3, '블랙 / 240mm', 2 UNION ALL
+    SELECT 4, '블랙 / 245mm', 2 UNION ALL
+    SELECT 5, '블랙 / 250mm', 2 UNION ALL
+    SELECT 6, '블랙 / 255mm', 2 UNION ALL
+    SELECT 7, '블랙 / 260mm', 3 UNION ALL
+    SELECT 8, '블랙 / 265mm', 3 UNION ALL
+    SELECT 9, '블랙 / 270mm', 3 UNION ALL
+    SELECT 10, '블랙 / 275mm', 2 UNION ALL
+    SELECT 11, '블랙 / 280mm', 1 UNION ALL
+    SELECT 12, '화이트 / 230mm', 1 UNION ALL
+    SELECT 13, '화이트 / 235mm', 1 UNION ALL
+    SELECT 14, '화이트 / 240mm', 2 UNION ALL
+    SELECT 15, '화이트 / 245mm', 2 UNION ALL
+    SELECT 16, '화이트 / 250mm', 2 UNION ALL
+    SELECT 17, '화이트 / 255mm', 2 UNION ALL
+    SELECT 18, '화이트 / 260mm', 2 UNION ALL
+    SELECT 19, '화이트 / 265mm', 2 UNION ALL
+    SELECT 20, '화이트 / 270mm', 2 UNION ALL
+    SELECT 21, '화이트 / 275mm', 1 UNION ALL
+    SELECT 22, '화이트 / 280mm', 1
+) o
+WHERE p.name = '런닝화'
+ORDER BY o.seq;
+-- 상품 재고 = 옵션 재고 합계 (22 + 18 = 40)
+UPDATE products SET stock = (SELECT SUM(o.stock) FROM product_options o WHERE o.product_id = products.id)
+WHERE name = '런닝화';
 
 -- 확인
 SELECT * FROM products;

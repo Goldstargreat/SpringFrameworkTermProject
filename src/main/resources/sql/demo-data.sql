@@ -34,12 +34,14 @@ INSERT INTO order_items (order_id, product_id, order_price, quantity) VALUES
 (@order_id, (SELECT id FROM products WHERE name = '수분 크림 50ml'), 18900, 1),
 (@order_id, (SELECT id FROM products WHERE name = '시트 마스크팩 10매'), 12900, 2);
 
--- [배송완료] lee03 : 러닝화 x1
+-- [배송완료] lee03 : 런닝화 x1
 INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, status, total_price, ordered_at) VALUES
 ((SELECT id FROM members WHERE login_id = 'lee03'), '이민수', '010-4567-8901', '부산광역시 해운대구 해운대로 570', 'DELIVERED', 49900, '2026-11-15 08:30:00.000000');
 SET @order_id = LAST_INSERT_ID();
-INSERT INTO order_items (order_id, product_id, order_price, quantity) VALUES
-(@order_id, (SELECT id FROM products WHERE name = '러닝화'), 49900, 1);
+-- 런닝화는 옵션 상품이라 옵션(블랙 / 270mm)도 함께 넣는다
+INSERT INTO order_items (order_id, product_id, option_id, order_price, quantity) VALUES
+(@order_id, (SELECT id FROM products WHERE name = '런닝화'),
+ (SELECT o.id FROM product_options o JOIN products p ON p.id = o.product_id WHERE p.name = '런닝화' AND o.name = '블랙 / 270mm'), 49900, 1);
 
 -- [배송완료] kim02 : 2인용 원터치 텐트 x2, 스테인리스 냄비 3종 세트 x1, 플로럴 향수 50ml x2
 -- → 누적 구매액 326,200원 (30만 원 이상) 이라 골드 등급이 된다. 주문할 때는 일반 등급이라 할인 없음
@@ -186,7 +188,7 @@ INSERT INTO reviews (member_id, product_id, rating, content, created_at) VALUES
  '건성 피부인데 하루 종일 촉촉해요. 향도 은은해서 좋습니다.', '2026-11-22 22:40:00.000000'),
 ((SELECT id FROM members WHERE login_id = 'kim02'), (SELECT id FROM products WHERE name = '시트 마스크팩 10매'), 3,
  '무난해요. 에센스 양은 넉넉한데 시트가 조금 얇은 편입니다.', '2026-11-22 22:45:00.000000'),
-((SELECT id FROM members WHERE login_id = 'lee03'), (SELECT id FROM products WHERE name = '러닝화'), 4,
+((SELECT id FROM members WHERE login_id = 'lee03'), (SELECT id FROM products WHERE name = '런닝화'), 4,
  '쿠션감이 좋아서 오래 뛰어도 발이 편합니다. 평소 신는 사이즈로 주문하면 딱 맞아요.', '2026-11-23 08:30:00.000000');
 
 -- ===== 관리자 코멘트 : 상품평 2개에 관리자가 코멘트를 단다 =====
@@ -203,7 +205,7 @@ INSERT INTO inquiries (member_id, product_id, question, answer, created_at, answ
 ((SELECT id FROM members WHERE login_id = 'park04'), (SELECT id FROM products WHERE name = '신라면 5개입'),
  '한 번에 여러 묶음을 주문하면 박스로 포장되나요?', NULL,
  '2026-11-24 09:10:00.000000', NULL),
-((SELECT id FROM members WHERE login_id = 'choi05'), (SELECT id FROM products WHERE name = '러닝화'),
+((SELECT id FROM members WHERE login_id = 'choi05'), (SELECT id FROM products WHERE name = '런닝화'),
  '발볼이 넓은 편인데 한 치수 크게 주문해야 할까요?', '발볼이 넓으시면 5mm 크게 주문하시는 것을 권해 드립니다. 받은 날로부터 7일 이내 교환 가능합니다.',
  '2026-11-23 11:00:00.000000', '2026-11-23 15:30:00.000000'),
 ((SELECT id FROM members WHERE login_id = 'hong07'), (SELECT id FROM products WHERE name = '수분 크림 50ml'),
