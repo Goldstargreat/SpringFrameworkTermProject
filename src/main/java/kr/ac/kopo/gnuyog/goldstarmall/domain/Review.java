@@ -18,6 +18,9 @@ import java.time.LocalDateTime;
 @Table(name = "reviews")
 public class Review {
 
+    // 별점 최고 점수 (별 모양 표시에 쓴다)
+    private static final int MAX_RATING = 5;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -54,7 +57,18 @@ public class Review {
     // 관리자가 코멘트를 달거나 고치면 false 가 되고, 회원이 알림 화면을 보면 true 가 된다 (비어 있으면 확인 안 함)
     private Boolean commentRead;
 
+    // 상품평을 쓴 회원이 코멘트 알림을 알림 목록에서 삭제했는지 (상품평과 코멘트 자체는 그대로 남는다)
+    // 관리자가 코멘트를 고치면 새 알림이 되므로 다시 false 가 된다 (비어 있으면 삭제 안 함)
+    private Boolean commentNoticeHidden;
+
     public Review() {
+    }
+
+    // ===== 화면 표시 =====
+
+    // 화면에 별 모양으로 보여 주기 위한 문자열 (예: 4점 → ★★★★☆)
+    public String getStars() {
+        return "★".repeat(rating) + "☆".repeat(MAX_RATING - rating);
     }
 
     // 관리자 코멘트가 달렸는지 (화면에서 review.commented 로 사용)
@@ -62,19 +76,19 @@ public class Review {
         return adminComment != null;
     }
 
-    // 아직 확인하지 않은 관리자 코멘트가 있는지 (회원 알림)
+    // ===== 코멘트 알림 (NotificationService 에서 사용) =====
+    // commentRead, commentNoticeHidden 은 옛 데이터에서 비어 있을(null) 수 있어서 Boolean.TRUE.equals 로 비교한다
+
+    // 아직 확인하지 않은 관리자 코멘트가 있는지
     public boolean isCommentUnread() {
-        return adminComment != null && !Boolean.TRUE.equals(commentRead);
+        return isCommented() && !Boolean.TRUE.equals(commentRead);
     }
 
     public void setCommentRead(boolean commentRead) {
         this.commentRead = commentRead;
     }
 
-    // 상품평을 쓴 회원이 코멘트 알림을 알림 목록에서 삭제했는지 (상품평과 코멘트 자체는 그대로 남는다)
-    // 관리자가 코멘트를 고치면 새 알림이 되므로 다시 false 가 된다 (비어 있으면 삭제 안 함)
-    private Boolean commentNoticeHidden;
-
+    // 코멘트 알림을 알림 목록에서 삭제했는지
     public boolean isCommentNoticeHidden() {
         return Boolean.TRUE.equals(commentNoticeHidden);
     }
@@ -83,12 +97,8 @@ public class Review {
         this.commentNoticeHidden = commentNoticeHidden;
     }
 
-    // 화면에 별 모양으로 보여 주기 위한 문자열 (예: 4점 → ★★★★☆)
-    public String getStars() {
-        return "★".repeat(rating) + "☆".repeat(5 - rating);
-    }
-
     // ===== getter / setter =====
+
     public Long getId() {
         return id;
     }
