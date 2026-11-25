@@ -501,6 +501,16 @@ h2 {
     color: #8a8f99;
 }
 
+/* 상품 상세의 카테고리 이름 : 누르면 카테고리 상품 목록으로 간다 */
+.category-link {
+    display: inline-block;
+}
+
+.category-link:hover {
+    color: #1b3a6b;
+    text-decoration: underline;
+}
+
 .product-name {
     font-size: 15px;
     margin: 4px 0 8px;

@@ -20,7 +20,9 @@
         </div>
 
         <div class="detail-info">
-            <div class="product-category" th:text="${product.category}">카테고리</div>
+            <!-- 카테고리 이름을 누르면 그 카테고리의 상품 목록으로 간다 -->
+            <a class="product-category category-link" th:href="@{/products(category=${product.category})}"
+               th:text="${product.category}">카테고리</a>
             <h1 th:text="${product.name}">상품명</h1>
             <!-- 상품평이 있으면 평균 별점을 이름 아래에 보여 주고, 누르면 상품평 탭으로 이동 -->
             <a class="rating-link" href="#tab-reviews" th:if="${!reviews.isEmpty()}">
