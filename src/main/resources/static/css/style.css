@@ -223,6 +223,18 @@ h2 {
     font-size: 14px;
 }
 
+/* 검색 결과가 없을 때 비슷한 검색어 추천 */
+.search-suggestion {
+    font-size: 15px;
+    color: #333;
+}
+
+.search-suggestion a {
+    font-weight: bold;
+    color: #1b3a6b;
+    text-decoration: underline;
+}
+
 /* ----- 페이지 나누기 (메인 화면) ----- */
 .pagination {
     display: flex;

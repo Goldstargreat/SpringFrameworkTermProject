@@ -8,6 +8,7 @@ import kr.ac.kopo.gnuyog.goldstarmall.domain.Review;
 import kr.ac.kopo.gnuyog.goldstarmall.service.InquiryService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.ProductService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.ReviewService;
+import kr.ac.kopo.gnuyog.goldstarmall.service.SearchSuggestionService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
@@ -27,11 +28,14 @@ public class HomeController {
     private final ProductService productService;
     private final ReviewService reviewService;
     private final InquiryService inquiryService;
+    private final SearchSuggestionService searchSuggestionService;
 
-    public HomeController(ProductService productService, ReviewService reviewService, InquiryService inquiryService) {
+    public HomeController(ProductService productService, ReviewService reviewService, InquiryService inquiryService,
+                          SearchSuggestionService searchSuggestionService) {
         this.productService = productService;
         this.reviewService = reviewService;
         this.inquiryService = inquiryService;
+        this.searchSuggestionService = searchSuggestionService;
     }
 
     // 홈 화면 : 배너, 카테고리 바로가기, 인기 상품 / 로켓 배송 / 신상품 / 품절 임박 섹션
@@ -115,6 +119,14 @@ public class HomeController {
         model.addAttribute("categories", categories);
         model.addAttribute("selectedCategory", category);
         model.addAttribute("keyword", keyword);
+        // 검색 결과가 없으면 비슷한 검색어를 추천한다 (예: '감치' → "혹시 '김치'를 찾으시나요?")
+        if (keyword != null && !keyword.trim().isEmpty() && productPage.getTotalElements() == 0) {
+            String suggestion = searchSuggestionService.suggest(keyword);
+            if (suggestion != null) {
+                model.addAttribute("suggestion", suggestion);
+                model.addAttribute("suggestionParticle", SearchSuggestionService.objectParticle(suggestion));
+            }
+        }
         // 페이지 나누기 정보
         model.addAttribute("totalCount", productPage.getTotalElements());
         model.addAttribute("currentPage", currentPage);
