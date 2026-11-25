@@ -18,10 +18,17 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
-// 회원 서비스 : 회원가입, 로그인, 정보 수정, 비밀번호 변경, 탈퇴
+// 회원 서비스 : 회원가입, 로그인, 정보 수정, 아이디·비밀번호 찾기, 비밀번호 변경, 탈퇴, (관리자) 회원 검색/삭제
 @Service
 @Transactional
 public class MemberService {
+
+    // 아이디 찾기/비밀번호 찾기에서 정보가 맞지 않을 때의 메시지
+    // 이름이 틀렸는지 전화번호가 틀렸는지는 알려 주지 않는다 (남의 정보를 알아내는 데 쓰이지 않도록)
+    private static final String NO_MATCHING_MEMBER = "입력한 정보와 일치하는 회원이 없습니다.";
+
+    // 아이디를 가릴 때 최소한 보여 줄 앞 글자 수
+    private static final int MIN_VISIBLE_LOGIN_ID = 2;
 
     private final MemberRepository memberRepository;
     private final CartItemRepository cartItemRepository;
@@ -45,17 +52,18 @@ public class MemberService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    // ===== 회원가입 / 로그인 =====
+
     // 회원가입
     public Member join(String loginId, String password, String name, String phone, String address) {
         // 1) 아이디 중복 검사
-        Member found = memberRepository.findByLoginId(loginId);
-        if (found != null) {
+        if (!isLoginIdAvailable(loginId)) {
             throw new BusinessException("이미 사용 중인 아이디입니다.");
         }
 
         // 2) 전화번호 중복 검사 (이름은 같을 수 있어도 전화번호는 사람마다 다르다)
-        phone = MemberValidator.normalizePhone(phone);
-        checkDuplicatePhone(phone, null);
+        String normalizedPhone = MemberValidator.normalizePhone(phone);
+        checkDuplicatePhone(normalizedPhone, null);
 
         // 3) 회원 객체를 만들고 값 채우기
         Member member = new Member();
@@ -63,7 +71,7 @@ public class MemberService {
         // 비밀번호는 그대로 저장하지 않고 BCrypt 로 암호화해서 저장한다
         member.setPassword(passwordEncoder.encode(password));
         member.setName(name);
-        member.setPhone(phone);
+        member.setPhone(normalizedPhone);
         member.setAddress(address);
         member.setRole(Member.ROLE_USER);
         member.setCreatedAt(LocalDateTime.now());
@@ -86,10 +94,8 @@ public class MemberService {
         if (member == null) {
             return null;
         }
-
         // 2) 입력한 비밀번호와 DB의 암호화된 비밀번호 비교
-        boolean matched = passwordEncoder.matches(password, member.getPassword());
-        if (!matched) {
+        if (!passwordMatches(password, member)) {
             return null;
         }
         return member;
@@ -101,12 +107,15 @@ public class MemberService {
         return memberRepository.findById(memberId).orElse(null);
     }
 
+    // ===== 내 정보 =====
+
     // 내 정보 수정 : 이름, 전화번호, 기본 배송지, 추가 배송지 (아이디는 바꿀 수 없다)
     public void updateInfo(Long memberId, String name, String phone, String address, String secondAddress) {
         MemberValidator.validateName(name);
-        phone = MemberValidator.normalizePhone(phone);
+        String normalizedPhone = MemberValidator.normalizePhone(phone);
         // 내 번호 그대로 두는 건 괜찮고, 다른 회원이 쓰는 번호로 바꾸는 것만 막는다
-        checkDuplicatePhone(phone, memberId);
+        checkDuplicatePhone(normalizedPhone, memberId);
+
         Member member = findById(memberId);
         // 일반 회원은 "관리자" 같은 이름으로 바꿀 수 없다 (관리자 계정은 원래 이름이 "관리자"라서 검사하지 않는다)
         if (!member.isAdmin()) {
@@ -114,18 +123,27 @@ public class MemberService {
         }
         // 트랜잭션 안에서 값을 바꾸면 JPA 가 알아서 update SQL 을 실행한다 (변경 감지)
         member.setName(name.trim());
-        member.setPhone(phone);
+        member.setPhone(normalizedPhone);
         member.setAddress(address);
         member.setSecondAddress(secondAddress);
     }
 
-    // 전화번호 중복 검사 : 다른 회원이 이미 쓰는 번호면 예외
-    // myId : 정보 수정일 때 내 회원 번호 (회원가입일 때는 null)
-    private void checkDuplicatePhone(String phone, Long myId) {
-        Member found = memberRepository.findByPhone(phone);
-        if (found != null && !found.getId().equals(myId)) {
-            throw new BusinessException("이미 가입된 전화번호입니다.");
+    // 비밀번호 변경 : 현재 비밀번호가 맞아야 바꿀 수 있다
+    public void changePassword(Long memberId, String currentPassword, String newPassword, String newPasswordConfirm) {
+        Member member = findById(memberId);
+        if (!passwordMatches(currentPassword, member)) {
+            throw new BusinessException("현재 비밀번호가 올바르지 않습니다.");
         }
+        setNewPassword(member, newPassword, newPasswordConfirm);
+    }
+
+    // 회원 탈퇴 : 본인 확인(비밀번호) 후 회원 삭제
+    public void withdraw(Long memberId, String password) {
+        Member member = findById(memberId);
+        if (!passwordMatches(password, member)) {
+            throw new BusinessException("비밀번호가 올바르지 않습니다.");
+        }
+        deleteMember(memberId);
     }
 
     // ===== 아이디 찾기 / 비밀번호 찾기 =====
@@ -144,7 +162,7 @@ public class MemberService {
     public Long verifyForPasswordReset(String loginId, String name, String phone) {
         Member member = findByNameAndPhone(name, phone);
         if (loginId == null || !member.getLoginId().equals(loginId.trim())) {
-            throw new BusinessException("입력한 정보와 일치하는 회원이 없습니다.");
+            throw new BusinessException(NO_MATCHING_MEMBER);
         }
         // 관리자 계정은 이름/전화번호만으로 비밀번호를 바꿀 수 없게 막는다
         if (member.isAdmin()) {
@@ -155,12 +173,8 @@ public class MemberService {
 
     // 비밀번호 찾기 2단계 : 본인 확인을 통과한 회원의 비밀번호를 새로 정한다
     public void resetPassword(Long memberId, String newPassword, String newPasswordConfirm) {
-        Member member = findById(memberId);
-        if (member == null) {
-            throw new NotFoundException("회원을 찾을 수 없습니다.");
-        }
-        MemberValidator.validatePassword(newPassword, newPasswordConfirm, member.getLoginId());
-        member.setPassword(passwordEncoder.encode(newPassword));
+        Member member = getMember(memberId);
+        setNewPassword(member, newPassword, newPasswordConfirm);
     }
 
     // 이름 + 전화번호로 회원 찾기 (없으면 예외)
@@ -168,8 +182,7 @@ public class MemberService {
         MemberValidator.validateName(name);
         Member member = memberRepository.findByPhone(MemberValidator.normalizePhone(phone));
         if (member == null || !member.getName().equals(name.trim())) {
-            // 이름이 틀렸는지 전화번호가 틀렸는지는 알려 주지 않는다 (남의 정보를 알아내는 데 쓰이지 않도록)
-            throw new BusinessException("입력한 정보와 일치하는 회원이 없습니다.");
+            throw new BusinessException(NO_MATCHING_MEMBER);
         }
         return member;
     }
@@ -177,40 +190,24 @@ public class MemberService {
     // 아이디 가리기 : 앞쪽 절반만 보여 주고 나머지는 * 로 바꾼다 (최소 2글자는 보여 준다)
     // 예) goldstar → gold****, admin → ad***, test → te**
     private String maskLoginId(String loginId) {
-        int visible = Math.max(2, loginId.length() / 2);
-        return loginId.substring(0, visible) + "*".repeat(loginId.length() - visible);
+        int visible = Math.max(MIN_VISIBLE_LOGIN_ID, loginId.length() / 2);
+        int hidden = loginId.length() - visible;
+        return loginId.substring(0, visible) + "*".repeat(hidden);
     }
 
-    // 비밀번호 변경 : 현재 비밀번호가 맞아야 바꿀 수 있다
-    public void changePassword(Long memberId, String currentPassword, String newPassword, String newPasswordConfirm) {
-        Member member = findById(memberId);
-        if (!passwordEncoder.matches(currentPassword, member.getPassword())) {
-            throw new BusinessException("현재 비밀번호가 올바르지 않습니다.");
-        }
-        MemberValidator.validatePassword(newPassword, newPasswordConfirm, member.getLoginId());
-        member.setPassword(passwordEncoder.encode(newPassword));
-    }
+    // ===== (관리자) 회원 목록 / 검색 / 삭제 =====
 
-    // 회원 탈퇴 : 본인 확인(비밀번호) 후 회원 삭제
-    public void withdraw(Long memberId, String password) {
-        Member member = findById(memberId);
-        if (!passwordEncoder.matches(password, member.getPassword())) {
-            throw new BusinessException("비밀번호가 올바르지 않습니다.");
-        }
-        deleteMember(memberId);
-    }
-
-    // (관리자) 전체 회원 목록
+    // 전체 회원 목록
     @Transactional(readOnly = true)
     public List<Member> findAllMembers() {
         return memberRepository.findAll();
     }
 
-    // (관리자) 회원 검색 : 검색 기준(type)에 따라 일부만 맞아도 찾는다
-    //   all   : 이름, 아이디, 전화번호 중 하나라도 맞으면
-    //   name  : 이름
+    // 회원 검색 : 검색 기준(type)에 따라 일부만 맞아도 찾는다 (회원번호 순)
+    //   all     : 이름, 아이디, 전화번호 중 하나라도 맞으면
+    //   name    : 이름
     //   loginId : 아이디
-    //   phone : 전화번호 (숫자만 뽑아서 비교, 숫자가 하나도 없으면 결과 없음)
+    //   phone   : 전화번호 (숫자만 뽑아서 비교, 숫자가 하나도 없으면 결과 없음)
     // 검색어가 비어 있으면 전체 목록
     @Transactional(readOnly = true)
     public List<Member> searchMembers(String type, String keyword) {
@@ -219,6 +216,7 @@ public class MemberService {
             return memberRepository.findAll(Sort.by("id"));
         }
         String text = keyword.trim();
+        // 전화번호는 010-1234-5678 처럼 하이픈을 넣어 검색해도 찾을 수 있게 숫자만 뽑는다
         String digits = text.replaceAll("[^0-9]", "");
 
         if ("name".equals(type)) {
@@ -239,10 +237,7 @@ public class MemberService {
     // 회원 삭제 : 회원 탈퇴와 관리자의 회원 삭제가 함께 쓴다
     // 관리자 계정이거나, 배송이 끝나지 않은 주문이 있으면 삭제할 수 없다
     public void deleteMember(Long memberId) {
-        Member member = findById(memberId);
-        if (member == null) {
-            throw new NotFoundException("회원을 찾을 수 없습니다.");
-        }
+        Member member = getMember(memberId);
         if (member.isAdmin()) {
             throw new BusinessException("관리자 계정은 삭제할 수 없습니다.");
         }
@@ -264,5 +259,36 @@ public class MemberService {
 
         // 3) 마지막으로 회원 삭제
         memberRepository.delete(member);
+    }
+
+    // ===== 도우미 =====
+
+    // 회원 1명 조회 (없으면 "회원을 찾을 수 없습니다." 예외)
+    private Member getMember(Long memberId) {
+        Member member = findById(memberId);
+        if (member == null) {
+            throw new NotFoundException("회원을 찾을 수 없습니다.");
+        }
+        return member;
+    }
+
+    // 입력한 비밀번호가 회원의 (암호화된) 비밀번호와 맞는지
+    private boolean passwordMatches(String rawPassword, Member member) {
+        return passwordEncoder.matches(rawPassword, member.getPassword());
+    }
+
+    // 새 비밀번호 규칙을 검사하고 암호화해서 저장한다 (비밀번호 변경, 비밀번호 찾기가 함께 쓴다)
+    private void setNewPassword(Member member, String newPassword, String newPasswordConfirm) {
+        MemberValidator.validatePassword(newPassword, newPasswordConfirm, member.getLoginId());
+        member.setPassword(passwordEncoder.encode(newPassword));
+    }
+
+    // 전화번호 중복 검사 : 다른 회원이 이미 쓰는 번호면 예외
+    // myId : 정보 수정일 때 내 회원 번호 (회원가입일 때는 null)
+    private void checkDuplicatePhone(String phone, Long myId) {
+        Member found = memberRepository.findByPhone(phone);
+        if (found != null && !found.getId().equals(myId)) {
+            throw new BusinessException("이미 가입된 전화번호입니다.");
+        }
     }
 }
