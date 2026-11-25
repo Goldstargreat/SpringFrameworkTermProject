@@ -24,6 +24,10 @@ import java.util.Map;
 @Transactional
 public class GradeService {
 
+    // 누적 구매액에 넣는 주문 상태 : 배송완료, 반품신청(아직 확정 전)
+    private static final List<ShippingStatus> PURCHASED_STATUSES =
+            List.of(ShippingStatus.DELIVERED, ShippingStatus.RETURN_REQUESTED);
+
     private final MemberRepository memberRepository;
     private final OrderRepository orderRepository;
 
@@ -32,11 +36,9 @@ public class GradeService {
         this.orderRepository = orderRepository;
     }
 
-    // 누적 구매액에 넣는 주문 상태 : 배송완료, 반품신청(아직 확정 전)
-    private static final List<ShippingStatus> PURCHASED_STATUSES =
-            List.of(ShippingStatus.DELIVERED, ShippingStatus.RETURN_REQUESTED);
+    // ===== 누적 구매액 =====
 
-    // 한 회원의 누적 구매액 (배송완료 주문의 결제 금액 합계)
+    // 한 회원의 누적 구매액 (배송완료 + 반품신청 중인 주문의 결제 금액 합계)
     @Transactional(readOnly = true)
     public long totalPurchase(Member member) {
         return orderRepository.sumTotalPriceByMemberAndStatusIn(member, PURCHASED_STATUSES);
@@ -44,15 +46,25 @@ public class GradeService {
 
     // 다음 등급까지 남은 금액 (가장 높은 등급이면 0)
     @Transactional(readOnly = true)
-    public long remainingToNextGrade(Member member)
-    {
+    public long remainingToNextGrade(Member member) {
         MemberGrade next = member.getGrade().getNext();
-        if (next == null)
-        {
+        if (next == null) {
             return 0;
         }
         return Math.max(0, next.getMinAmount() - totalPurchase(member));
     }
+
+    // (관리자) 회원 번호 → 누적 구매액 (회원관리 목록에 보여 주기 위해)
+    @Transactional(readOnly = true)
+    public Map<Long, Long> totalPurchaseByMember() {
+        Map<Long, Long> result = new HashMap<>();
+        for (Member member : memberRepository.findAll()) {
+            result.put(member.getId(), totalPurchase(member));
+        }
+        return result;
+    }
+
+    // ===== 등급 다시 정하기 =====
 
     // 한 회원의 등급을 누적 구매액에 맞게 다시 정한다 (관리자 계정은 그대로)
     // 주문이 배송완료되거나 반품이 승인될 때 OrderService 가 부른다
@@ -69,16 +81,5 @@ public class GradeService {
         for (Member member : memberRepository.findAll()) {
             refreshGrade(member);
         }
-    }
-
-
-    // (관리자) 회원 번호 → 누적 구매액 (회원관리 목록에 보여 주기 위해)
-    @Transactional(readOnly = true)
-    public Map<Long, Long> totalPurchaseByMember() {
-        Map<Long, Long> result = new HashMap<>();
-        for (Member member : memberRepository.findAll()) {
-            result.put(member.getId(), totalPurchase(member));
-        }
-        return result;
     }
 }
