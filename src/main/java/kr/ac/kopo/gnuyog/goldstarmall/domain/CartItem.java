@@ -42,31 +42,31 @@ public class CartItem {
     public CartItem() {
     }
 
+    // ===== 금액 / 재고 =====
+
     // 이 항목의 금액 = 오늘 판매 가격(오늘의 할인 적용) x 수량 (화면에서 cartItem.totalPrice 로 사용)
-    public int getTotalPrice()
-    {
+    public int getTotalPrice() {
         return product.getSalePrice() * quantity;
     }
 
     // 담을 수 있는 재고 : 옵션을 골랐으면 그 옵션의 재고, 아니면 상품 재고
     public int getAvailableStock() {
-        return option != null ? option.getStock() : product.getStock();
+        if (option != null) {
+            return option.getStock();
+        }
+        return product.getStock();
     }
 
-    // 재고가 부족할 때 보여 줄 문구
+    // 재고가 부족할 때 보여 줄 문구 : 옵션을 골랐으면 그 옵션의 문구, 아니면 상품의 문구
     public String getStockShortageMessage() {
-        return option != null ? option.getStockShortageMessage() : product.getStockShortageMessage();
-    }
-
-    public ProductOption getOption() {
-        return option;
-    }
-
-    public void setOption(ProductOption option) {
-        this.option = option;
+        if (option != null) {
+            return option.getStockShortageMessage();
+        }
+        return product.getStockShortageMessage();
     }
 
     // ===== getter / setter =====
+
     public Long getId() {
         return id;
     }
@@ -97,5 +97,13 @@ public class CartItem {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public ProductOption getOption() {
+        return option;
+    }
+
+    public void setOption(ProductOption option) {
+        this.option = option;
     }
 }
