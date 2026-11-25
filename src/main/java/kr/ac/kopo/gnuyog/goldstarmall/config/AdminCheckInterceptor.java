@@ -1,9 +1,9 @@
 package kr.ac.kopo.gnuyog.goldstarmall.config;
 
-import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
