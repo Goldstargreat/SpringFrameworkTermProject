@@ -407,6 +407,24 @@ ORDER BY o.seq;
 UPDATE products SET stock = (SELECT SUM(o.stock) FROM product_options o WHERE o.product_id = products.id)
 WHERE name = '기모 후드티';
 
+-- ===== 상품 옵션 : 데님 일자 청바지 (색상은 하나, 허리 사이즈 5가지, 가격은 모두 같다) =====
+-- 많이 팔리는 30, 32 사이즈에 재고를 더 많이 둔다
+INSERT INTO product_options (product_id, name, stock)
+SELECT p.id, o.name, o.stock
+FROM products p
+JOIN (
+    SELECT 1 AS seq, '28인치' AS name, 5 AS stock UNION ALL
+    SELECT 2, '30인치', 9 UNION ALL
+    SELECT 3, '32인치', 9 UNION ALL
+    SELECT 4, '34인치', 7 UNION ALL
+    SELECT 5, '36인치', 5
+) o
+WHERE p.name = '데님 일자 청바지'
+ORDER BY o.seq;
+-- 상품 재고 = 옵션 재고 합계 (5 + 9 + 9 + 7 + 5 = 35)
+UPDATE products SET stock = (SELECT SUM(o.stock) FROM product_options o WHERE o.product_id = products.id)
+WHERE name = '데님 일자 청바지';
+
 -- 확인
 SELECT * FROM products;
 SELECT * FROM product_options;
