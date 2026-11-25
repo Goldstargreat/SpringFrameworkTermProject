@@ -352,6 +352,31 @@ ORDER BY o.seq;
 UPDATE products SET stock = (SELECT SUM(o.stock) FROM product_options o WHERE o.product_id = products.id)
 WHERE name = '기능성 티셔츠';
 
+-- ===== 상품 옵션 : 오버핏 맨투맨 (색상 3가지 x 사이즈 4가지 = 12가지, 가격은 모두 같다) =====
+-- 많이 팔리는 M, L 사이즈에 재고를 더 많이 둔다
+INSERT INTO product_options (product_id, name, stock)
+SELECT p.id, o.name, o.stock
+FROM products p
+JOIN (
+    SELECT 1 AS seq, '그레이 / S' AS name, 3 AS stock UNION ALL
+    SELECT 2, '그레이 / M', 5 UNION ALL
+    SELECT 3, '그레이 / L', 5 UNION ALL
+    SELECT 4, '그레이 / XL', 3 UNION ALL
+    SELECT 5, '블랙 / S', 3 UNION ALL
+    SELECT 6, '블랙 / M', 4 UNION ALL
+    SELECT 7, '블랙 / L', 4 UNION ALL
+    SELECT 8, '블랙 / XL', 3 UNION ALL
+    SELECT 9, '아이보리 / S', 2 UNION ALL
+    SELECT 10, '아이보리 / M', 3 UNION ALL
+    SELECT 11, '아이보리 / L', 3 UNION ALL
+    SELECT 12, '아이보리 / XL', 2
+) o
+WHERE p.name = '오버핏 맨투맨'
+ORDER BY o.seq;
+-- 상품 재고 = 옵션 재고 합계 (16 + 14 + 10 = 40)
+UPDATE products SET stock = (SELECT SUM(o.stock) FROM product_options o WHERE o.product_id = products.id)
+WHERE name = '오버핏 맨투맨';
+
 -- 확인
 SELECT * FROM products;
 SELECT * FROM product_options;

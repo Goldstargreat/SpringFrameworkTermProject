@@ -102,9 +102,11 @@ INSERT INTO order_items (order_id, product_id, order_price, quantity) VALUES
 INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, status, total_price, ordered_at, discount_amount, order_grade) VALUES
 ((SELECT id FROM members WHERE login_id = 'lee03'), '이민수', '010-4567-8901', '부산광역시 해운대구 해운대로 570', 'ORDER_RECEIVED', 69549, '2026-11-24 08:15:00.000000', 2151, 'SILVER');
 SET @order_id = LAST_INSERT_ID();
-INSERT INTO order_items (order_id, product_id, order_price, quantity) VALUES
-(@order_id, (SELECT id FROM products WHERE name = '오버핏 맨투맨'), 24900, 2),
-(@order_id, (SELECT id FROM products WHERE name = '요가 매트 10mm'), 21900, 1);
+-- 맨투맨은 옵션 상품이라 옵션(블랙 / L)도 함께 넣는다
+INSERT INTO order_items (order_id, product_id, option_id, order_price, quantity) VALUES
+(@order_id, (SELECT id FROM products WHERE name = '오버핏 맨투맨'),
+ (SELECT o.id FROM product_options o JOIN products p ON p.id = o.product_id WHERE p.name = '오버핏 맨투맨' AND o.name = '블랙 / L'), 24900, 2),
+(@order_id, (SELECT id FROM products WHERE name = '요가 매트 10mm'), NULL, 21900, 1);
 
 -- [주문접수] hong07 : 특란 30구 x2, 스테인리스 프라이팬 28cm x1
 INSERT INTO orders (member_id, receiver_name, receiver_phone, shipping_address, status, total_price, ordered_at) VALUES
@@ -162,6 +164,16 @@ JOIN (SELECT oi.product_id, SUM(oi.quantity) AS qty
       WHERE m.login_id IN ('hong01','kim02','lee03','park04','choi05','jung06','hong07') AND o.status NOT IN ('CANCELED', 'REJECTED')
       GROUP BY oi.product_id) d ON d.product_id = p.id
 SET p.stock = p.stock - d.qty;
+-- 옵션 상품은 옵션 재고도 함께 줄인다 (상품 재고 = 옵션 재고 합계를 유지)
+UPDATE product_options po
+JOIN (SELECT oi.option_id, SUM(oi.quantity) AS qty
+      FROM order_items oi
+      JOIN orders o ON o.id = oi.order_id
+      JOIN members m ON m.id = o.member_id
+      WHERE oi.option_id IS NOT NULL
+        AND m.login_id IN ('hong01','kim02','lee03','park04','choi05','jung06','hong07') AND o.status NOT IN ('CANCELED', 'REJECTED')
+      GROUP BY oi.option_id) d ON d.option_id = po.id
+SET po.stock = po.stock - d.qty;
 
 -- ===== 상품평 : 배송완료된 주문의 상품에만 쓸 수 있으므로, 배송완료 주문(hong01, kim02, lee03)의 상품에 단다 =====
 -- (reviews, inquiries 테이블은 앱을 한 번 실행하면 JPA 가 만들어 준다)
