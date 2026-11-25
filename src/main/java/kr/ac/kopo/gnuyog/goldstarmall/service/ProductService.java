@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -121,16 +122,18 @@ public class ProductService {
         return productRepository.findTop8ByCreatedAtGreaterThanEqualOrderByCreatedAtDescIdDesc(since);
     }
 
-    // 로켓 배송 상품 : 관리자가 로켓 배송을 켠 상품 중 재고가 있는 것 (최근 등록 순)
+    // 로켓 배송 상품 : 관리자가 로켓 배송을 켠 상품 중 재고가 있는 것 (무작위 8개)
     public List<Product> findFastDeliveryProducts() {
         List<Product> result = new ArrayList<>();
-        for (Product p : productRepository.findAll(Sort.by(Sort.Direction.DESC, "id"))) {
+        for (Product p : productRepository.findAll()) {
             if (p.isShowFastDelivery()) {
                 result.add(p);
-                if (result.size() == HOME_SECTION_SIZE) {
-                    break;
-                }
             }
+        }
+        // 홈 화면을 열 때마다 다른 상품이 보이도록 순서를 섞은 뒤 앞에서 8개만 보여 준다
+        Collections.shuffle(result);
+        if (result.size() > HOME_SECTION_SIZE) {
+            return new ArrayList<>(result.subList(0, HOME_SECTION_SIZE));
         }
         return result;
     }
