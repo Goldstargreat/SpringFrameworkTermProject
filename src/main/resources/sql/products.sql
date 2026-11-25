@@ -307,6 +307,11 @@ INSERT INTO products (name, category, price, stock, description, icon, manufactu
 INSERT INTO products (name, category, price, stock, description, icon, manufacturer, origin, fast_delivery) VALUES
 ('아보카도 인형', '완구/취미', 5000, 30, '말랑하고 포근한 촉감의 귀여운 아보카도 봉제 인형입니다.', '🥑', '다이소', '중국', 1);
 
+-- 추가 상품 : 패션의류 기모 후드티 (맨 끝에 넣어 앞 상품들의 번호(id)가 밀리지 않게 한다, 158번)
+-- 재고는 아래 옵션 재고의 합계로 다시 맞춘다
+INSERT INTO products (name, category, price, stock, description, icon, manufacturer, origin, fast_delivery) VALUES
+('기모 후드티', '패션의류', 29900, 40, '안쪽에 부드러운 기모를 넣어 따뜻하고, 넉넉한 모자와 앞주머니가 있는 후드티입니다.', '🧥', '골드스타 PB', '베트남', 1);
+
 -- 로켓 배송 : 처음에는 모든 상품을 로켓 배송으로 해 둔다 (관리자가 상품관리 화면에서 상품마다 켜고 끈다)
 UPDATE products SET fast_delivery = 1;
 -- 예외 : 고가/대형 상품은 로켓 배송을 하지 않는다
@@ -376,6 +381,31 @@ ORDER BY o.seq;
 -- 상품 재고 = 옵션 재고 합계 (16 + 14 + 10 = 40)
 UPDATE products SET stock = (SELECT SUM(o.stock) FROM product_options o WHERE o.product_id = products.id)
 WHERE name = '오버핏 맨투맨';
+
+-- ===== 상품 옵션 : 기모 후드티 (색상 3가지 x 사이즈 4가지 = 12가지, 가격은 모두 같다) =====
+-- 많이 팔리는 M, L 사이즈에 재고를 더 많이 둔다
+INSERT INTO product_options (product_id, name, stock)
+SELECT p.id, o.name, o.stock
+FROM products p
+JOIN (
+    SELECT 1 AS seq, '멜란지 그레이 / S' AS name, 3 AS stock UNION ALL
+    SELECT 2, '멜란지 그레이 / M', 5 UNION ALL
+    SELECT 3, '멜란지 그레이 / L', 5 UNION ALL
+    SELECT 4, '멜란지 그레이 / XL', 3 UNION ALL
+    SELECT 5, '블랙 / S', 3 UNION ALL
+    SELECT 6, '블랙 / M', 4 UNION ALL
+    SELECT 7, '블랙 / L', 4 UNION ALL
+    SELECT 8, '블랙 / XL', 3 UNION ALL
+    SELECT 9, '네이비 / S', 2 UNION ALL
+    SELECT 10, '네이비 / M', 3 UNION ALL
+    SELECT 11, '네이비 / L', 3 UNION ALL
+    SELECT 12, '네이비 / XL', 2
+) o
+WHERE p.name = '기모 후드티'
+ORDER BY o.seq;
+-- 상품 재고 = 옵션 재고 합계 (16 + 14 + 10 = 40)
+UPDATE products SET stock = (SELECT SUM(o.stock) FROM product_options o WHERE o.product_id = products.id)
+WHERE name = '기모 후드티';
 
 -- 확인
 SELECT * FROM products;
