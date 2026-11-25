@@ -1,9 +1,9 @@
 package kr.ac.kopo.gnuyog.goldstarmall.controller;
 
+import jakarta.servlet.http.HttpSession;
 import kr.ac.kopo.gnuyog.goldstarmall.config.SessionConst;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.service.NotificationService;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
@@ -22,10 +22,13 @@ public class MemberNoticeAdvice {
     // 확인하지 않은 알림 개수 (로그인하지 않았거나 관리자면 null)
     @ModelAttribute("myNoticeCount")
     public Long myNoticeCount(HttpSession session) {
+        // 로그인하지 않았거나 관리자면 보여 줄 것이 없다
         Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
-        if (memberId == null || Member.ROLE_ADMIN.equals(session.getAttribute(SessionConst.LOGIN_MEMBER_ROLE))) {
+        boolean admin = Member.ROLE_ADMIN.equals(session.getAttribute(SessionConst.LOGIN_MEMBER_ROLE));
+        if (memberId == null || admin) {
             return null;
         }
+
         return notificationService.countUnread(memberId);
     }
 }
