@@ -1,5 +1,7 @@
 package kr.ac.kopo.gnuyog.goldstarmall.service;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.CartItem;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Order;
@@ -19,11 +21,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 // 주문 서비스 : 주문 생성, 조회, 취소, 반품, (관리자) 주문 거절 / 배송 상태 변경 / 검색 / 주문번호 / 삭제
 // 클래스에 @Transactional 이 붙어 있어서, 메서드 하나가 끝날 때까지 한 묶음으로 처리된다
 // (중간에 오류가 나면 그 메서드에서 한 작업이 모두 취소(rollback)된다)
+// 재고를 읽고 고칠 때는 상품을 잠근다(lockStock) : 여러 사람이 동시에 주문해도 재고보다 많이 팔리지 않는다
 @Service
 @Transactional
 public class OrderService {
@@ -47,18 +51,23 @@ public class OrderService {
     private final GradeService gradeService;
     private final ProductService productService;
 
+    // 상품을 잠글 때 쓴다 (JPA 가 엔티티를 관리하는 도구)
+    private final EntityManager entityManager;
+
     public OrderService(OrderRepository orderRepository,
                         CartItemRepository cartItemRepository,
                         MemberRepository memberRepository,
                         ProductRepository productRepository,
                         GradeService gradeService,
-                        ProductService productService) {
+                        ProductService productService,
+                        EntityManager entityManager) {
         this.orderRepository = orderRepository;
         this.cartItemRepository = cartItemRepository;
         this.memberRepository = memberRepository;
         this.productRepository = productRepository;
         this.gradeService = gradeService;
         this.productService = productService;
+        this.entityManager = entityManager;
     }
 
     // ===== 주문하기 =====
@@ -77,7 +86,18 @@ public class OrderService {
         // 2) 주문 만들기
         Order order = newOrder(member, receiverName, receiverPhone, shippingAddress);
 
-        // 3) 장바구니 항목을 하나씩 주문 상품으로 옮기면서 재고를 줄인다
+        // 3) 담긴 상품들을 잠그고 최신 재고를 다시 읽는다 (동시에 들어온 다른 주문은 여기서 기다린다)
+        List<Product> products = new ArrayList<>();
+        List<ProductOption> options = new ArrayList<>();
+        for (CartItem cartItem : cartItems) {
+            products.add(cartItem.getProduct());
+            if (cartItem.getOption() != null) {
+                options.add(cartItem.getOption());
+            }
+        }
+        lockStock(products, options);
+
+        // 4) 장바구니 항목을 하나씩 주문 상품으로 옮기면서 재고를 줄인다
         int totalPrice = 0;
         for (CartItem cartItem : cartItems) {
             Product product = cartItem.getProduct();
@@ -99,13 +119,13 @@ public class OrderService {
             totalPrice = totalPrice + orderItem.getTotalPrice();
         }
 
-        // 4) 상품 금액 합계에서 등급 할인을 뺀 금액이 결제 금액이다
+        // 5) 상품 금액 합계에서 등급 할인을 뺀 금액이 결제 금액이다
         applyGradeDiscount(order, member, totalPrice);
 
-        // 5) 저장하고 주문번호 붙이기 (cascade 설정으로 주문 상품들도 함께 저장된다)
+        // 6) 저장하고 주문번호 붙이기 (cascade 설정으로 주문 상품들도 함께 저장된다)
         saveWithOrderNumber(order);
 
-        // 6) 주문이 끝났으니 장바구니 비우기
+        // 7) 주문이 끝났으니 장바구니 비우기
         cartItemRepository.deleteAll(cartItems);
         return order;
     }
@@ -120,8 +140,13 @@ public class OrderService {
             throw new NotFoundException("상품을 찾을 수 없습니다.");
         }
 
-        // 1) 옵션, 수량, 재고 확인
+        // 1) 옵션을 고르고, 상품을 잠근 뒤 최신 재고로 수량 확인
         ProductOption option = productService.resolveOption(product, optionId);
+        List<ProductOption> options = new ArrayList<>();
+        if (option != null) {
+            options.add(option);
+        }
+        lockStock(List.of(product), options);
         checkDirectOrderQuantity(product, option, quantity);
 
         // 2) 재고 줄이기
@@ -179,6 +204,31 @@ public class OrderService {
         orderItem.setOrderPrice(product.getSalePrice());
         orderItem.setQuantity(quantity);
         return orderItem;
+    }
+
+    // 재고 잠그기 : 주문/환불이 끝날 때까지 이 상품들의 DB 행을 잠그고(SELECT ... FOR UPDATE), 최신 재고를 다시 읽는다
+    // - 다른 요청이 같은 상품을 잠그려고 하면, 앞의 주문이 끝날(commit) 때까지 기다린다
+    //   그래서 재고 1개 남은 상품에 두 사람이 동시에 주문해도, 뒤 사람은 재고 0 을 보고 "재고 부족"이 된다
+    // - 다시 읽는 이유 : 잠그기 전에 읽어 둔 재고는 그사이 다른 주문이 바꿨을 수 있다
+    // - 항상 상품 번호 순서로, 상품 → 옵션 순서로 잠근다
+    //   (A 는 1번 → 2번, B 는 2번 → 1번 순서로 잠그면 서로를 영원히 기다리는 교착 상태(deadlock)가 생긴다)
+    // - 같은 상품이 여러 번 들어 있어도(옵션만 다른 장바구니 항목) 한 번만 잠근다 (distinct)
+    private void lockStock(List<Product> products, List<ProductOption> options) {
+        List<Product> sortedProducts = products.stream()
+                .distinct()
+                .sorted(Comparator.comparing(Product::getId))
+                .toList();
+        for (Product product : sortedProducts) {
+            entityManager.refresh(product, LockModeType.PESSIMISTIC_WRITE);
+        }
+
+        List<ProductOption> sortedOptions = options.stream()
+                .distinct()
+                .sorted(Comparator.comparing(ProductOption::getId))
+                .toList();
+        for (ProductOption option : sortedOptions) {
+            entityManager.refresh(option, LockModeType.PESSIMISTIC_WRITE);
+        }
     }
 
     // 재고 줄이기 : 옵션이 있으면 옵션 재고도 함께 줄인다 (상품 재고 = 옵션 재고의 합계를 유지)
@@ -306,6 +356,17 @@ public class OrderService {
     // 환불 처리 : 주문취소, 주문거절, 반품승인이 함께 쓴다. 환불한 금액을 돌려준다
     // 1) 줄였던 재고를 다시 돌려놓고  2) 결제 금액 전체를 환불 기록으로 남기고  3) 상태를 바꾼다
     private int refund(Order order, ShippingStatus newStatus) {
+        // 재고를 돌려놓는 동안 같은 상품의 주문이 끼어들지 못하게 잠근다
+        List<Product> products = new ArrayList<>();
+        List<ProductOption> options = new ArrayList<>();
+        for (OrderItem orderItem : order.getOrderItems()) {
+            products.add(orderItem.getProduct());
+            if (orderItem.getOption() != null) {
+                options.add(orderItem.getOption());
+            }
+        }
+        lockStock(products, options);
+
         for (OrderItem orderItem : order.getOrderItems()) {
             Product product = orderItem.getProduct();
             product.setStock(product.getStock() + orderItem.getQuantity());
