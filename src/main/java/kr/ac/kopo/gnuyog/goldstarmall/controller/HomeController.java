@@ -3,6 +3,7 @@ package kr.ac.kopo.gnuyog.goldstarmall.controller;
 import jakarta.servlet.http.HttpSession;
 import kr.ac.kopo.gnuyog.goldstarmall.config.SessionConst;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.DailyDeal;
+import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
 import kr.ac.kopo.gnuyog.goldstarmall.service.InquiryService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.ProductService;
@@ -188,7 +189,7 @@ public class HomeController {
 
         // 로그인한 회원 정보 (상품평/문의의 삭제 버튼, 관리자 답변 폼을 보여 줄지 정한다)
         Long loginMemberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
-        boolean isAdmin = "ADMIN".equals(session.getAttribute(SessionConst.LOGIN_MEMBER_ROLE));
+        boolean isAdmin = Member.ROLE_ADMIN.equals(session.getAttribute(SessionConst.LOGIN_MEMBER_ROLE));
         model.addAttribute("loginMemberId", loginMemberId);
         model.addAttribute("isAdmin", isAdmin);
 

@@ -59,7 +59,7 @@ public class InquiryService {
         if (member == null) {
             throw new NotFoundException("회원 정보를 찾을 수 없습니다.");
         }
-        if ("ADMIN".equals(member.getRole())) {
+        if (member.isAdmin()) {
             throw new BusinessException("관리자는 상품문의를 쓸 수 없습니다. 회원의 문의에 답변해 주세요.");
         }
         Product product = productRepository.findById(productId).orElse(null);

@@ -43,7 +43,7 @@ public class DataInitializer implements CommandLineRunner
             admin.setName("관리자");
             admin.setPhone("010-0000-0000");
             admin.setAddress("GoldstarMall");
-            admin.setRole("ADMIN");
+            admin.setRole(Member.ROLE_ADMIN);
             admin.setCreatedAt(LocalDateTime.now());
             memberRepository.save(admin);
         }

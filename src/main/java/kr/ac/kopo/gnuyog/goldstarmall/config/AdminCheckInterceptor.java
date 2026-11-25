@@ -1,5 +1,6 @@
 package kr.ac.kopo.gnuyog.goldstarmall.config;
 
+import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -20,7 +21,7 @@ public class AdminCheckInterceptor implements HandlerInterceptor {
             role = (String) session.getAttribute(SessionConst.LOGIN_MEMBER_ROLE);
         }
 
-        if (!"ADMIN".equals(role)) {
+        if (!Member.ROLE_ADMIN.equals(role)) {
             // 관리자가 아니면 메인 화면으로 돌려보낸다
             response.sendRedirect("/");
             return false;

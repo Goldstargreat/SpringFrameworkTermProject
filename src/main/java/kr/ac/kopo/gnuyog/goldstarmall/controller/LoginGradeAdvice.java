@@ -25,7 +25,7 @@ public class LoginGradeAdvice {
     @ModelAttribute("loginMemberGrade")
     public MemberGrade loginMemberGrade(HttpSession session) {
         Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
-        if (memberId == null || "ADMIN".equals(session.getAttribute(SessionConst.LOGIN_MEMBER_ROLE))) {
+        if (memberId == null || Member.ROLE_ADMIN.equals(session.getAttribute(SessionConst.LOGIN_MEMBER_ROLE))) {
             return null;
         }
         Member member = memberService.findById(memberId);

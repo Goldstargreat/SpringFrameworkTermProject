@@ -10,7 +10,7 @@ public class SessionConst {
     // 로그인한 회원의 이름 (화면 상단에 "OOO님" 표시용)
     public static final String LOGIN_MEMBER_NAME = "loginMemberName";
 
-    // 로그인한 회원의 권한 ("USER" 또는 "ADMIN")
+    // 로그인한 회원의 권한 (Member.ROLE_USER 또는 Member.ROLE_ADMIN)
     public static final String LOGIN_MEMBER_ROLE = "loginMemberRole";
 
     // 비밀번호 찾기에서 본인 확인을 통과한 회원의 번호 (새 비밀번호를 정하면 지운다)

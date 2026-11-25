@@ -1,6 +1,7 @@
 package kr.ac.kopo.gnuyog.goldstarmall.controller;
 
 import kr.ac.kopo.gnuyog.goldstarmall.config.SessionConst;
+import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
 import kr.ac.kopo.gnuyog.goldstarmall.service.InquiryService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.ReviewService;
@@ -136,6 +137,6 @@ public class ProductBoardController {
     }
 
     private boolean isAdmin(HttpSession session) {
-        return "ADMIN".equals(session.getAttribute(SessionConst.LOGIN_MEMBER_ROLE));
+        return Member.ROLE_ADMIN.equals(session.getAttribute(SessionConst.LOGIN_MEMBER_ROLE));
     }
 }

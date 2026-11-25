@@ -1,5 +1,6 @@
 package kr.ac.kopo.gnuyog.goldstarmall.config;
 
+import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -21,7 +22,7 @@ public class CustomerOnlyInterceptor implements HandlerInterceptor {
             role = (String) session.getAttribute(SessionConst.LOGIN_MEMBER_ROLE);
         }
 
-        if ("ADMIN".equals(role)) {
+        if (Member.ROLE_ADMIN.equals(role)) {
             response.sendRedirect("/admin/orders");
             return false;
         }

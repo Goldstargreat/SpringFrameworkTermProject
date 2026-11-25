@@ -57,7 +57,7 @@ public class GradeService {
     // 한 회원의 등급을 누적 구매액에 맞게 다시 정한다 (관리자 계정은 그대로)
     // 주문이 배송완료되거나 반품이 승인될 때 OrderService 가 부른다
     public void refreshGrade(Member member) {
-        if ("ADMIN".equals(member.getRole())) {
+        if (member.isAdmin()) {
             return;
         }
         member.setGrade(MemberGrade.fromAmount(totalPurchase(member)));

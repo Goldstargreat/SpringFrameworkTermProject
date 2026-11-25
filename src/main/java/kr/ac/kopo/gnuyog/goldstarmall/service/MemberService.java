@@ -65,7 +65,7 @@ public class MemberService {
         member.setName(name);
         member.setPhone(phone);
         member.setAddress(address);
-        member.setRole("USER");
+        member.setRole(Member.ROLE_USER);
         member.setCreatedAt(LocalDateTime.now());
 
         // 4) DB에 저장 (insert into members ...)
@@ -109,7 +109,7 @@ public class MemberService {
         checkDuplicatePhone(phone, memberId);
         Member member = findById(memberId);
         // 일반 회원은 "관리자" 같은 이름으로 바꿀 수 없다 (관리자 계정은 원래 이름이 "관리자"라서 검사하지 않는다)
-        if (!"ADMIN".equals(member.getRole())) {
+        if (!member.isAdmin()) {
             MemberValidator.checkReservedName(name);
         }
         // 트랜잭션 안에서 값을 바꾸면 JPA 가 알아서 update SQL 을 실행한다 (변경 감지)
@@ -147,7 +147,7 @@ public class MemberService {
             throw new BusinessException("입력한 정보와 일치하는 회원이 없습니다.");
         }
         // 관리자 계정은 이름/전화번호만으로 비밀번호를 바꿀 수 없게 막는다
-        if ("ADMIN".equals(member.getRole())) {
+        if (member.isAdmin()) {
             throw new BusinessException("관리자 계정은 비밀번호 찾기를 이용할 수 없습니다.");
         }
         return member.getId();
@@ -243,7 +243,7 @@ public class MemberService {
         if (member == null) {
             throw new NotFoundException("회원을 찾을 수 없습니다.");
         }
-        if ("ADMIN".equals(member.getRole())) {
+        if (member.isAdmin()) {
             throw new BusinessException("관리자 계정은 삭제할 수 없습니다.");
         }
 

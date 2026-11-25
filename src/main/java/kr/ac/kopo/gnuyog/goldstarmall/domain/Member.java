@@ -14,8 +14,12 @@ import java.time.LocalDateTime;
 // 회원 엔티티 : members 테이블과 1:1로 연결되는 클래스
 @Entity
 @Table(name = "members")
-public class Member
-{
+public class Member {
+
+    // 권한 값 : role 칸에 저장되는 글자 (오타가 나지 않도록 상수로 쓴다)
+    public static final String ROLE_USER = "USER";     // 일반 회원
+    public static final String ROLE_ADMIN = "ADMIN";   // 관리자
+
     // 기본키(PK). MySQL의 AUTO_INCREMENT 로 번호가 자동 증가한다
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,7 +50,7 @@ public class Member
     @Column(length = 200)
     private String secondAddress;
 
-    // 권한 : "USER"(일반 회원) 또는 "ADMIN"(관리자)
+    // 권한 : ROLE_USER(일반 회원) 또는 ROLE_ADMIN(관리자)
     @Column(nullable = false, length = 10)
     private String role;
 
@@ -60,13 +64,42 @@ public class Member
     @Column(length = 10)
     private MemberGrade grade;
 
-
     // JPA 는 기본 생성자가 반드시 필요하다
-    public Member()
-    {
+    public Member() {
+    }
+
+    // ===== 화면/업무에서 쓰는 메서드 =====
+
+    // 관리자인지
+    public boolean isAdmin() {
+        return ROLE_ADMIN.equals(role);
+    }
+
+    // 가린 이름 : 상품평/상품문의에 글쓴이를 보여 줄 때 쓴다 (예: 홍길동 → 홍*동, 김철 → 김*)
+    // 한 글자 이하는 그대로 보여 준다
+    public String getMaskedName() {
+        if (name == null || name.length() < 2) {
+            return name;
+        }
+        char first = name.charAt(0);
+        if (name.length() == 2) {
+            return first + "*";
+        }
+        char last = name.charAt(name.length() - 1);
+        String stars = "*".repeat(name.length() - 2);
+        return first + stars + last;
+    }
+
+    // 회원 등급 (기록이 없는 옛 회원은 '일반')
+    public MemberGrade getGrade() {
+        if (grade == null) {
+            return MemberGrade.NORMAL;
+        }
+        return grade;
     }
 
     // ===== getter / setter =====
+
     public Long getId() {
         return id;
     }
@@ -93,17 +126,6 @@ public class Member
 
     public String getName() {
         return name;
-    }
-
-    // 가린 이름 : 상품평/상품문의에 글쓴이를 보여 줄 때 쓴다 (예: 홍길동 → 홍*동, 김철 → 김*)
-    public String getMaskedName() {
-        if (name == null || name.length() < 2) {
-            return name;
-        }
-        if (name.length() == 2) {
-            return name.charAt(0) + "*";
-        }
-        return name.charAt(0) + "*".repeat(name.length() - 2) + name.charAt(name.length() - 1);
     }
 
     public void setName(String name) {
@@ -142,14 +164,10 @@ public class Member
         this.role = role;
     }
 
-    public MemberGrade getGrade() {
-        return grade == null ? MemberGrade.NORMAL : grade;
-    }
-
+    // getGrade() 는 위에 있다
     public void setGrade(MemberGrade grade) {
         this.grade = grade;
     }
-
 
     public LocalDateTime getCreatedAt() {
         return createdAt;

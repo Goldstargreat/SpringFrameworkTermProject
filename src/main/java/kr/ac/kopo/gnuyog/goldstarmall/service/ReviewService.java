@@ -80,7 +80,7 @@ public class ReviewService {
         if (member == null) {
             return "로그인한 회원만 상품평을 쓸 수 있습니다.";
         }
-        if ("ADMIN".equals(member.getRole())) {
+        if (member.isAdmin()) {
             return "관리자는 상품평을 쓸 수 없습니다. 상품평에 코멘트를 달아 주세요.";
         }
         if (reviewRepository.existsByMemberAndProduct(member, product)) {
