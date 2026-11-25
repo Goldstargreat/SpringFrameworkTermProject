@@ -425,6 +425,31 @@ ORDER BY o.seq;
 UPDATE products SET stock = (SELECT SUM(o.stock) FROM product_options o WHERE o.product_id = products.id)
 WHERE name = '데님 일자 청바지';
 
+-- ===== 상품 옵션 : 경량 패딩 조끼 (색상 3가지 x 사이즈 4가지 = 12가지, 가격은 모두 같다) =====
+-- 많이 팔리는 M, L 사이즈와 블랙 색상에 재고를 더 많이 둔다
+INSERT INTO product_options (product_id, name, stock)
+SELECT p.id, o.name, o.stock
+FROM products p
+JOIN (
+    SELECT 1 AS seq, '블랙 / S' AS name, 2 AS stock UNION ALL
+    SELECT 2, '블랙 / M', 3 UNION ALL
+    SELECT 3, '블랙 / L', 3 UNION ALL
+    SELECT 4, '블랙 / XL', 2 UNION ALL
+    SELECT 5, '네이비 / S', 1 UNION ALL
+    SELECT 6, '네이비 / M', 3 UNION ALL
+    SELECT 7, '네이비 / L', 3 UNION ALL
+    SELECT 8, '네이비 / XL', 1 UNION ALL
+    SELECT 9, '카키 / S', 1 UNION ALL
+    SELECT 10, '카키 / M', 2 UNION ALL
+    SELECT 11, '카키 / L', 3 UNION ALL
+    SELECT 12, '카키 / XL', 1
+) o
+WHERE p.name = '경량 패딩 조끼'
+ORDER BY o.seq;
+-- 상품 재고 = 옵션 재고 합계 (10 + 8 + 7 = 25)
+UPDATE products SET stock = (SELECT SUM(o.stock) FROM product_options o WHERE o.product_id = products.id)
+WHERE name = '경량 패딩 조끼';
+
 -- 확인
 SELECT * FROM products;
 SELECT * FROM product_options;
