@@ -1,5 +1,6 @@
 package kr.ac.kopo.gnuyog.goldstarmall.controller;
 
+import jakarta.servlet.http.HttpSession;
 import kr.ac.kopo.gnuyog.goldstarmall.config.SessionConst;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Order;
@@ -9,7 +10,6 @@ import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
 import kr.ac.kopo.gnuyog.goldstarmall.service.MemberService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.OrderService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.ProductService;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,10 +21,17 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
-// 주문 컨트롤러 (로그인한 사람만 들어올 수 있다)
+// 주문 컨트롤러 : 장바구니 주문, 바로 주문, 내 주문 목록/상세, 주문 취소, 반품 신청, 주문내역 삭제
+// 로그인한 사람만 들어올 수 있다 (로그인한 회원 번호는 세션에 들어 있다)
 @Controller
 @RequestMapping("/orders")
 public class OrderController {
+
+    // 배송 진행 막대에 표시할 단계 이름 (순서대로 1~5단계)
+    private static final List<String> SHIPPING_STEPS = List.of("주문접수", "입고", "출고", "배송중", "배송완료");
+
+    // 받는 사람 정보가 비어 있을 때의 메시지
+    private static final String RECEIVER_REQUIRED = "받는 사람, 연락처, 배송지를 모두 입력해 주세요.";
 
     private final OrderService orderService;
     private final ProductService productService;
@@ -36,6 +43,8 @@ public class OrderController {
         this.memberService = memberService;
     }
 
+    // ===== 장바구니 주문 =====
+
     // 주문하기 : 장바구니 화면의 주문서에서 넘어온다
     @PostMapping
     public String create(@RequestParam("receiverName") String receiverName,
@@ -43,16 +52,15 @@ public class OrderController {
                          @RequestParam("shippingAddress") String shippingAddress,
                          HttpSession session,
                          RedirectAttributes redirectAttributes) {
-        Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
-
         // 받는 사람 정보가 비어 있으면 주문할 수 없다
-        if (receiverName.trim().isEmpty() || receiverPhone.trim().isEmpty() || shippingAddress.trim().isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "받는 사람, 연락처, 배송지를 모두 입력해 주세요.");
+        if (isBlank(receiverName, receiverPhone, shippingAddress)) {
+            redirectAttributes.addFlashAttribute("error", RECEIVER_REQUIRED);
             return "redirect:/cart";
         }
 
         try {
-            Order order = orderService.createOrder(memberId, receiverName.trim(), receiverPhone.trim(), shippingAddress.trim());
+            Order order = orderService.createOrder(loginMemberId(session),
+                    receiverName.trim(), receiverPhone.trim(), shippingAddress.trim());
             redirectAttributes.addFlashAttribute("message", "주문이 완료되었습니다.");
             return "redirect:/orders/" + order.getId();
         } catch (BusinessException e) {
@@ -72,11 +80,17 @@ public class OrderController {
                              HttpSession session,
                              Model model,
                              RedirectAttributes redirectAttributes) {
-        Product product = productId == null ? null : productService.findById(productId);
+        // 1) 상품 확인
+        Product product = null;
+        if (productId != null) {
+            product = productService.findById(productId);
+        }
         if (product == null) {
             redirectAttributes.addFlashAttribute("error", "상품을 찾을 수 없습니다.");
             return "redirect:/";
         }
+
+        // 2) 옵션, 수량 확인 (문제가 있으면 상품 화면으로 돌아간다)
         int count = parseQuantity(quantity);
         ProductOption option;
         try {
@@ -87,8 +101,8 @@ public class OrderController {
             return "redirect:/products/" + productId;
         }
 
-        Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
-        Member member = memberService.findById(memberId);
+        // 3) 주문서에 보여 줄 값
+        Member member = memberService.findById(loginMemberId(session));
         model.addAttribute("product", product);
         model.addAttribute("option", option);
         model.addAttribute("quantity", count);
@@ -113,19 +127,16 @@ public class OrderController {
                                @RequestParam("shippingAddress") String shippingAddress,
                                HttpSession session,
                                RedirectAttributes redirectAttributes) {
-        Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
         int count = parseQuantity(quantity);
-        // 실패하면 같은 주문서로 돌아간다
-        String backToForm = "redirect:/orders/direct?productId=" + productId + "&quantity=" + count
-                + (optionId != null ? "&optionId=" + optionId : "");
 
-        if (receiverName.trim().isEmpty() || receiverPhone.trim().isEmpty() || shippingAddress.trim().isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "받는 사람, 연락처, 배송지를 모두 입력해 주세요.");
-            return backToForm;
+        // 받는 사람 정보가 비어 있으면 같은 주문서로 돌아간다
+        if (isBlank(receiverName, receiverPhone, shippingAddress)) {
+            redirectAttributes.addFlashAttribute("error", RECEIVER_REQUIRED);
+            return "redirect:" + directFormLink(productId, optionId, count);
         }
 
         try {
-            Order order = orderService.createDirectOrder(memberId, productId, optionId, count,
+            Order order = orderService.createDirectOrder(loginMemberId(session), productId, optionId, count,
                     receiverName.trim(), receiverPhone.trim(), shippingAddress.trim());
             redirectAttributes.addFlashAttribute("message", "주문이 완료되었습니다.");
             return "redirect:/orders/" + order.getId();
@@ -136,21 +147,34 @@ public class OrderController {
         }
     }
 
-    // 수량 문자열 → 숫자 (숫자가 아니면 0 : 이후 "1개 이상" 검사에서 걸린다)
+    // 바로 주문 주문서 주소  예) /orders/direct?productId=2&quantity=3&optionId=5
+    private String directFormLink(Long productId, Long optionId, int count) {
+        String link = "/orders/direct?productId=" + productId + "&quantity=" + count;
+        if (optionId != null) {
+            link = link + "&optionId=" + optionId;
+        }
+        return link;
+    }
+
+    // 수량 문자열 → 숫자
+    // 값이 없으면 1개, 숫자가 아니면 0 (0 은 이후 "1개 이상" 검사에서 걸린다)
     private int parseQuantity(String quantity) {
+        if (quantity == null) {
+            return 1;
+        }
         try {
-            return quantity == null ? 1 : Integer.parseInt(quantity.trim());
+            return Integer.parseInt(quantity.trim());
         } catch (NumberFormatException e) {
             return 0;
         }
     }
 
+    // ===== 내 주문 =====
+
     // 내 주문 목록
     @GetMapping
     public String list(HttpSession session, Model model) {
-        Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
-        List<Order> orders = orderService.findMyOrders(memberId);
-        model.addAttribute("orders", orders);
+        model.addAttribute("orders", orderService.findMyOrders(loginMemberId(session)));
         return "order/list";
     }
 
@@ -160,18 +184,14 @@ public class OrderController {
                          HttpSession session,
                          Model model,
                          RedirectAttributes redirectAttributes) {
-        Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
         try {
-            Order order = orderService.findMyOrder(memberId, orderId);
+            Order order = orderService.findMyOrder(loginMemberId(session), orderId);
             model.addAttribute("order", order);
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/orders";
         }
-
-        // 배송 진행 막대에 표시할 단계 이름 (순서대로 1~5단계)
-        List<String> steps = List.of("주문접수", "입고", "출고", "배송중", "배송완료");
-        model.addAttribute("steps", steps);
+        model.addAttribute("steps", SHIPPING_STEPS);
         return "order/detail";
     }
 
@@ -180,9 +200,8 @@ public class OrderController {
     public String cancel(@PathVariable("orderId") Long orderId,
                          HttpSession session,
                          RedirectAttributes redirectAttributes) {
-        Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
         try {
-            int refund = orderService.cancelOrder(memberId, orderId);
+            int refund = orderService.cancelOrder(loginMemberId(session), orderId);
             redirectAttributes.addFlashAttribute("message",
                     "주문을 취소했습니다. 결제 금액 " + String.format("%,d", refund) + "원이 환불되었습니다.");
         } catch (BusinessException e) {
@@ -199,9 +218,9 @@ public class OrderController {
                                 @RequestParam(name = "noDefect", required = false) String noDefect,
                                 HttpSession session,
                                 RedirectAttributes redirectAttributes) {
-        Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
+        boolean noDefectConfirmed = noDefect != null;
         try {
-            orderService.requestReturn(memberId, orderId, reason, noDefect != null);
+            orderService.requestReturn(loginMemberId(session), orderId, reason, noDefectConfirmed);
             redirectAttributes.addFlashAttribute("message",
                     "반품을 신청했습니다. 상품을 돌려받아 확인한 뒤 결제 금액 전체를 환불해 드립니다.");
         } catch (BusinessException e) {
@@ -215,13 +234,26 @@ public class OrderController {
     public String delete(@PathVariable("orderId") Long orderId,
                          HttpSession session,
                          RedirectAttributes redirectAttributes) {
-        Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
         try {
-            String orderNumber = orderService.hideMyOrder(memberId, orderId);
+            String orderNumber = orderService.hideMyOrder(loginMemberId(session), orderId);
             redirectAttributes.addFlashAttribute("message", "주문번호 " + orderNumber + " 주문내역을 삭제했습니다.");
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/orders";
+    }
+
+    // ===== 도우미 =====
+
+    // 로그인한 회원 번호 (로그인할 때 세션에 저장해 둔 값)
+    private Long loginMemberId(HttpSession session) {
+        return (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
+    }
+
+    // 받는 사람, 연락처, 배송지 중 하나라도 비어 있는지 (공백만 있어도 빈 것)
+    private boolean isBlank(String receiverName, String receiverPhone, String shippingAddress) {
+        return receiverName.trim().isEmpty()
+                || receiverPhone.trim().isEmpty()
+                || shippingAddress.trim().isEmpty();
     }
 }
