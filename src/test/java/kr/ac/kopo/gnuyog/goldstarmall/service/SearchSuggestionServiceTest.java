@@ -5,7 +5,9 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // 검색어 추천 테스트 (DB 없이 상품 이름 목록만으로 확인한다)
 class SearchSuggestionServiceTest {
@@ -48,6 +50,41 @@ class SearchSuggestionServiceTest {
     @Test
     void 한_글자는_추천하지_않는다() {
         assertNull(SearchSuggestionService.suggest("감", NAMES));
+    }
+
+    @Test
+    void 한글을_자모로_푼다() {
+        assertEquals("ㄱㅣㅁㅊㅣ", SearchSuggestionService.toJamo("김치"));
+        assertEquals("ㄸㅓㄱ", SearchSuggestionService.toJamo("떡"));
+        assertEquals("ㅅㅏㄹㅏㅁㅕㄴ3kg", SearchSuggestionService.toJamo("사라면3kg"));
+    }
+
+    @Test
+    void 키보드에서_옆_키인지_안다() {
+        // 같은 줄 옆 키
+        assertTrue(SearchSuggestionService.isNearKey('ㅏ', 'ㅣ'));   // K, L
+        // 위아래 줄 : 가운데 줄 A(ㅁ) 는 윗줄 Q(ㅂ), W(ㅈ) 와 붙어 있다
+        assertTrue(SearchSuggestionService.isNearKey('ㅁ', 'ㅂ'));
+        assertTrue(SearchSuggestionService.isNearKey('ㅈ', 'ㅁ'));
+        // 아랫줄 Z(ㅋ) 는 가운데 줄 A(ㅁ), S(ㄴ) 와 붙어 있다
+        assertTrue(SearchSuggestionService.isNearKey('ㅋ', 'ㄴ'));
+        // Shift 만 다른 같은 키
+        assertTrue(SearchSuggestionService.isNearKey('ㄱ', 'ㄲ'));
+        assertTrue(SearchSuggestionService.isNearKey('ㅐ', 'ㅒ'));
+        assertTrue(SearchSuggestionService.isNearKey('ㅖ', 'ㅔ'));
+        // 먼 키
+        assertFalse(SearchSuggestionService.isNearKey('ㅁ', 'ㄹ'));   // A, F
+        assertFalse(SearchSuggestionService.isNearKey('ㅋ', 'ㅂ'));   // Z, Q (두 줄 차이)
+        // 키 하나로 치지 않는 자모
+        assertFalse(SearchSuggestionService.isNearKey('ㅘ', 'ㅏ'));
+    }
+
+    @Test
+    void 틀린_정도를_점수로_센다() {
+        assertEquals(0, SearchSuggestionService.editCost("ㄱㅣㅁㅊㅣ", "ㄱㅣㅁㅊㅣ"));
+        assertEquals(6, SearchSuggestionService.editCost("ㄱㅏㅁㅊㅣ", "ㄱㅣㅁㅊㅣ"));    // 옆 키로 바꾸기
+        assertEquals(10, SearchSuggestionService.editCost("ㄱㅏㅁㅊㅣ", "ㄱㅏㄹㅊㅣ"));   // 먼 키로 바꾸기
+        assertEquals(10, SearchSuggestionService.editCost("ㅅㅣㄴㄹㅏㅁㅕ", "ㅅㅣㄴㄹㅏㅁㅕㄴ")); // 하나 넣기
     }
 
     @Test
