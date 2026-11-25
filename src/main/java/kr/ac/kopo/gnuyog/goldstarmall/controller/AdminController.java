@@ -1,9 +1,9 @@
 package kr.ac.kopo.gnuyog.goldstarmall.controller;
 
+import jakarta.servlet.http.HttpSession;
 import kr.ac.kopo.gnuyog.goldstarmall.config.SessionConst;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.MemberGrade;
-import kr.ac.kopo.gnuyog.goldstarmall.domain.Order;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Product;
 import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
 import kr.ac.kopo.gnuyog.goldstarmall.service.GradeService;
@@ -12,7 +12,6 @@ import kr.ac.kopo.gnuyog.goldstarmall.service.MemberService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.OrderService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.ProductService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.ReviewService;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,14 +21,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
 import java.util.Map;
 
-// 관리자 컨트롤러 : 주문관리(검색, 주문번호 수정, 배송 상태 변경, 주문 거절/환불, 주문 삭제), 회원관리(회원 정보 수정, 삭제), 상품관리(등록, 가격/재고 수정)
+// 관리자 컨트롤러 : 주문관리(검색, 주문번호 수정, 배송 상태 변경, 주문 거절/환불, 반품, 주문 삭제),
+//                  회원관리(회원 정보 수정, 삭제), 상품관리(등록, 가격/재고 수정, 로켓 배송, 판매량 초기화, 삭제), 리뷰/문의
 // AdminCheckInterceptor 때문에 관리자(ADMIN)만 들어올 수 있다
+// 처리 결과는 redirectAttributes 에 "message"(성공) 또는 "error"(실패)로 담아, 이동한 화면에서 한 번 보여 준다
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
+
+    // 처리가 끝나면 돌아갈 화면
+    private static final String REDIRECT_ORDERS = "redirect:/admin/orders";
+    private static final String REDIRECT_MEMBERS = "redirect:/admin/members";
+    private static final String REDIRECT_PRODUCTS = "redirect:/admin/products";
 
     private final OrderService orderService;
     private final MemberService memberService;
@@ -40,13 +45,15 @@ public class AdminController {
 
     public AdminController(OrderService orderService, MemberService memberService, ProductService productService,
                            GradeService gradeService, ReviewService reviewService, InquiryService inquiryService) {
-        this.gradeService = gradeService;
-        this.reviewService = reviewService;
-        this.inquiryService = inquiryService;
         this.orderService = orderService;
         this.memberService = memberService;
         this.productService = productService;
+        this.gradeService = gradeService;
+        this.reviewService = reviewService;
+        this.inquiryService = inquiryService;
     }
+
+    // ===== 주문관리 =====
 
     // 주문 목록 : 검색어(keyword)가 있으면 검색 기준(type)에 따른 검색 결과, 없으면 전체 주문
     // type : all(전체), number(주문번호), member(주문자), date(주문일시), address(배송지)
@@ -54,8 +61,7 @@ public class AdminController {
     public String orders(@RequestParam(name = "type", defaultValue = "all") String type,
                          @RequestParam(name = "keyword", required = false) String keyword,
                          Model model) {
-        List<Order> orders = orderService.searchOrders(type, keyword);
-        model.addAttribute("orders", orders);
+        model.addAttribute("orders", orderService.searchOrders(type, keyword));
         // 검색창에 검색 기준과 검색어를 그대로 남겨 두고, 결과 건수를 보여 주는 데 쓴다
         model.addAttribute("type", type);
         model.addAttribute("keyword", keyword);
@@ -67,12 +73,11 @@ public class AdminController {
     public String next(@PathVariable("orderId") Long orderId, RedirectAttributes redirectAttributes) {
         try {
             orderService.moveToNextStatus(orderId);
-            redirectAttributes.addFlashAttribute("message",
-                    "주문번호 " + orderService.findOrderNumber(orderId) + "의 배송 상태를 변경했습니다.");
+            redirectAttributes.addFlashAttribute("message", orderLabel(orderId) + "의 배송 상태를 변경했습니다.");
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/admin/orders";
+        return REDIRECT_ORDERS;
     }
 
     // 주문번호 고치기 : 기본키(id)는 그대로 두고 화면에 보이는 주문번호만 바꾼다
@@ -87,7 +92,7 @@ public class AdminController {
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/admin/orders";
+        return REDIRECT_ORDERS;
     }
 
     // 주문 거절 : 출고 전 주문만, 거절 사유가 필요하고 결제 금액 전체를 환불한다
@@ -98,11 +103,11 @@ public class AdminController {
         try {
             int refund = orderService.rejectOrder(orderId, reason);
             redirectAttributes.addFlashAttribute("message",
-                    "주문번호 " + orderService.findOrderNumber(orderId) + " 주문을 거절하고 " + String.format("%,d", refund) + "원을 환불했습니다.");
+                    orderLabel(orderId) + " 주문을 거절하고 " + won(refund) + "원을 환불했습니다.");
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/admin/orders";
+        return REDIRECT_ORDERS;
     }
 
     // 반품 승인 : 돌려받은 상품에 하자가 없으면 승인하고 결제 금액 전체를 환불한다
@@ -111,11 +116,11 @@ public class AdminController {
         try {
             int refund = orderService.approveReturn(orderId);
             redirectAttributes.addFlashAttribute("message",
-                    "주문번호 " + orderService.findOrderNumber(orderId) + " 반품을 승인하고 " + String.format("%,d", refund) + "원을 환불했습니다.");
+                    orderLabel(orderId) + " 반품을 승인하고 " + won(refund) + "원을 환불했습니다.");
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/admin/orders";
+        return REDIRECT_ORDERS;
     }
 
     // 반품 거절 : 하자가 있는 등의 이유로 거절한다. 사유가 필요하고, 주문은 배송완료 상태로 돌아간다
@@ -125,27 +130,28 @@ public class AdminController {
                                RedirectAttributes redirectAttributes) {
         try {
             orderService.rejectReturn(orderId, reason);
-            redirectAttributes.addFlashAttribute("message",
-                    "주문번호 " + orderService.findOrderNumber(orderId) + " 반품을 거절했습니다.");
+            redirectAttributes.addFlashAttribute("message", orderLabel(orderId) + " 반품을 거절했습니다.");
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/admin/orders";
+        return REDIRECT_ORDERS;
     }
 
     // 주문 삭제 (배송완료, 주문취소, 주문거절, 반품완료된 주문만)
     @PostMapping("/orders/{orderId}/delete")
     public String deleteOrder(@PathVariable("orderId") Long orderId, RedirectAttributes redirectAttributes) {
-        // 삭제하면 주문번호를 찾을 수 없으므로 먼저 알아 둔다
-        String orderNumber = orderService.findOrderNumber(orderId);
+        // 삭제하고 나면 주문번호를 찾을 수 없으므로 먼저 알아 둔다
+        String label = orderLabel(orderId);
         try {
             orderService.deleteOrder(orderId);
-            redirectAttributes.addFlashAttribute("message", "주문번호 " + orderNumber + " 주문을 삭제했습니다.");
+            redirectAttributes.addFlashAttribute("message", label + " 주문을 삭제했습니다.");
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/admin/orders";
+        return REDIRECT_ORDERS;
     }
+
+    // ===== 회원관리 =====
 
     // 회원 목록 : 검색어(keyword)가 있으면 검색 기준(type)에 따른 검색 결과, 없으면 전체 회원
     // type : all(전체), name(이름), loginId(아이디), phone(전화번호)
@@ -153,8 +159,7 @@ public class AdminController {
     public String members(@RequestParam(name = "type", defaultValue = "all") String type,
                           @RequestParam(name = "keyword", required = false) String keyword,
                           Model model) {
-        List<Member> members = memberService.searchMembers(type, keyword);
-        model.addAttribute("members", members);
+        model.addAttribute("members", memberService.searchMembers(type, keyword));
         // 검색창에 검색 기준과 검색어를 그대로 남겨 두고, 결과 건수를 보여 주는 데 쓴다
         model.addAttribute("type", type);
         model.addAttribute("keyword", keyword);
@@ -164,7 +169,6 @@ public class AdminController {
         return "admin/members";
     }
 
-
     // 회원 정보 수정 화면
     // 이름, 전화번호, 배송지만 고칠 수 있다
     // (회원번호는 주문/장바구니가 가리키는 기본키라서, 아이디는 로그인에 쓰는 값이라서 바꿀 수 없다)
@@ -173,7 +177,7 @@ public class AdminController {
         Member member = memberService.findById(memberId);
         if (member == null) {
             redirectAttributes.addFlashAttribute("error", "회원을 찾을 수 없습니다.");
-            return "redirect:/admin/members";
+            return REDIRECT_MEMBERS;
         }
         model.addAttribute("member", member);
         return "admin/member-edit";
@@ -190,20 +194,22 @@ public class AdminController {
                              RedirectAttributes redirectAttributes) {
         if (memberService.findById(memberId) == null) {
             redirectAttributes.addFlashAttribute("error", "회원을 찾을 수 없습니다.");
-            return "redirect:/admin/members";
+            return REDIRECT_MEMBERS;
         }
         try {
             memberService.updateInfo(memberId, name, phone, address, secondAddress);
         } catch (BusinessException e) {
+            // 실패하면 수정 화면으로 돌아가서 다시 고칠 수 있게 한다
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/admin/members/" + memberId + "/edit";
         }
         // 관리자가 자기 이름을 고쳤다면 화면 상단 "OOO님" 도 바뀌도록 세션 값도 바꾼다
-        if (memberId.equals(session.getAttribute(SessionConst.LOGIN_MEMBER_ID))) {
+        boolean editedMyself = memberId.equals(session.getAttribute(SessionConst.LOGIN_MEMBER_ID));
+        if (editedMyself) {
             session.setAttribute(SessionConst.LOGIN_MEMBER_NAME, name.trim());
         }
         redirectAttributes.addFlashAttribute("message", memberId + "번 회원 정보를 수정했습니다.");
-        return "redirect:/admin/members";
+        return REDIRECT_MEMBERS;
     }
 
     // 회원 삭제 (회원의 장바구니, 주문 내역도 함께 삭제된다)
@@ -215,8 +221,10 @@ public class AdminController {
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/admin/members";
+        return REDIRECT_MEMBERS;
     }
+
+    // ===== 상품관리 =====
 
     // 상품관리 화면 : 전체 상품 목록(가격/재고 수정, 누적 판매량/매출) + 새 상품 등록
     @GetMapping("/products")
@@ -230,8 +238,8 @@ public class AdminController {
         model.addAttribute("salesQuantity", salesQuantity);
         model.addAttribute("salesAmount", salesAmount);
         // 표 위에 보여 줄 전체 합계
-        model.addAttribute("totalSalesQuantity", salesQuantity.values().stream().mapToLong(Long::longValue).sum());
-        model.addAttribute("totalSalesAmount", salesAmount.values().stream().mapToLong(Long::longValue).sum());
+        model.addAttribute("totalSalesQuantity", sum(salesQuantity));
+        model.addAttribute("totalSalesAmount", sum(salesAmount));
         return "admin/products";
     }
 
@@ -249,12 +257,14 @@ public class AdminController {
                                 @RequestParam(name = "fastDelivery", defaultValue = "false") boolean fastDelivery,
                                 RedirectAttributes redirectAttributes) {
         try {
-            Product product = productService.create(name, category, price, stock, description, icon, manufacturer, origin, fastDelivery);
-            redirectAttributes.addFlashAttribute("message", product.getId() + "번 상품 '" + product.getName() + "'을(를) 등록했습니다.");
+            Product product = productService.create(name, category, price, stock, description, icon,
+                    manufacturer, origin, fastDelivery);
+            redirectAttributes.addFlashAttribute("message",
+                    product.getId() + "번 상품 '" + product.getName() + "'을(를) 등록했습니다.");
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/admin/products";
+        return REDIRECT_PRODUCTS;
     }
 
     // 가격, 재고 수정
@@ -269,7 +279,7 @@ public class AdminController {
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/admin/products";
+        return REDIRECT_PRODUCTS;
     }
 
     // 로켓 배송 켜기/끄기
@@ -277,12 +287,15 @@ public class AdminController {
     public String toggleFastDelivery(@PathVariable("productId") Long productId, RedirectAttributes redirectAttributes) {
         try {
             Product product = productService.toggleFastDelivery(productId);
-            String state = product.isFastDelivery() ? "켰습니다" : "껐습니다";
+            String state = "껐습니다";
+            if (product.isFastDelivery()) {
+                state = "켰습니다";
+            }
             redirectAttributes.addFlashAttribute("message", "'" + product.getName() + "'의 로켓 배송을 " + state + ".");
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/admin/products";
+        return REDIRECT_PRODUCTS;
     }
 
     // 한 상품의 누적 판매량/매출 초기화 (주문 기록은 지우지 않고, 지금부터 다시 센다)
@@ -295,7 +308,7 @@ public class AdminController {
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/admin/products";
+        return REDIRECT_PRODUCTS;
     }
 
     // 모든 상품의 누적 판매량/매출 초기화
@@ -303,7 +316,7 @@ public class AdminController {
     public String resetAllSales(RedirectAttributes redirectAttributes) {
         productService.resetAllSales();
         redirectAttributes.addFlashAttribute("message", "모든 상품의 누적 판매량/매출을 초기화했습니다. 지금부터 다시 집계합니다.");
-        return "redirect:/admin/products";
+        return REDIRECT_PRODUCTS;
     }
 
     // 상품 삭제 (주문된 적 없는 상품만)
@@ -315,27 +328,54 @@ public class AdminController {
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/admin/products";
+        return REDIRECT_PRODUCTS;
     }
 
     // ===== 리뷰/문의 =====
 
     // 리뷰/문의 화면 : 손님이 남긴 상품문의와 상품평을 한곳에서 보고 바로 답변/코멘트를 단다
-    // tab    : inquiries(상품문의, 기본) / reviews(상품평)
-    // filter : pending(답변/코멘트 대기만, 기본) / all(전체)
+    // tab    : inquiries(상품문의, 기본) / reviews(상품평)  - 그 밖의 값은 inquiries 로 본다
+    // filter : pending(답변/코멘트 대기만, 기본) / all(전체) - 그 밖의 값은 pending 으로 본다
     @GetMapping("/board")
     public String board(@RequestParam(name = "tab", defaultValue = "inquiries") String tab,
                         @RequestParam(name = "filter", defaultValue = "pending") String filter,
                         Model model) {
         boolean pendingOnly = !"all".equals(filter);
+
         if ("reviews".equals(tab)) {
+            model.addAttribute("tab", "reviews");
             model.addAttribute("reviews", reviewService.findAllForAdmin(pendingOnly));
         } else {
-            tab = "inquiries";
+            model.addAttribute("tab", "inquiries");
             model.addAttribute("inquiries", inquiryService.findAllForAdmin(pendingOnly));
         }
-        model.addAttribute("tab", tab);
-        model.addAttribute("filter", pendingOnly ? "pending" : "all");
+
+        if (pendingOnly) {
+            model.addAttribute("filter", "pending");
+        } else {
+            model.addAttribute("filter", "all");
+        }
         return "admin/board";
+    }
+
+    // ===== 도우미 =====
+
+    // 결과 메시지에 쓰는 주문 이름  예) "주문번호 20261124-0012"
+    private String orderLabel(Long orderId) {
+        return "주문번호 " + orderService.findOrderNumber(orderId);
+    }
+
+    // 금액에 천 단위 쉼표 넣기  예) 15000 → "15,000"
+    private String won(int amount) {
+        return String.format("%,d", amount);
+    }
+
+    // 상품별 값(판매량 또는 매출)을 모두 더한다
+    private long sum(Map<Long, Long> valueByProduct) {
+        long total = 0;
+        for (long value : valueByProduct.values()) {
+            total = total + value;
+        }
+        return total;
     }
 }
