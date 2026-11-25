@@ -49,27 +49,33 @@ public class Inquiry {
     // 관리자가 답변을 달거나 고치면 false 가 되고, 회원이 알림 화면을 보면 true 가 된다 (비어 있으면 확인 안 함)
     private Boolean answerRead;
 
+    // 질문한 회원이 답변 알림을 알림 목록에서 삭제했는지 (문의와 답변 자체는 그대로 남는다)
+    // 관리자가 답변을 고치면 새 알림이 되므로 다시 false 가 된다 (비어 있으면 삭제 안 함)
+    private Boolean answerNoticeHidden;
+
     public Inquiry() {
     }
+
+    // ===== 화면 표시 =====
 
     // 답변이 달렸는지 (화면에서 inquiry.answered 로 사용)
     public boolean isAnswered() {
         return answer != null;
     }
 
-    // 아직 확인하지 않은 답변이 있는지 (회원 알림)
+    // ===== 답변 알림 (NotificationService 에서 사용) =====
+    // answerRead, answerNoticeHidden 은 옛 데이터에서 비어 있을(null) 수 있어서 Boolean.TRUE.equals 로 비교한다
+
+    // 아직 확인하지 않은 답변이 있는지
     public boolean isAnswerUnread() {
-        return answer != null && !Boolean.TRUE.equals(answerRead);
+        return isAnswered() && !Boolean.TRUE.equals(answerRead);
     }
 
     public void setAnswerRead(boolean answerRead) {
         this.answerRead = answerRead;
     }
 
-    // 질문한 회원이 답변 알림을 알림 목록에서 삭제했는지 (문의와 답변 자체는 그대로 남는다)
-    // 관리자가 답변을 고치면 새 알림이 되므로 다시 false 가 된다 (비어 있으면 삭제 안 함)
-    private Boolean answerNoticeHidden;
-
+    // 답변 알림을 알림 목록에서 삭제했는지
     public boolean isAnswerNoticeHidden() {
         return Boolean.TRUE.equals(answerNoticeHidden);
     }
@@ -79,6 +85,7 @@ public class Inquiry {
     }
 
     // ===== getter / setter =====
+
     public Long getId() {
         return id;
     }
