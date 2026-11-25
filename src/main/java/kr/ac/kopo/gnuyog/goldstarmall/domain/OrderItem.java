@@ -45,13 +45,7 @@ public class OrderItem {
     public OrderItem() {
     }
 
-    public ProductOption getOption() {
-        return option;
-    }
-
-    public void setOption(ProductOption option) {
-        this.option = option;
-    }
+    // ===== 금액 =====
 
     // 이 주문 상품의 금액 = 주문 당시 가격 x 수량
     public int getTotalPrice() {
@@ -59,6 +53,7 @@ public class OrderItem {
     }
 
     // ===== getter / setter =====
+
     public Long getId() {
         return id;
     }
@@ -97,5 +92,13 @@ public class OrderItem {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public ProductOption getOption() {
+        return option;
+    }
+
+    public void setOption(ProductOption option) {
+        this.option = option;
     }
 }
