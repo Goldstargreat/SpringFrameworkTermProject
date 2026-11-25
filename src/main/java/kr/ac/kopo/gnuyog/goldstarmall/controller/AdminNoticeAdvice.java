@@ -1,11 +1,11 @@
 package kr.ac.kopo.gnuyog.goldstarmall.controller;
 
+import jakarta.servlet.http.HttpSession;
 import kr.ac.kopo.gnuyog.goldstarmall.config.SessionConst;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.service.InquiryService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.OrderService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.ReviewService;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
@@ -28,21 +28,31 @@ public class AdminNoticeAdvice {
     // 답변 대기 문의 개수 (관리자가 아니면 null)
     @ModelAttribute("adminPendingInquiries")
     public Long adminPendingInquiries(HttpSession session) {
-        return isAdmin(session) ? inquiryService.countPending() : null;
+        if (!isAdmin(session)) {
+            return null;
+        }
+        return inquiryService.countPending();
     }
 
     // 코멘트 대기 상품평 개수 (관리자가 아니면 null)
     @ModelAttribute("adminPendingReviews")
     public Long adminPendingReviews(HttpSession session) {
-        return isAdmin(session) ? reviewService.countPending() : null;
+        if (!isAdmin(session)) {
+            return null;
+        }
+        return reviewService.countPending();
     }
 
     // 처리 대기 반품 신청 개수 (관리자가 아니면 null) → 화면 상단 '주문관리' 옆 빨간 숫자
     @ModelAttribute("adminPendingReturns")
     public Long adminPendingReturns(HttpSession session) {
-        return isAdmin(session) ? orderService.countPendingReturns() : null;
+        if (!isAdmin(session)) {
+            return null;
+        }
+        return orderService.countPendingReturns();
     }
 
+    // 로그인한 사람이 관리자인지
     private boolean isAdmin(HttpSession session) {
         return Member.ROLE_ADMIN.equals(session.getAttribute(SessionConst.LOGIN_MEMBER_ROLE));
     }
