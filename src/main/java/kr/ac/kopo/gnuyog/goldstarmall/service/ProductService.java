@@ -112,9 +112,13 @@ public class ProductService {
         return result;
     }
 
-    // 신상품 : 최근에 등록한 상품
+    // 신상품 기준 : 등록한 지 이 일수 이내인 상품
+    public static final int NEW_PRODUCT_DAYS = 30;
+
+    // 신상품 : 최근 30일 안에 등록한 상품 (최근 등록 순, 최대 8개)
     public List<Product> findNewProducts() {
-        return productRepository.findTop8ByOrderByIdDesc();
+        LocalDateTime since = LocalDateTime.now().minusDays(NEW_PRODUCT_DAYS);
+        return productRepository.findTop8ByCreatedAtGreaterThanEqualOrderByCreatedAtDescIdDesc(since);
     }
 
     // 로켓 배송 상품 : 관리자가 로켓 배송을 켠 상품 중 재고가 있는 것 (최근 등록 순)
@@ -215,6 +219,7 @@ public class ProductService {
         product.setManufacturer(blankToNull(manufacturer));
         product.setOrigin(blankToNull(origin));
         product.setFastDelivery(fastDelivery);
+        product.setCreatedAt(LocalDateTime.now());
         return productRepository.save(product);
     }
 

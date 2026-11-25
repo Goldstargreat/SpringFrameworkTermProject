@@ -63,6 +63,11 @@ public class Product
     // 비어 있으면(null) 로켓 배송이 아닌 것으로 본다
     private Boolean fastDelivery;
 
+    // 등록일 : 관리자가 상품을 등록한 시각. 홈 화면 "신상품"의 기준이 된다
+    // DB 기본값 CURRENT_TIMESTAMP : products.sql 처럼 SQL 로 직접 넣은 상품에도 등록 시각이 자동으로 들어간다
+    @Column(columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
+    private LocalDateTime createdAt;
+
     // 옵션 목록 (예: 15인치 / 화이트). 옵션이 없는 상품은 비어 있다
     // 옵션이 있으면 손님은 옵션을 골라야 담거나 주문할 수 있고, 재고는 옵션마다 따로 센다
     // cascade = ALL : 상품을 지우면 옵션도 함께 지워진다
@@ -157,6 +162,14 @@ public class Product
 
     public void setFastDelivery(boolean fastDelivery) {
         this.fastDelivery = fastDelivery;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     // 손님 화면에 "로켓 배송"을 붙일지 : 관리자가 켜 둔 상품이라도 품절이면 붙이지 않는다

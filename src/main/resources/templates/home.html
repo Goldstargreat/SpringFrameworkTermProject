@@ -87,7 +87,7 @@
         </div>
     </section>
 
-    <!-- 신상품 : 최근 등록한 상품 -->
+    <!-- 신상품 : 최근 30일 안에 등록한 상품 (최대 8개, 없으면 섹션을 숨긴다) -->
     <section class="home-section" th:if="${!newProducts.isEmpty()}">
         <div class="home-section-head">
             <h2>✨ 신상품</h2>

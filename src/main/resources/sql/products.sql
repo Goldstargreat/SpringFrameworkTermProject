@@ -299,10 +299,14 @@ INSERT INTO products (name, category, price, stock, description, icon, manufactu
 ('닭볶음탕용 생닭 1.1kg', '식품', 8900, 25, '닭볶음탕, 백숙 크기로 토막 낸 국내산 냉장 생닭입니다.', '🍗', '골드스타 PB', '국내산', 1),
 ('호주산 소갈비살 500g', '식품', 24900, 15, '쫄깃하고 고소한 구이용 냉장 소갈비살입니다.', '🍖', '골드스타 PB', '호주', 1);
 
+-- 추가 상품 : 가전디지털 세탁기 (맨 끝에 넣어 앞 상품들의 번호(id)가 밀리지 않게 한다)
+INSERT INTO products (name, category, price, stock, description, icon, manufacturer, origin, fast_delivery) VALUES
+('드럼 세탁기 12kg', '가전디지털', 799000, 5, '빨래, 헹굼, 탈수를 조용하게 해 주는 12kg 대용량 드럼 세탁기입니다. 기사님이 방문해 설치해 드립니다.', '🧺', '골드스타 PB', '대한민국', 0);
+
 -- 로켓 배송 : 처음에는 모든 상품을 로켓 배송으로 해 둔다 (관리자가 상품관리 화면에서 상품마다 켜고 끈다)
 UPDATE products SET fast_delivery = 1;
 -- 예외 : 고가/대형 상품은 로켓 배송을 하지 않는다
-UPDATE products SET fast_delivery = 0 WHERE name IN ('미러리스 카메라 렌즈킷', '로봇 청소기', '세단기 (문서 파쇄기)');
+UPDATE products SET fast_delivery = 0 WHERE name IN ('미러리스 카메라 렌즈킷', '로봇 청소기', '세단기 (문서 파쇄기)', '드럼 세탁기 12kg');
 
 -- ===== 상품 옵션 : 노트북 백팩 (크기 x 색상 4가지, 가격은 모두 같다) =====
 -- 옵션 상품은 옵션마다 재고를 따로 세고, 상품 재고는 옵션 재고의 합계로 맞춘다

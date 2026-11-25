@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 // 상품 리포지토리
@@ -25,6 +26,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<Product> findByNameContaining(String keyword, Pageable pageable);
 
     // ===== 홈 화면 =====
-    // 최근에 등록한 상품 8개 (신상품) → select * from products order by id desc limit 8
-    List<Product> findTop8ByOrderByIdDesc();
+    // 신상품 : 기준 시각 이후에 등록한 상품 중 최근 등록 순 8개
+    // → select * from products where created_at >= ? order by created_at desc, id desc limit 8
+    List<Product> findTop8ByCreatedAtGreaterThanEqualOrderByCreatedAtDescIdDesc(LocalDateTime since);
 }
