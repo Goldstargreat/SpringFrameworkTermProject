@@ -28,16 +28,13 @@ Spring Boot + JPA + MySQL로 만든 온라인 쇼핑몰입니다.
 - MySQL 8.0 (`localhost:3306`)
 
 ### 2. DB 비밀번호 설정
-비밀번호는 Git에 올리지 않습니다.
-`src/main/resources/application-local.properties` 파일을 새로 만들고 자신의 MySQL root 비밀번호를 적습니다.
-이 파일은 `.gitignore`에 들어 있어서 커밋되지 않습니다.
+MySQL root 비밀번호가 `1234`가 아니면 `src/main/resources/application.properties`의 password 줄만 고치세요.
 
 ```properties
-# src/main/resources/application-local.properties
-spring.datasource.password=본인_MySQL_비밀번호
+# src/main/resources/application.properties
+spring.datasource.password = 1234
 ```
 
-- `application.properties`가 이 파일을 자동으로 읽어 옵니다 (`spring.config.import`).
 - 접속 주소는 `localhost:3306`, 계정은 `root`입니다.
 - `goldstarmall` 데이터베이스는 없으면 자동으로 만들어집니다 (`createDatabaseIfNotExist=true`).
 
