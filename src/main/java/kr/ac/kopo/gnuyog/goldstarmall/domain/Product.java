@@ -17,8 +17,12 @@ import java.util.List;
 // 상품 엔티티 : products 테이블
 @Entity
 @Table(name = "products")
-public class Product
-{
+public class Product {
+
+    // 손님에게 남은 개수를 알려 주는 기준 : 이 개수 이하로 남았을 때만 "N개 남음"을 보여 준다
+    // (재고가 넉넉할 때 정확한 숫자를 보여 주면 쇼핑몰의 판매량/입고량이 그대로 드러나기 때문)
+    public static final int LOW_STOCK_LIMIT = 2;
+
     @Id // 기본키
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -78,23 +82,65 @@ public class Product
     public Product() {
     }
 
+    // ===== 옵션 =====
+
     // 옵션이 있는 상품인지 (화면에서 product.hasOptions 로 사용)
     public boolean isHasOptions() {
         return !options.isEmpty();
     }
 
-    public List<ProductOption> getOptions() {
-        return options;
+    // ===== 가격 (오늘의 할인) =====
+
+    // 오늘의 할인 대상인지 (요일별 할인 카테고리, DailyDeal) → 화면에서 product.onSale 로 사용
+    public boolean isOnSale() {
+        return DailyDeal.today().appliesTo(category);
     }
 
-    // ===== getter / setter =====
-    public LocalDateTime getSalesResetAt() {
-        return salesResetAt;
+    // 오늘의 할인율 (할인 대상이 아니면 0) → 화면에서 product.saleRate 로 사용
+    public int getSaleRate() {
+        if (!isOnSale()) {
+            return 0;
+        }
+        return DailyDeal.today().getRate();
     }
 
-    public void setSalesResetAt(LocalDateTime salesResetAt) {
-        this.salesResetAt = salesResetAt;
+    // 손님이 실제로 내는 가격 (오늘의 할인 적용, 등급 할인 전) → 화면에서 product.salePrice 로 사용
+    // 장바구니, 바로 주문, 주문 금액은 모두 이 가격으로 계산한다
+    public int getSalePrice() {
+        if (!isOnSale()) {
+            return price;
+        }
+        return DailyDeal.today().discountedPrice(price);
     }
+
+    // ===== 재고 =====
+
+    // 품절 임박인지 (재고 1 ~ 2개) → 화면에서 product.lowStock 으로 사용
+    public boolean isLowStock() {
+        return stock > 0 && stock <= LOW_STOCK_LIMIT;
+    }
+
+    // 재고가 부족할 때 손님에게 보여 줄 문구 : 품절 임박일 때만 남은 개수를 알려 준다
+    public String getStockShortageMessage() {
+        if (isLowStock()) {
+            return "재고가 부족합니다. (남은 수량 " + stock + "개)";
+        }
+        return "재고가 부족합니다. 주문 수량을 줄여 주세요.";
+    }
+
+    // ===== 로켓 배송 =====
+
+    // 로켓 배송 상품인지 (관리자가 정한 값) → 화면에서 product.fastDelivery 로 사용
+    public boolean isFastDelivery() {
+        return Boolean.TRUE.equals(fastDelivery);
+    }
+
+    // 손님 화면에 "로켓 배송"을 붙일지 : 관리자가 켜 둔 상품이라도 품절이면 붙이지 않는다
+    public boolean isShowFastDelivery() {
+        return isFastDelivery() && stock > 0;
+    }
+
+    // ===== getter / setter (필드 순서대로) =====
 
     public Long getId() {
         return id;
@@ -104,18 +150,15 @@ public class Product
         this.id = id;
     }
 
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
-    public void setName(String name)
-    {
+    public void setName(String name) {
         this.name = name;
     }
 
-    public String getCategory()
-    {
+    public String getCategory() {
         return category;
     }
 
@@ -127,68 +170,12 @@ public class Product
         return price;
     }
 
-    // 오늘의 할인 대상인지 (요일별 할인 카테고리, DailyDeal) → 화면에서 product.onSale 로 사용
-    public boolean isOnSale() {
-        return DailyDeal.today().appliesTo(category);
-    }
-
-    // 오늘의 할인율 (할인 대상이 아니면 0) → 화면에서 product.saleRate 로 사용
-    public int getSaleRate() {
-        return isOnSale() ? DailyDeal.today().getRate() : 0;
-    }
-
-    // 손님이 실제로 내는 가격 (오늘의 할인 적용, 등급 할인 전) → 화면에서 product.salePrice 로 사용
-    // 장바구니, 바로 주문, 주문 금액은 모두 이 가격으로 계산한다
-    public int getSalePrice() {
-        return isOnSale() ? DailyDeal.today().discountedPrice(price) : price;
-    }
-
     public void setPrice(int price) {
         this.price = price;
     }
 
     public int getStock() {
         return stock;
-    }
-
-    // 손님에게 남은 개수를 알려 주는 기준 : 이 개수 이하로 남았을 때만 "N개 남음"을 보여 준다
-    // (재고가 넉넉할 때 정확한 숫자를 보여 주면 쇼핑몰의 판매량/입고량이 그대로 드러나기 때문)
-    public static final int LOW_STOCK_LIMIT = 2;
-
-    // 로켓 배송 상품인지 (관리자가 정한 값) → 화면에서 product.fastDelivery 로 사용
-    public boolean isFastDelivery() {
-        return Boolean.TRUE.equals(fastDelivery);
-    }
-
-    public void setFastDelivery(boolean fastDelivery) {
-        this.fastDelivery = fastDelivery;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    // 손님 화면에 "로켓 배송"을 붙일지 : 관리자가 켜 둔 상품이라도 품절이면 붙이지 않는다
-    public boolean isShowFastDelivery() {
-        return isFastDelivery() && stock > 0;
-    }
-
-    // 품절 임박인지 (재고 1 ~ 2개) → 화면에서 product.lowStock 으로 사용
-    public boolean isLowStock() {
-        return stock > 0 && stock <= LOW_STOCK_LIMIT;
-    }
-
-    // 재고가 부족할 때 손님에게 보여 줄 문구 : 품절 임박일 때만 남은 개수를 알려 준다
-    public String getStockShortageMessage() {
-        if (isLowStock())
-        {
-            return "재고가 부족합니다. (남은 수량 " + stock + "개)";
-        }
-        return "재고가 부족합니다. 주문 수량을 줄여 주세요.";
     }
 
     public void setStock(int stock) {
@@ -225,5 +212,30 @@ public class Product
 
     public void setOrigin(String origin) {
         this.origin = origin;
+    }
+
+    public LocalDateTime getSalesResetAt() {
+        return salesResetAt;
+    }
+
+    public void setSalesResetAt(LocalDateTime salesResetAt) {
+        this.salesResetAt = salesResetAt;
+    }
+
+    // isFastDelivery() 는 위 '로켓 배송' 에 있다
+    public void setFastDelivery(boolean fastDelivery) {
+        this.fastDelivery = fastDelivery;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public List<ProductOption> getOptions() {
+        return options;
     }
 }
