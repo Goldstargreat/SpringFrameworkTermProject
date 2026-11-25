@@ -49,7 +49,7 @@ INSERT INTO products (name, category, price, stock, description, icon) VALUES
 ('플리츠 롱스커트', '패션의류', 29900, 18, '움직일 때마다 주름이 살아나는 롱스커트입니다.', '👗'),
 ('수면 양말 5켤레', '패션의류', 9900, 2, '부드럽고 포근한 극세사 수면 양말 묶음입니다.', '🧦'),
 -- 잡화
-('가죽 반지갑', '잡화', 39900, 20, '카드와 지폐를 깔끔하게 정리하는 소가죽 반지갑입니다.', '👛'),
+('가죽 지갑', '잡화', 39900, 20, '카드와 지폐를 깔끔하게 정리하는 소가죽 지갑입니다.', '👛'),
 ('3단 자동 우산', '잡화', 14900, 60, '버튼 하나로 펴고 접는 튼튼한 자동 우산입니다.', '☂️'),
 ('미러 선글라스', '잡화', 25900, 15, '자외선을 차단하는 가벼운 미러 렌즈 선글라스입니다.', '🕶️'),
 ('니트 목도리', '잡화', 17900, 0, '겨울철 목을 따뜻하게 감싸는 니트 목도리입니다.', '🧣'),
@@ -163,7 +163,7 @@ UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE na
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '보온 스포츠 물병 750ml';
 UPDATE products SET manufacturer = '에스티글로벌 (일상공식)', origin = '중국' WHERE name = '노트북 백팩';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '면 볼캡';
-UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WHERE name = '가죽 반지갑';
+UPDATE products SET manufacturer = '골드스타 PB', origin = '대한민국' WHERE name = '가죽 지갑';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '3단 자동 우산';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '미러 선글라스';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '니트 목도리';
