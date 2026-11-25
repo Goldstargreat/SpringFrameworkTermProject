@@ -15,9 +15,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 // 장바구니 서비스 : 담기, 조회, 수량 변경, 삭제
+// 같은 상품이라도 옵션이 다르면 다른 항목이다. 재고보다 많이 담을 수 없다
 @Service
 @Transactional
 public class CartService {
+
+    // 수량이 1개보다 적을 때의 메시지
+    private static final String QUANTITY_TOO_SMALL = "수량은 1개 이상이어야 합니다.";
 
     private final CartItemRepository cartItemRepository;
     private final MemberRepository memberRepository;
@@ -34,12 +38,13 @@ public class CartService {
         this.productService = productService;
     }
 
+    // ===== 담기 =====
+
     // 장바구니에 상품 담기 (옵션이 있는 상품이면 optionId 로 옵션을 골라야 한다)
     public void addToCart(Long memberId, Long productId, Long optionId, int quantity) {
-        if (quantity < 1) {
-            throw new BusinessException("수량은 1개 이상이어야 합니다.");
-        }
+        checkQuantity(quantity);
 
+        // 1) 회원, 상품, 옵션 확인
         Member member = memberRepository.findById(memberId).orElse(null);
         Product product = productRepository.findById(productId).orElse(null);
         if (member == null || product == null) {
@@ -47,28 +52,26 @@ public class CartService {
         }
         ProductOption option = productService.resolveOption(product, optionId);
 
-        // 이미 담은 상품(같은 옵션)이면 수량만 더하고, 처음 담는 상품이면 새 항목을 만든다
+        // 2) 이미 담은 상품(같은 옵션)이면 그 항목에 수량을 더하고, 처음 담는 상품이면 새 항목을 만든다
         CartItem cartItem = cartItemRepository.findByMemberAndProductAndOption(member, product, option);
-        int newQuantity = quantity;
-        if (cartItem != null) {
-            newQuantity = cartItem.getQuantity() + quantity;
-        }
-
-        // 재고보다 많이 담을 수 없다 (옵션이 있으면 그 옵션의 재고)
-        int stock = option != null ? option.getStock() : product.getStock();
-        if (newQuantity > stock) {
-            throw new BusinessException(option != null ? option.getStockShortageMessage() : product.getStockShortageMessage());
-        }
-
         if (cartItem == null) {
-            cartItem = new CartItem();
+            cartItem = new CartItem();   // 새 항목의 수량은 0 에서 시작한다
             cartItem.setMember(member);
             cartItem.setProduct(product);
             cartItem.setOption(option);
         }
+        int newQuantity = cartItem.getQuantity() + quantity;
+
+        // 3) 재고보다 많이 담을 수 없다 (옵션이 있으면 그 옵션의 재고)
+        if (newQuantity > cartItem.getAvailableStock()) {
+            throw new BusinessException(cartItem.getStockShortageMessage());
+        }
+
         cartItem.setQuantity(newQuantity);
         cartItemRepository.save(cartItem);
     }
+
+    // ===== 조회 =====
 
     // 내 장바구니 목록
     @Transactional(readOnly = true)
@@ -86,12 +89,12 @@ public class CartService {
         return total;
     }
 
+    // ===== 수량 변경 / 삭제 =====
+
     // 수량 변경
     public void updateQuantity(Long memberId, Long cartItemId, int quantity) {
         CartItem cartItem = findMyCartItem(memberId, cartItemId);
-        if (quantity < 1) {
-            throw new BusinessException("수량은 1개 이상이어야 합니다.");
-        }
+        checkQuantity(quantity);
         if (quantity > cartItem.getAvailableStock()) {
             throw new BusinessException(cartItem.getStockShortageMessage());
         }
@@ -103,6 +106,15 @@ public class CartService {
     public void deleteCartItem(Long memberId, Long cartItemId) {
         CartItem cartItem = findMyCartItem(memberId, cartItemId);
         cartItemRepository.delete(cartItem);
+    }
+
+    // ===== 공통 =====
+
+    // 수량은 1개 이상이어야 한다
+    private void checkQuantity(int quantity) {
+        if (quantity < 1) {
+            throw new BusinessException(QUANTITY_TOO_SMALL);
+        }
     }
 
     // 장바구니 항목을 찾고, 로그인한 회원의 것이 맞는지 확인한다 (남의 장바구니를 건드리지 못하게)
