@@ -50,7 +50,10 @@ public enum MemberGrade {
     // 바로 위 등급 (가장 높은 등급이면 null). 화면에서 ${grade.next} 로 쓴다
     public MemberGrade getNext() {
         int nextIndex = ordinal() + 1;
-        return nextIndex < values().length ? values()[nextIndex] : null;
+        if (nextIndex >= values().length) {
+            return null;
+        }
+        return values()[nextIndex];
     }
 
     // 금액에 이 등급의 할인율을 적용한 할인 금액 (원 단위 아래는 버린다)
