@@ -149,7 +149,7 @@ UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE na
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '무선 마우스';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '블루투스 스피커';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '스마트 워치';
-UPDATE products SET manufacturer = '골드스타 PB', origin = '베트남' WHERE name = '기능성 티셔츠';
+UPDATE products SET manufacturer = '나이키', origin = '베트남' WHERE name = '기능성 티셔츠';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '베트남' WHERE name = '데님 일자 청바지';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '베트남' WHERE name = '오버핏 맨투맨';
 UPDATE products SET manufacturer = '골드스타 PB', origin = '중국' WHERE name = '경량 패딩 조끼';
