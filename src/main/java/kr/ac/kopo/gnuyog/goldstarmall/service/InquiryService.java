@@ -14,7 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
-// 상품문의 서비스 : 문의 조회, 질문 쓰기, (관리자) 답변, 삭제
+// 상품문의 서비스 : 문의 조회, 질문 쓰기, 삭제, (관리자) 답변 달기
+// 규칙 : 로그인한 일반 회원이면 누구나 질문할 수 있다 (관리자는 질문하지 않고 답변한다)
 @Service
 @Transactional
 public class InquiryService {
@@ -34,18 +35,7 @@ public class InquiryService {
         this.productRepository = productRepository;
     }
 
-    // (관리자) 모든 문의 (최신순). pendingOnly 면 답변을 아직 안 단 것만
-    @Transactional(readOnly = true)
-    public List<Inquiry> findAllForAdmin(boolean pendingOnly) {
-        return pendingOnly ? inquiryRepository.findByAnswerIsNullOrderByIdDesc()
-                           : inquiryRepository.findAllByOrderByIdDesc();
-    }
-
-    // (관리자) 답변을 아직 안 단 문의 개수
-    @Transactional(readOnly = true)
-    public long countPending() {
-        return inquiryRepository.countByAnswerIsNull();
-    }
+    // ===== 문의 보기 =====
 
     // 한 상품의 문의 목록 (최신순)
     @Transactional(readOnly = true)
@@ -53,8 +43,11 @@ public class InquiryService {
         return inquiryRepository.findByProductOrderByIdDesc(product);
     }
 
-    // 질문 쓰기 : 로그인한 일반 회원이면 누구나 쓸 수 있다 (관리자는 질문하지 않고 답변한다)
+    // ===== 질문 쓰기 / 삭제 =====
+
+    // 질문 쓰기
     public Inquiry ask(Long memberId, Long productId, String question) {
+        // 1) 질문할 수 있는 회원인지
         Member member = memberRepository.findById(memberId).orElse(null);
         if (member == null) {
             throw new NotFoundException("회원 정보를 찾을 수 없습니다.");
@@ -62,12 +55,15 @@ public class InquiryService {
         if (member.isAdmin()) {
             throw new BusinessException("관리자는 상품문의를 쓸 수 없습니다. 회원의 문의에 답변해 주세요.");
         }
+
+        // 2) 상품 확인, 입력값 검사
         Product product = productRepository.findById(productId).orElse(null);
         if (product == null) {
             throw new NotFoundException("상품을 찾을 수 없습니다.");
         }
         String text = checkText(question, "문의 내용");
 
+        // 3) 저장
         Inquiry inquiry = new Inquiry();
         inquiry.setMember(member);
         inquiry.setProduct(product);
@@ -76,28 +72,52 @@ public class InquiryService {
         return inquiryRepository.save(inquiry);
     }
 
+    // 문의 삭제 : 질문한 본인이나 관리자만 지울 수 있다. 상품 번호를 돌려준다
+    public Long delete(Long memberId, boolean admin, Long inquiryId) {
+        Inquiry inquiry = findInquiry(inquiryId);
+
+        boolean askedByMe = inquiry.getMember().getId().equals(memberId);
+        if (!admin && !askedByMe) {
+            throw new BusinessException("본인이 쓴 문의만 삭제할 수 있습니다.");
+        }
+
+        Long productId = inquiry.getProduct().getId();
+        inquiryRepository.delete(inquiry);
+        return productId;
+    }
+
+    // ===== 관리자 =====
+
+    // (관리자) 모든 문의 (최신순). pendingOnly 면 답변을 아직 안 단 것만
+    @Transactional(readOnly = true)
+    public List<Inquiry> findAllForAdmin(boolean pendingOnly) {
+        if (pendingOnly) {
+            return inquiryRepository.findByAnswerIsNullOrderByIdDesc();
+        }
+        return inquiryRepository.findAllByOrderByIdDesc();
+    }
+
+    // (관리자) 답변을 아직 안 단 문의 개수
+    @Transactional(readOnly = true)
+    public long countPending() {
+        return inquiryRepository.countByAnswerIsNull();
+    }
+
     // (관리자) 답변 달기 : 이미 답변이 있으면 새 답변으로 고친다. 상품 번호를 돌려준다
     public Long answer(Long inquiryId, String answer) {
         Inquiry inquiry = findInquiry(inquiryId);
         inquiry.setAnswer(checkText(answer, "답변 내용"));
         inquiry.setAnsweredAt(LocalDateTime.now());
+
         // 질문한 회원에게 새 알림으로 보이도록
         inquiry.setAnswerRead(false);
         inquiry.setAnswerNoticeHidden(false);
         return inquiry.getProduct().getId();
     }
 
-    // 문의 삭제 : 질문한 본인이나 관리자만 지울 수 있다. 상품 번호를 돌려준다
-    public Long delete(Long memberId, boolean admin, Long inquiryId) {
-        Inquiry inquiry = findInquiry(inquiryId);
-        if (!admin && !inquiry.getMember().getId().equals(memberId)) {
-            throw new BusinessException("본인이 쓴 문의만 삭제할 수 있습니다.");
-        }
-        Long productId = inquiry.getProduct().getId();
-        inquiryRepository.delete(inquiry);
-        return productId;
-    }
+    // ===== 공통 =====
 
+    // 문의 한 건 (없으면 NotFoundException)
     private Inquiry findInquiry(Long inquiryId) {
         Inquiry inquiry = inquiryRepository.findById(inquiryId).orElse(null);
         if (inquiry == null) {
