@@ -24,6 +24,14 @@ import java.util.List;
 @Table(name = "orders")
 public class Order {
 
+    // 반품 신청 기간 (배송완료 후 며칠까지)
+    public static final int RETURN_PERIOD_DAYS = 14;
+
+    // 기본 주문번호의 날짜 부분 형식  예) 2026-11-24 → 20261124
+    private static final DateTimeFormatter ORDER_NUMBER_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
+
+    // ===== 기본 정보 =====
+
     // 주문 id : DB가 자동으로 붙이는 기본키. 주문 상품(order_items)이 이 값으로 주문을 가리키므로 바꾸지 않는다
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,6 +53,16 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> orderItems = new ArrayList<>();
 
+    // 주문 일시
+    private LocalDateTime orderedAt;
+
+    // 배송 상태. EnumType.STRING : DB에 "SHIPPED" 같은 글자로 저장된다
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private ShippingStatus status;
+
+    // ===== 받는 사람 =====
+
     // 받는 사람 이름
     @Column(nullable = false, length = 30)
     private String receiverName;
@@ -56,6 +74,8 @@ public class Order {
     // 배송지 주소 (회원의 기본 주소와 따로, 주문마다 저장한다) → shipping_address 컬럼
     @Column(nullable = false, length = 200)
     private String shippingAddress;
+
+    // ===== 금액 =====
 
     // 총 결제 금액 : 등급 할인을 뺀, 손님이 실제로 낸 금액 (환불도 이 금액으로 한다)
     @Column(nullable = false)
@@ -70,13 +90,7 @@ public class Order {
     @Column(length = 10)
     private MemberGrade orderGrade;
 
-    // 배송 상태. EnumType.STRING : DB에 "SHIPPED" 같은 글자로 저장된다
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private ShippingStatus status;
-
-    // 주문 일시
-    private LocalDateTime orderedAt;
+    // ===== 환불 / 거절 =====
 
     // 환불 금액 : 주문취소/주문거절/반품완료 때 결제 금액 전체를 돌려준다 (환불 전에는 null)
     // 실제 결제(카드, 계좌) 기능이 없으므로 "얼마를 언제 환불했는지"를 기록해 화면에 보여 준다
@@ -88,6 +102,8 @@ public class Order {
     // 거절 사유 : 관리자가 주문을 거절할 때 남긴다 (손님에게 보여 준다)
     @Column(length = 200)
     private String rejectReason;
+
+    // ===== 배송완료 / 반품 =====
 
     // 배송완료 일시 : 반품 신청 기한(배송완료 후 14일)을 계산하는 데 쓴다
     // 이 기능이 생기기 전에 배송완료된 주문은 비어 있을(null) 수 있어서, 그때는 주문 일시로 계산한다
@@ -104,6 +120,8 @@ public class Order {
     @Column(length = 200)
     private String returnRejectReason;
 
+    // ===== 회원 화면에서 숨김 =====
+
     // 회원이 내 주문내역에서 삭제했는지 : 실제로 지우지 않고 회원 화면에서만 숨긴다
     // (지워 버리면 누적 구매액/등급, 상품평 작성 자격이 사라지고, 관리자도 주문을 볼 수 없게 된다)
     // 이 기능이 생기기 전의 주문은 비어 있을(null) 수 있어서, isHiddenByMember() 에서 false 로 본다
@@ -112,23 +130,204 @@ public class Order {
     public Order() {
     }
 
-    // 반품 신청 기간 (배송완료 후 며칠까지)
-    public static final int RETURN_PERIOD_DAYS = 14;
+    // ===== 주문 상품 =====
+
+    // 주문에 주문 상품을 추가하면서, 주문 상품 쪽에도 "내 주문은 이것"이라고 알려 준다 (양방향 연결)
+    public void addOrderItem(OrderItem orderItem) {
+        orderItems.add(orderItem);
+        orderItem.setOrder(this);
+    }
+
+    // ===== 주문번호 =====
+
+    // 자동으로 붙이는 기본 주문번호 : 주문 날짜 + "-" + id 4자리 (예: 2026-11-24 의 12번 주문 → 20261124-0012)
+    // 주문 일시가 없으면 날짜 자리를 00000000 으로 채운다
+    public String makeDefaultOrderNumber() {
+        String date = "00000000";
+        if (orderedAt != null) {
+            date = orderedAt.format(ORDER_NUMBER_DATE_FORMAT);
+        }
+        return date + "-" + String.format("%04d", id);
+    }
+
+    // 화면에 보여 줄 주문번호 (화면에서 order.displayNumber 로 사용)
+    // SQL 로 직접 넣은 주문처럼 아직 주문번호가 없으면 기본 주문번호를 보여 준다
+    public String getDisplayNumber() {
+        if (orderNumber != null) {
+            return orderNumber;
+        }
+        return makeDefaultOrderNumber();
+    }
+
+    // ===== 금액 =====
+
+    // 상품 금액 합계 (할인 전) = 결제 금액 + 할인 금액. 화면에서 order.originalPrice 로 사용
+    public int getOriginalPrice() {
+        return totalPrice + getDiscountAmount();
+    }
+
+    // 등급 할인 금액 (기록이 없는 옛 주문은 0원)
+    public int getDiscountAmount() {
+        if (discountAmount == null) {
+            return 0;
+        }
+        return discountAmount;
+    }
+
+    // 환불이 끝난 주문인지 (화면에서 order.refunded 로 사용)
+    public boolean isRefunded() {
+        return refundedAt != null;
+    }
+
+    // ===== 반품 =====
 
     // 반품 신청 마감 일시 = 배송완료 일시 + 14일 (화면에서 order.returnDeadline 으로 사용)
+    // 배송완료 일시가 없는 옛 주문은 주문 일시로 계산하고, 둘 다 없으면 null
     public LocalDateTime getReturnDeadline() {
-        LocalDateTime base = deliveredAt != null ? deliveredAt : orderedAt;
-        return base == null ? null : base.plusDays(RETURN_PERIOD_DAYS);
+        LocalDateTime base = deliveredAt;
+        if (base == null) {
+            base = orderedAt;
+        }
+        if (base == null) {
+            return null;
+        }
+        return base.plusDays(RETURN_PERIOD_DAYS);
     }
 
     // 지금 반품을 신청할 수 있는지 : 배송완료 상태 + 14일 이내 + 반품을 거절당한 적이 없음
     // 화면에서 order.returnable 로 사용
     public boolean isReturnable() {
+        if (status != ShippingStatus.DELIVERED) {
+            return false;
+        }
+        if (returnRejectReason != null) {
+            return false;
+        }
         LocalDateTime deadline = getReturnDeadline();
-        return status == ShippingStatus.DELIVERED
-                && returnRejectReason == null
-                && deadline != null
-                && !LocalDateTime.now().isAfter(deadline);
+        if (deadline == null) {
+            return false;
+        }
+        boolean pastDeadline = LocalDateTime.now().isAfter(deadline);
+        return !pastDeadline;
+    }
+
+    // ===== getter / setter (필드 순서대로) =====
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getOrderNumber() {
+        return orderNumber;
+    }
+
+    public void setOrderNumber(String orderNumber) {
+        this.orderNumber = orderNumber;
+    }
+
+    public Member getMember() {
+        return member;
+    }
+
+    public void setMember(Member member) {
+        this.member = member;
+    }
+
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
+    }
+
+    public void setOrderItems(List<OrderItem> orderItems) {
+        this.orderItems = orderItems;
+    }
+
+    public LocalDateTime getOrderedAt() {
+        return orderedAt;
+    }
+
+    public void setOrderedAt(LocalDateTime orderedAt) {
+        this.orderedAt = orderedAt;
+    }
+
+    public ShippingStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(ShippingStatus status) {
+        this.status = status;
+    }
+
+    public String getReceiverName() {
+        return receiverName;
+    }
+
+    public void setReceiverName(String receiverName) {
+        this.receiverName = receiverName;
+    }
+
+    public String getReceiverPhone() {
+        return receiverPhone;
+    }
+
+    public void setReceiverPhone(String receiverPhone) {
+        this.receiverPhone = receiverPhone;
+    }
+
+    public String getShippingAddress() {
+        return shippingAddress;
+    }
+
+    public void setShippingAddress(String shippingAddress) {
+        this.shippingAddress = shippingAddress;
+    }
+
+    public int getTotalPrice() {
+        return totalPrice;
+    }
+
+    public void setTotalPrice(int totalPrice) {
+        this.totalPrice = totalPrice;
+    }
+
+    // getDiscountAmount() 는 위 '금액' 에 있다
+    public void setDiscountAmount(int discountAmount) {
+        this.discountAmount = discountAmount;
+    }
+
+    public MemberGrade getOrderGrade() {
+        return orderGrade;
+    }
+
+    public void setOrderGrade(MemberGrade orderGrade) {
+        this.orderGrade = orderGrade;
+    }
+
+    public Integer getRefundAmount() {
+        return refundAmount;
+    }
+
+    public void setRefundAmount(Integer refundAmount) {
+        this.refundAmount = refundAmount;
+    }
+
+    public LocalDateTime getRefundedAt() {
+        return refundedAt;
+    }
+
+    public void setRefundedAt(LocalDateTime refundedAt) {
+        this.refundedAt = refundedAt;
+    }
+
+    public String getRejectReason() {
+        return rejectReason;
+    }
+
+    public void setRejectReason(String rejectReason) {
+        this.rejectReason = rejectReason;
     }
 
     public LocalDateTime getDeliveredAt() {
@@ -169,154 +368,5 @@ public class Order {
 
     public void setHiddenByMember(boolean hiddenByMember) {
         this.hiddenByMember = hiddenByMember;
-    }
-
-    // 자동으로 붙이는 기본 주문번호 : 주문 날짜 + "-" + id 4자리 (예: 2026-11-24 의 12번 주문 → 20261124-0012)
-    public String makeDefaultOrderNumber() {
-        String date = orderedAt == null ? "00000000" : orderedAt.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        return date + "-" + String.format("%04d", id);
-    }
-
-    // 화면에 보여 줄 주문번호 (화면에서 order.displayNumber 로 사용)
-    // SQL 로 직접 넣은 주문처럼 아직 주문번호가 없으면 기본 주문번호를 보여 준다
-    public String getDisplayNumber() {
-        return orderNumber != null ? orderNumber : makeDefaultOrderNumber();
-    }
-
-    // 상품 금액 합계 (할인 전) = 결제 금액 + 할인 금액. 화면에서 order.originalPrice 로 사용
-    public int getOriginalPrice() {
-        return totalPrice + getDiscountAmount();
-    }
-
-    public int getDiscountAmount() {
-        return discountAmount == null ? 0 : discountAmount;
-    }
-
-    public void setDiscountAmount(int discountAmount) {
-        this.discountAmount = discountAmount;
-    }
-
-    public MemberGrade getOrderGrade() {
-        return orderGrade;
-    }
-
-    public void setOrderGrade(MemberGrade orderGrade) {
-        this.orderGrade = orderGrade;
-    }
-
-    // 환불이 끝난 주문인지 (화면에서 order.refunded 로 사용)
-    public boolean isRefunded() {
-        return refundedAt != null;
-    }
-
-    // 주문에 주문 상품을 추가하면서, 주문 상품 쪽에도 "내 주문은 이것"이라고 알려 준다 (양방향 연결)
-    public void addOrderItem(OrderItem orderItem) {
-        orderItems.add(orderItem);
-        orderItem.setOrder(this);
-    }
-
-    // ===== getter / setter =====
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getOrderNumber() {
-        return orderNumber;
-    }
-
-    public void setOrderNumber(String orderNumber) {
-        this.orderNumber = orderNumber;
-    }
-
-    public Member getMember() {
-        return member;
-    }
-
-    public void setMember(Member member) {
-        this.member = member;
-    }
-
-    public List<OrderItem> getOrderItems() {
-        return orderItems;
-    }
-
-    public void setOrderItems(List<OrderItem> orderItems) {
-        this.orderItems = orderItems;
-    }
-
-    public String getReceiverName() {
-        return receiverName;
-    }
-
-    public void setReceiverName(String receiverName) {
-        this.receiverName = receiverName;
-    }
-
-    public String getReceiverPhone() {
-        return receiverPhone;
-    }
-
-    public void setReceiverPhone(String receiverPhone) {
-        this.receiverPhone = receiverPhone;
-    }
-
-    public String getShippingAddress() {
-        return shippingAddress;
-    }
-
-    public void setShippingAddress(String shippingAddress) {
-        this.shippingAddress = shippingAddress;
-    }
-
-    public int getTotalPrice() {
-        return totalPrice;
-    }
-
-    public void setTotalPrice(int totalPrice) {
-        this.totalPrice = totalPrice;
-    }
-
-    public ShippingStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(ShippingStatus status) {
-        this.status = status;
-    }
-
-    public LocalDateTime getOrderedAt() {
-        return orderedAt;
-    }
-
-    public void setOrderedAt(LocalDateTime orderedAt) {
-        this.orderedAt = orderedAt;
-    }
-
-    public Integer getRefundAmount() {
-        return refundAmount;
-    }
-
-    public void setRefundAmount(Integer refundAmount) {
-        this.refundAmount = refundAmount;
-    }
-
-    public LocalDateTime getRefundedAt() {
-        return refundedAt;
-    }
-
-    public void setRefundedAt(LocalDateTime refundedAt) {
-        this.refundedAt = refundedAt;
-    }
-
-    public String getRejectReason() {
-        return rejectReason;
-    }
-
-    public void setRejectReason(String rejectReason) {
-        this.rejectReason = rejectReason;
     }
 }
