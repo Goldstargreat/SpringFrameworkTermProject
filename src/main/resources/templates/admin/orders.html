@@ -50,6 +50,7 @@
             <tr>
                 <th>주문번호</th>
                 <th>주문자</th>
+                <th>주문 상품</th>
                 <th>주문일시</th>
                 <th>배송지</th>
                 <th>결제 금액</th>
@@ -68,6 +69,15 @@
                     </form>
                 </td>
                 <td th:text="${order.member.name} + ' (' + ${order.member.loginId} + ')'">홍길동 (hong)</td>
+                <!-- 주문 상품 : 상품명 x 수량, 옵션 상품이면 고른 옵션도 보여 준다 -->
+                <td>
+                    <ul class="admin-order-items">
+                        <li th:each="item : ${order.orderItems}">
+                            <span th:text="${item.product.name} + ' x ' + ${item.quantity}">상품명 x 1</span>
+                            <div class="option-name" th:if="${item.option != null}" th:text="'옵션: ' + ${item.option.name}">옵션: 15인치 / 화이트</div>
+                        </li>
+                    </ul>
+                </td>
                 <td th:text="${#temporals.format(order.orderedAt, 'yyyy-MM-dd HH:mm')}">2026-01-01 00:00</td>
                 <td th:text="${order.shippingAddress}">주소</td>
                 <td>
