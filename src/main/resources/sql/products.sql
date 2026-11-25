@@ -303,6 +303,10 @@ INSERT INTO products (name, category, price, stock, description, icon, manufactu
 INSERT INTO products (name, category, price, stock, description, icon, manufacturer, origin, fast_delivery) VALUES
 ('드럼 세탁기 12kg', '가전디지털', 799000, 5, '빨래, 헹굼, 탈수를 조용하게 해 주는 12kg 대용량 드럼 세탁기입니다. 기사님이 방문해 설치해 드립니다.', '🧺', '골드스타 PB', '대한민국', 0);
 
+-- 추가 상품 : 완구/취미 아보카도 인형 (맨 끝에 넣어 앞 상품들의 번호(id)가 밀리지 않게 한다)
+INSERT INTO products (name, category, price, stock, description, icon, manufacturer, origin, fast_delivery) VALUES
+('아보카도 인형', '완구/취미', 5000, 30, '말랑하고 포근한 촉감의 귀여운 아보카도 봉제 인형입니다.', '🥑', '다이소', '중국', 1);
+
 -- 로켓 배송 : 처음에는 모든 상품을 로켓 배송으로 해 둔다 (관리자가 상품관리 화면에서 상품마다 켜고 끈다)
 UPDATE products SET fast_delivery = 1;
 -- 예외 : 고가/대형 상품은 로켓 배송을 하지 않는다
