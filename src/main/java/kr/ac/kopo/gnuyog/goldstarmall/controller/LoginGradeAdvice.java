@@ -1,10 +1,10 @@
 package kr.ac.kopo.gnuyog.goldstarmall.controller;
 
+import jakarta.servlet.http.HttpSession;
 import kr.ac.kopo.gnuyog.goldstarmall.config.SessionConst;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.MemberGrade;
 import kr.ac.kopo.gnuyog.goldstarmall.service.MemberService;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
@@ -24,11 +24,17 @@ public class LoginGradeAdvice {
     // 로그인한 일반 회원이면 그 회원의 등급, 로그인하지 않았거나 관리자면 null
     @ModelAttribute("loginMemberGrade")
     public MemberGrade loginMemberGrade(HttpSession session) {
+        // 로그인하지 않았거나 관리자면 보여 줄 것이 없다
         Long memberId = (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
-        if (memberId == null || Member.ROLE_ADMIN.equals(session.getAttribute(SessionConst.LOGIN_MEMBER_ROLE))) {
+        boolean admin = Member.ROLE_ADMIN.equals(session.getAttribute(SessionConst.LOGIN_MEMBER_ROLE));
+        if (memberId == null || admin) {
             return null;
         }
+
         Member member = memberService.findById(memberId);
-        return member == null ? null : member.getGrade();
+        if (member == null) {
+            return null;
+        }
+        return member.getGrade();
     }
 }
