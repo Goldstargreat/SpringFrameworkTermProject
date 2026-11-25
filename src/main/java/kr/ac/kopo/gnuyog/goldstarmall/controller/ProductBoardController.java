@@ -1,11 +1,11 @@
 package kr.ac.kopo.gnuyog.goldstarmall.controller;
 
+import jakarta.servlet.http.HttpSession;
 import kr.ac.kopo.gnuyog.goldstarmall.config.SessionConst;
 import kr.ac.kopo.gnuyog.goldstarmall.domain.Member;
 import kr.ac.kopo.gnuyog.goldstarmall.exception.BusinessException;
 import kr.ac.kopo.gnuyog.goldstarmall.service.InquiryService;
 import kr.ac.kopo.gnuyog.goldstarmall.service.ReviewService;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +18,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 // 처리가 끝나면 상품 상세 화면의 해당 탭 위치(#tab-reviews, #tab-qna)로 돌아간다
 @Controller
 public class ProductBoardController {
+
+    // 상품 상세 화면의 탭 위치
+    private static final String REVIEW_TAB = "#tab-reviews";
+    private static final String QNA_TAB = "#tab-qna";
+
+    // returnTo 값이 이것이면 관리자 리뷰/문의 화면(/admin/board)으로 돌아간다
+    private static final String RETURN_TO_BOARD = "board";
 
     private final ReviewService reviewService;
     private final InquiryService inquiryService;
@@ -42,7 +49,7 @@ public class ProductBoardController {
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/products/" + productId + "#tab-reviews";
+        return productTab(productId, REVIEW_TAB);
     }
 
     // 상품평 삭제 (본인 또는 관리자)
@@ -53,7 +60,7 @@ public class ProductBoardController {
         try {
             Long productId = reviewService.delete(loginMemberId(session), isAdmin(session), reviewId);
             redirectAttributes.addFlashAttribute("message", "상품평을 삭제했습니다.");
-            return "redirect:/products/" + productId + "#tab-reviews";
+            return productTab(productId, REVIEW_TAB);
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/";
@@ -74,10 +81,10 @@ public class ProductBoardController {
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        if ("board".equals(returnTo)) {
+        if (RETURN_TO_BOARD.equals(returnTo)) {
             return "redirect:/admin/board?tab=reviews";
         }
-        return "redirect:/products/" + productId + "#tab-reviews";
+        return productTab(productId, REVIEW_TAB);
     }
 
     // ===== 상품문의 =====
@@ -94,7 +101,7 @@ public class ProductBoardController {
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/products/" + productId + "#tab-qna";
+        return productTab(productId, QNA_TAB);
     }
 
     // 문의 삭제 (본인 또는 관리자)
@@ -105,7 +112,7 @@ public class ProductBoardController {
         try {
             Long productId = inquiryService.delete(loginMemberId(session), isAdmin(session), inquiryId);
             redirectAttributes.addFlashAttribute("message", "문의를 삭제했습니다.");
-            return "redirect:/products/" + productId + "#tab-qna";
+            return productTab(productId, QNA_TAB);
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/";
@@ -126,16 +133,25 @@ public class ProductBoardController {
         } catch (BusinessException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        if ("board".equals(returnTo)) {
+        if (RETURN_TO_BOARD.equals(returnTo)) {
             return "redirect:/admin/board?tab=inquiries";
         }
-        return "redirect:/products/" + productId + "#tab-qna";
+        return productTab(productId, QNA_TAB);
     }
 
+    // ===== 공통 =====
+
+    // 상품 상세 화면의 탭으로 돌아가는 주소  예) redirect:/products/3#tab-qna
+    private String productTab(Long productId, String tab) {
+        return "redirect:/products/" + productId + tab;
+    }
+
+    // 로그인한 회원 번호 (세션에 들어 있다)
     private Long loginMemberId(HttpSession session) {
         return (Long) session.getAttribute(SessionConst.LOGIN_MEMBER_ID);
     }
 
+    // 로그인한 사람이 관리자인지
     private boolean isAdmin(HttpSession session) {
         return Member.ROLE_ADMIN.equals(session.getAttribute(SessionConst.LOGIN_MEMBER_ROLE));
     }
